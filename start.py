@@ -1,85 +1,91 @@
 import argparse
 import asyncio
-import json
+
+import logging.handlers
 
 import aiohttp
+from batterytest import BatteryTest
+from database import DataBase
 
-from arduino_connection import ArduinoConnection
-from notifier import Notifier
+lgr=logging.getLogger()
+lgr.setLevel(logging.DEBUG)
 
-SERIAL_SPEED = 115200
-
-from aiohttp import web
-from serial import Serial
-
-
-class BatteryTest():
-    def __init__(self, serial_port, shade_id, power_view_hub_ip, notifier):
-        self.loop = asyncio.get_event_loop()
-        self.ir = True
-        self.arduino = ArduinoConnection(self.loop, serial_port, SERIAL_SPEED)
-        self.session = aiohttp.ClientSession(loop=self.loop)
-        self.shade_id = shade_id
-        self.ip = power_view_hub_ip
-        self.url = 'http://{}/api/shades/{}'.format(power_view_hub_ip, shade_id)
-        self.close_data = json.dumps({'shade': {'id': shade_id, 'positions': {'posKind1': 1, 'position1': 0}}})
-        self.open_data = json.dumps({'shade': {'id': shade_id, 'positions': {'posKind1': 1, 'position1': 65535}}})
-        self.notifier = notifier
-
-        self.loop.create_task(self.get_serial_data())
-        self.loop.create_task(self.cycle())
-
-
-    def start(self):
-        pass
-
-    @asyncio.coroutine
-    def to_pv_hub(self, session, address):
-        resp = yield from session.get(address)
-        print(resp.status)
-
-    @asyncio.coroutine
-    def send_open(self, shade_id):
-        resp = yield from self.session.put(self.url, data=self.open_data)
-
-    @asyncio.coroutine
-    def send_close(self, shade_id):
-        resp = yield from self.session.put(self.url, data=self.close_data)
-
-    @asyncio.coroutine
-    def cycle(self, loop_pause, shade_id):
-        while 1:
-            self.send_open(shade_id)
-            yield from asyncio.sleep(loop_pause)
-            if self.ir == 0:
-                self.notifier.notify("Ir sensor has zero value. breaking loop. stopping measurement.")
-                break
-            self.send_close(shade_id)
-            yield from asyncio.sleep(loop_pause)
-
-        # ir data not ok. Closing serial connection and stopping measurements.
-
-
-    @asyncio.coroutine
-    def get_serial_data(self, arduino_connection):
-        while 1:
-            _data = yield from arduino_connection.get_byte_async()
-            _line = _data.split(';')
-            if _line[0] == 'v':
-                # data is voltage and amps.
-                _voltage = float(_line[1])
-                _amps = float(_line[2])
-            elif _line[0] == 'i':
-                # data is the ir sensor.
-                _ir = int(_line[1])
-                self.ir = _ir
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
 if __name__ == "__main__":
+
+    # logging.basicConfig(level=logging.DEBUG)
+
     parser = argparse.ArgumentParser()
+
     parser.add_argument("--serialport")
+    parser.add_argument("--influxhost")
+    parser.add_argument("--measurement")
+    parser.add_argument("--database")
+    parser.add_argument("--email")
+    parser.add_argument("--email_pass")
+    parser.add_argument("--pvhubip")
+    parser.add_argument("--blindid")
+    parser.add_argument("--cycletime")
     args = parser.parse_args()
+
     SERIAL_PORT = args.serialport
-    notifier = Notifier()
-    battery = BatteryTest(SERIAL_PORT, 123456, "192.168.2.10", notifier)
-    battery.start()
+    influx = args.influxhost
+    measurement = args.measurement
+    database = args.database
+    pvhubip = args.pvhubip
+    blindid = args.blindid
+    cycletime = args.cycletime
+    email = args.email
+    email_pass = args.email_pass
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(formatter)
+    lgr.addHandler(ch)
+
+    fh = logging.handlers.RotatingFileHandler("out.log", 'a', 10000, 5)
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(formatter)
+    lgr.addHandler(fh)
+
+    mh = logging.handlers.SMTPHandler(("smtp.gmail.com", 587), "testruimte.menc@gmail.com", "s.teunissen@gmail.com",
+                                      "batterytest",
+                                      (email, email_pass), secure=())
+    mh.setLevel(logging.INFO)
+    mh.setFormatter(formatter)
+    lgr.addHandler(mh)
+
+
+
+    # get the event loop.
+    loop = asyncio.get_event_loop()
+
+    # client session.
+    session = aiohttp.ClientSession(loop=loop)
+
+    # setup the influxdb database connection and parser
+    influx = DataBase(influx, database, measurement, session, 10)
+    lgr.info("***** start logging ******")
+
+    battery = BatteryTest(serial_port=SERIAL_PORT,
+                          shade_id=blindid,
+                          power_view_hub_ip=pvhubip,
+                          loop=loop,
+                          session=session,
+                          influx=influx,
+                          command_delay=cycletime)
+    loop.run_forever()
+    lgr.info("stopping software...")
+    #tasks = asyncio.gather()
+    #loop.stop()
+    # this should stop the task running in the concurrent.futures executor.
+    session.close()
+    #loop.close()
+    pending = asyncio.Task.all_tasks()
+    for _pending in pending:
+        _pending.cancel()
+    battery.event.set()
+    loop.run_until_complete(asyncio.gather(*pending))
+    loop.close()
