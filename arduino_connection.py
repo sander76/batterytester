@@ -30,44 +30,34 @@ class ArduinoConnection:
     def __init__(self, loop, serial_port, serial_speed, try_delay=10):
         # self.network_id = b'\x00\x03I' + network_id
         self.s = Serial()
+        self.s.timeout=10
         self.serial_port = serial_port
         self.s.port = serial_port
         self.s.baudrate = serial_speed
         self.trydelay = try_delay
         self.loop = loop
-
-        self.loop.create_task(self.connect())
-        #self.loop.create_task(self.get_from_serial_port())
+        self.connect()
 
     # handler
     def connect(self):
-        attempt = 1
-        while True:
-            if self.s.is_open:
-                lgr.debug("****************** Connected **************************")
-            else:
-                try:
-                    lgr.info("Connecting to serial port {}. Attempt: {}".format(self.serial_port, attempt))
-                    self.s.open()
-                    lgr.info("****************** Connected **************************")
-                except SerialException:
-                    lgr.debug("serial port opening problem.")
-                    attempt += 1
-            yield from asyncio.sleep(self.trydelay)
+        try:
+            lgr.debug("Connecting to serial port {}.".format(self.serial_port))
+            self.s.open()
+        except SerialException:
+            lgr.info("serial port opening problem.")
+            self.loop.stop()
 
     # the method which gets wrapped in the asyncio thread executor.
     def get_byte(self,event):
-        while 1:
-            if event.is_set():
-                return
-            if self.s.is_open:
-                try:
-                    data = self.s.readline()
-                    data=data.rstrip(b'\n')
-                    return data
-                except SerialException as e:
-                    lgr.exception(e)
-            time.sleep(self.trydelay)
+        if event.is_set():
+            return
+        if self.s.is_open:
+            try:
+                data = self.s.readline()
+                data=data.rstrip(b'\n')
+                return data
+            except SerialException as e:
+                lgr.exception(e)
 
     # Runs blocking function in executor, yielding the result
     @asyncio.coroutine

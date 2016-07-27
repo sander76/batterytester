@@ -1,33 +1,69 @@
 import asyncio
 import logging
+import aiohttp
 from time import time
 
 LENGTH = 10
 
 lgr = logging.getLogger(__name__)
 
+
 class DataBase:
-    def __init__(self, host, database, measurement, session, datalength=LENGTH):
+    def __init__(self, host, database, measurement, session, loop, datalength=LENGTH):
         self.host = host
         self.data = []
         self.url = 'http://{}:8086/write?db={}&precision=ms'.format(host, database)
         self.measurement = measurement
         self.session = session
         self.data_length = datalength
+        self.loop = loop
+
+    def _get_time_stamp(self):
+        return int(time() * 1000)
 
     @asyncio.coroutine
-    def add_data(self, volts, amps):
-        lgr.debug("adding data: volts: {} amps: {}".format(volts,amps))
-        ts = int(time() * 1000)
-        ln = '{} volts={},amps={} {}'.format(self.measurement, volts, amps, ts)
+    def add_ir_data(self, ir):
+        lgr.debug("adding data: ir value: {}".format(ir))
+        ts = self._get_time_stamp()
+        ln = '{} ir={} {}'.format(self.measurement, ir, ts)
         self.data.append(ln)
-        #if len(self.data) == self.data_length:
-            # _data = self.prepare_data()
-            # self.data = []
-            # resp = yield from self.send(_data)
-            # return resp
-        return True
+        return
 
+    @asyncio.coroutine
+    def add_open(self):
+        lgr.debug("adding open command")
+        ts = self._get_time_stamp()
+        ln = '{} open=1 {}'.format(self.measurement, ts)
+        self.data.append(ln)
+
+    @asyncio.coroutine
+    def add_close(self):
+        lgr.debug("adding close command")
+        ts = self._get_time_stamp()
+        ln = '{} close=1 {}'.format(self.measurement, ts)
+        self.data.append(ln)
+
+    @asyncio.coroutine
+    def add_data(self, volts, milliamps):
+        lgr.debug("adding data: volts: {} amps: {}".format(volts, milliamps))
+        ts = self._get_time_stamp()
+        ln = '{} volts={},amps={} {}'.format(self.measurement, volts, milliamps, ts)
+        self.data.append(ln)
+        # if len(self.data) == self.data_length:
+        # _data = self.prepare_data()
+        # self.data = []
+        # resp = yield from self.send(_data)
+        # return resp
+        return
+
+    @asyncio.coroutine
+    def clean_milliamps(self, milliamps):
+        if milliamps < 0:
+            return 0
+        elif milliamps > 0 and milliamps <= 0.5:
+            return 0.5
+        else:
+            return round(milliamps)
 
     @asyncio.coroutine
     def sender(self):
@@ -35,13 +71,11 @@ class DataBase:
         Checks the length of the data and if long enough sends it to the database.
         :return:
         '''
-        if len(self.data)==self.data_length:
+        if len(self.data) > self.data_length:
             _data = self.prepare_data()
             # clear the list so asyncio can start populate it while processing the next yields.
             self.data = []
-            resp = yield from self.send(_data)
-            assert resp.status == 200
-            yield from resp.release()
+            yield from self.send(_data)
         return
 
     def prepare_data(self):
@@ -53,9 +87,17 @@ class DataBase:
     def send(self, data):
         try:
             resp = yield from self.session.post(self.url, data=data)
-            yield from resp.release()
+            # 204 code from influx db means all is ok.
+            assert resp.status == 204
+            return
         except aiohttp.errors.ClientOSError as e:
-            raise UserWarning("Problems writing data to database")
+            lgr.info("Problems writing data to database")
+            self.loop.stop()
+        except AssertionError as e:
+            lgr.info("Response from influx db not correct response:")
+            self.loop.stop()
+        finally:
+            yield from resp.release()
         return True
 
 

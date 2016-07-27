@@ -2,6 +2,7 @@ import json
 import asyncio
 import logging
 import threading
+from asyncio.futures import CancelledError
 
 from arduino_connection import ArduinoConnection
 import aiohttp
@@ -9,7 +10,8 @@ import aiohttp
 SERIAL_SPEED = 115200
 lgr = logging.getLogger(__name__)
 
-class BatteryTest():
+
+class BatteryTest:
     def __init__(self, serial_port, shade_id, power_view_hub_ip, loop, session, influx, command_delay=60):
         self.loop = loop
         self.ir = 1
@@ -22,12 +24,11 @@ class BatteryTest():
         self.open_data = json.dumps({'shade': {'id': shade_id, 'positions': {'posKind1': 1, 'position1': 65535}}})
         self.command_delay = command_delay
         self.influx = influx
-        self.event=threading.Event()
+        self.event = threading.Event()
 
         self.loop.create_task(self.get_serial_data())
-        self.loop.create_task(self.cycle())
+        self.loop.create_task(self.cycle_up_down())
         self.loop.create_task(self.cycle_sender())
-
 
     # @asyncio.coroutine
     # def to_pv_hub(self, session, address):
@@ -39,6 +40,7 @@ class BatteryTest():
         lgr.debug("Sending open command to: {}".format(self.ip))
         resp = yield from self.session.put(self.url, data=self.open_data)
         assert resp.status == 200
+        yield from self.influx.add_open()
         yield from resp.release()
         return True
 
@@ -47,38 +49,41 @@ class BatteryTest():
         lgr.debug("Sending close command to: {}".format(self.ip))
         resp = yield from self.session.put(self.url, data=self.close_data)
         assert resp.status == 200
+        yield from self.influx.add_close()
         yield from resp.release()
         return True
 
     @asyncio.coroutine
-    def cycle(self):
+    def cycle_up_down(self):
         try:
             while 1:
                 yield from self.send_open()
                 yield from asyncio.sleep(self.command_delay)
                 if self.ir == 0:
-                    raise UserWarning("Ir sensor has zero value. Breaking loop. Stopping measurement.")
+                    raise UserWarning("Ir sensor has zero value. Breaking loop.")
                 yield from self.send_close()
                 yield from asyncio.sleep(self.command_delay)
         except aiohttp.errors.ClientOSError:
             lgr.info("Cannot connect to powerview hub.")
         except AssertionError as e:
             lgr.info("Something is wrong with the following PowerView ip address: {}".format(self.url))
-        finally:
-            lgr.info("Stopping measurements.")
-            self.loop.stop()
+        except UserWarning as e:
+            lgr.info(e)
+        #finally:
+        self.loop.stop()
         return
-        # self.loop.stop()
-        # ir data not ok. Closing serial connection and stopping measurements.
 
     @asyncio.coroutine
     def cycle_sender(self):
-        try:
-            while 1:
-                yield from self.influx.sender()
-                yield from asyncio.sleep(4)
-        except Exception as e:
-            pass
+        '''
+        coroutine to check the measurement buffer and if full to send the measurements to the database.
+        :return:
+        '''
+        while 1:
+            yield from self.influx.sender()
+            yield from asyncio.sleep(4)
+        # except Exception as e:
+        #     self.loop.stop()
 
     @asyncio.coroutine
     def get_serial_data(self):
@@ -94,3 +99,7 @@ class BatteryTest():
                 # data is the ir sensor.
                 _ir = int(_line[1])
                 self.ir = _ir
+                yield from self.influx.add_ir_data(_ir)
+            else:
+                lgr.info("incoming serial data is not correct.")
+                self.loop.stop()

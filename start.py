@@ -7,11 +7,11 @@ import aiohttp
 from batterytest import BatteryTest
 from database import DataBase
 
-lgr=logging.getLogger()
+lgr = logging.getLogger()
 lgr.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
+mailformatter = logging.Formatter('%(asctime)s - %(message)s')
 
 if __name__ == "__main__":
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser.add_argument("--email_pass")
     parser.add_argument("--pvhubip")
     parser.add_argument("--blindid")
-    parser.add_argument("--cycletime")
+    parser.add_argument("--cycletime", type=float)
     args = parser.parse_args()
 
     SERIAL_PORT = args.serialport
@@ -45,19 +45,17 @@ if __name__ == "__main__":
     ch.setFormatter(formatter)
     lgr.addHandler(ch)
 
-    fh = logging.handlers.RotatingFileHandler("out.log", 'a', 10000, 5)
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(formatter)
-    lgr.addHandler(fh)
+    # fh = logging.handlers.RotatingFileHandler("out.log", 'a', 10000, 5)
+    # fh.setLevel(logging.DEBUG)
+    # fh.setFormatter(formatter)
+    # lgr.addHandler(fh)
 
     mh = logging.handlers.SMTPHandler(("smtp.gmail.com", 587), "testruimte.menc@gmail.com", "s.teunissen@gmail.com",
-                                      "batterytest",
+                                      "batterytest {}".format(measurement),
                                       (email, email_pass), secure=())
     mh.setLevel(logging.INFO)
     mh.setFormatter(formatter)
     lgr.addHandler(mh)
-
-
 
     # get the event loop.
     loop = asyncio.get_event_loop()
@@ -66,8 +64,10 @@ if __name__ == "__main__":
     session = aiohttp.ClientSession(loop=loop)
 
     # setup the influxdb database connection and parser
-    influx = DataBase(influx, database, measurement, session, 10)
-    lgr.info("***** start logging ******")
+    influx = DataBase(influx, database, measurement, session,loop, 10)
+    lgr.info("***** starting measurement {} ******".format(measurement))
+
+
 
     battery = BatteryTest(serial_port=SERIAL_PORT,
                           shade_id=blindid,
@@ -77,15 +77,16 @@ if __name__ == "__main__":
                           influx=influx,
                           command_delay=cycletime)
     loop.run_forever()
-    lgr.info("stopping software...")
-    #tasks = asyncio.gather()
-    #loop.stop()
-    # this should stop the task running in the concurrent.futures executor.
+    lgr.info("****** stopping measurement {} ******".format(measurement))
     session.close()
-    #loop.close()
+
     pending = asyncio.Task.all_tasks()
+    battery.event.set()
+
     for _pending in pending:
         _pending.cancel()
-    battery.event.set()
-    loop.run_until_complete(asyncio.gather(*pending))
+    try:
+        loop.run_until_complete(asyncio.gather(*pending))
+    except asyncio.CancelledError:
+        pass
     loop.close()
