@@ -54,7 +54,7 @@ if __name__ == "__main__":
                                       "batterytest {}".format(measurement),
                                       (email, email_pass), secure=())
     mh.setLevel(logging.INFO)
-    mh.setFormatter(formatter)
+    mh.setFormatter(mailformatter)
     lgr.addHandler(mh)
 
     # get the event loop.
