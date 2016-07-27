@@ -28,13 +28,21 @@ class DataBase:
             # return resp
         return True
 
+
     @asyncio.coroutine
     def sender(self):
+        '''
+        Checks the length of the data and if long enough sends it to the database.
+        :return:
+        '''
         if len(self.data)==self.data_length:
             _data = self.prepare_data()
+            # clear the list so asyncio can start populate it while processing the next yields.
             self.data = []
             resp = yield from self.send(_data)
-            return resp
+            assert resp.status == 200
+            yield from resp.release()
+        return
 
     def prepare_data(self):
         _data = '\n'.join(self.data)

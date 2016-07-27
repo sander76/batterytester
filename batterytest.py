@@ -58,7 +58,7 @@ class BatteryTest():
                 yield from asyncio.sleep(self.command_delay)
                 if self.ir == 0:
                     raise UserWarning("Ir sensor has zero value. Breaking loop. Stopping measurement.")
-                #yield from self.send_close()
+                yield from self.send_close()
                 yield from asyncio.sleep(self.command_delay)
         except aiohttp.errors.ClientOSError:
             lgr.info("Cannot connect to powerview hub.")

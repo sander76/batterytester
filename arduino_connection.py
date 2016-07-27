@@ -64,10 +64,6 @@ class ArduinoConnection:
                 try:
                     data = self.s.readline()
                     data=data.rstrip(b'\n')
-                    # time.sleep(0.2)
-                    # tst = self.s.read(self.s.inWaiting())
-                    # data += tst
-                    # data += bytearray(self.s.read(self.s.inWaiting()))
                     return data
                 except SerialException as e:
                     lgr.exception(e)
