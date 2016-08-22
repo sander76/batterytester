@@ -1,5 +1,3 @@
-#!/home/sander/envs/powerview/bin/python
-
 import argparse
 import asyncio
 
