@@ -1,6 +1,6 @@
 create a service file (eg. battery1.service) in '/home/services/'
 
-'''
+```
 [Unit]
 Description=Battery 1 test
 After=network.target
@@ -12,7 +12,7 @@ ExecStart=<venv folder>/bin/python <script location>/start.py --config="config.j
 
 [Install]
 WantedBy=multi-user.target
-'''
+```
 
 add this service to systemd.
 
