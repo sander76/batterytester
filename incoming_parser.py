@@ -21,7 +21,7 @@ class IncomingParser:
             # data is the ir sensor.
             _ir = int(_line[1])
             self.state.ir = _ir
-            self.influx.add_ir_data(_ir)
+            self.database.add_ir_data(_ir)
         else:
             lgr.info("incoming serial data is not correct: {}".format(incoming))
             if self.current_retry > self.incoming_retries:
