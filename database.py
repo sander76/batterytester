@@ -21,7 +21,7 @@ class DataBase:
     def _get_time_stamp(self):
         return int(time() * 1000)
 
-    @asyncio.coroutine
+    #@asyncio.coroutine
     def add_ir_data(self, ir):
         lgr.debug("adding data: ir value: {}".format(ir))
         ts = self._get_time_stamp()
@@ -43,18 +43,12 @@ class DataBase:
         ln = '{} close=1 {}'.format(self.measurement, ts)
         self.data.append(ln)
 
-    @asyncio.coroutine
+    #@asyncio.coroutine
     def add_data(self, volts, milliamps):
         lgr.debug("adding data: volts: {} amps: {}".format(volts, milliamps))
         ts = self._get_time_stamp()
         ln = '{} volts={},amps={} {}'.format(self.measurement, volts, milliamps, ts)
         self.data.append(ln)
-        # if len(self.data) == self.data_length:
-        # _data = self.prepare_data()
-        # self.data = []
-        # resp = yield from self.send(_data)
-        # return resp
-        return
 
     @asyncio.coroutine
     def clean_milliamps(self, milliamps):
