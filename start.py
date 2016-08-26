@@ -20,15 +20,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config")
-    # parser.add_argument("--serialport")
-    # parser.add_argument("--influxhost")
-    # parser.add_argument("--measurement")
-    # parser.add_argument("--database")
-    # parser.add_argument("--email")
-    # parser.add_argument("--email_pass")
-    # parser.add_argument("--pvhubip")
-    # parser.add_argument("--blindid")
-    # parser.add_argument("--cycletime", type=float)
+
     args = parser.parse_args()
     config = args.config
     with open(config,'r') as fl:

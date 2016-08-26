@@ -39,6 +39,9 @@ class BatteryTest:
     def send_open(self):
         lgr.debug("Sending open command to: {}".format(self.ip))
         resp = yield from self.session.put(self.url, data=self.open_data)
+        yield from asyncio.sleep(1)
+        resp = yield from self.session.put(self.url, data=self.open_data)
+
         assert resp.status == 200
         yield from self.influx.add_open()
         yield from resp.release()
@@ -48,6 +51,9 @@ class BatteryTest:
     def send_close(self):
         lgr.debug("Sending close command to: {}".format(self.ip))
         resp = yield from self.session.put(self.url, data=self.close_data)
+        yield from asyncio.sleep(1)
+        resp = yield from self.session.put(self.url, data=self.close_data)
+
         assert resp.status == 200
         yield from self.influx.add_close()
         yield from resp.release()
@@ -101,5 +107,5 @@ class BatteryTest:
                 self.ir = _ir
                 yield from self.influx.add_ir_data(_ir)
             else:
-                lgr.info("incoming serial data is not correct.")
+                lgr.info("incoming serial data is not correct: {}".format(_data))
                 self.loop.stop()

@@ -16,7 +16,11 @@ WantedBy=multi-user.target
 
 add this service to systemd.
 
+
 `sudo systemctl enable /home/services/<service>`
+
 `sudo systemctl daemon-reload`
+
 `sudo systemctl start battery1`
+
 `sudo journalctl -f u battery1`
