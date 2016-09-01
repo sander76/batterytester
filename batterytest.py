@@ -41,27 +41,33 @@ class BatteryTest:
     #     print(resp.status)
 
     @asyncio.coroutine
+    def _send_open(self):
+        resp = yield from self.session.put(self.url, data=self.open_data)
+        assert resp.status == 200
+        yield from resp.release()
+
+    @asyncio.coroutine
     def send_open(self):
         lgr.debug("Sending open command to: {}".format(self.ip))
-        resp = yield from self.session.put(self.url, data=self.open_data)
+        yield from self._send_open()
         yield from asyncio.sleep(1)
-        resp = yield from self.session.put(self.url, data=self.open_data)
-
-        assert resp.status == 200
+        yield from self._send_open()
         yield from self.influx.add_open()
-        yield from resp.release()
         return True
+
+    @asyncio.coroutine
+    def _send_close(self):
+        resp = yield from self.session.put(self.url, data=self.close_data)
+        assert resp.status == 200
+        yield from resp.release()
 
     @asyncio.coroutine
     def send_close(self):
         lgr.debug("Sending close command to: {}".format(self.ip))
-        resp = yield from self.session.put(self.url, data=self.close_data)
+        yield from self._send_close()
         yield from asyncio.sleep(1)
-        resp = yield from self.session.put(self.url, data=self.close_data)
-
-        assert resp.status == 200
+        yield from self._send_close()
         yield from self.influx.add_close()
-        yield from resp.release()
         return True
 
     @asyncio.coroutine
