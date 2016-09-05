@@ -7,7 +7,7 @@ class IncomingParser:
     def __init__(self, database, state):
         self.database = database
         self.state = state
-        self.incoming_retries = 1
+        self.incoming_retries = 2
         self.current_retry = 0
 
     def parse(self, incoming):

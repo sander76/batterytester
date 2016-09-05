@@ -74,12 +74,12 @@ class BatteryTest:
     def cycle_up_down(self):
         try:
             while 1:
-                if self.state.ir==0:
-                    raise UserWarning("Ir sensor has value of zero. Should be one. Breaking loop")
+                if self.state.ir==1:
+                    raise UserWarning("Ir sensor has value of one. Should be zero. Breaking loop")
                 yield from self.send_open()
                 yield from asyncio.sleep(self.command_delay)
-                if self.state.ir == 1:
-                    raise UserWarning("Ir sensor has value of one. Should be zero. Breaking loop.")
+                if self.state.ir == 0:
+                    raise UserWarning("Ir sensor has value of zero. Should be one. Breaking loop.")
                 yield from self.send_close()
                 yield from asyncio.sleep(self.command_delay)
         except aiohttp.errors.ClientOSError:
