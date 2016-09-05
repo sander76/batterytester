@@ -71,8 +71,18 @@ class BatteryTest:
         return True
 
     @asyncio.coroutine
+    def init_test(self):
+        lgr.debug("Initializing test.")
+        yield from self.send_open()
+        yield from asyncio.sleep(120)
+        yield from self.send_close()
+        yield from asyncio.sleep(120)
+
+    @asyncio.coroutine
     def cycle_up_down(self):
+        yield from self.init_test()
         try:
+            lgr.debug("Starting actual test.")
             while 1:
                 if self.state.ir == 0:
                     yield from self.send_open()
