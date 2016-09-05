@@ -18,7 +18,7 @@ class BatteryTest:
     def __init__(self, serial_port, shade_id, power_view_hub_ip, loop, session, influx, command_delay=60):
         self.loop = loop
         self.state = States()
-        self.state.ir = 1
+        self.state.ir = 0
         self.parser = IncomingParser(influx, self.state)
         self.arduino = ArduinoConnection(loop, serial_port, SERIAL_SPEED)
         self.session = session
@@ -74,13 +74,15 @@ class BatteryTest:
     def cycle_up_down(self):
         try:
             while 1:
-                if self.state.ir==1:
-                    raise UserWarning("Ir sensor has value of one. Should be zero. Breaking loop")
-                yield from self.send_open()
-                yield from asyncio.sleep(self.command_delay)
                 if self.state.ir == 0:
+                    yield from self.send_open()
+                else:
+                    raise UserWarning("Ir sensor has value of one. Should be zero. Breaking loop")
+                yield from asyncio.sleep(self.command_delay)
+                if self.state.ir == 1:
+                    yield from self.send_close()
+                else:
                     raise UserWarning("Ir sensor has value of zero. Should be one. Breaking loop.")
-                yield from self.send_close()
                 yield from asyncio.sleep(self.command_delay)
         except aiohttp.errors.ClientOSError:
             lgr.info("Cannot connect to powerview hub.")
