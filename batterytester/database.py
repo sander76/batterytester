@@ -1,74 +1,59 @@
 import asyncio
 import logging
 from time import time
+import aiohttp
+import async_timeout
 
-LENGTH = 10
+from batterytester.helpers import get_bus
+
+LENGTH = 30
 
 lgr = logging.getLogger(__name__)
 
 
 class DataBase:
-    def __init__(self, host, database, measurement, session, loop,
-                 datalength=LENGTH):
+    def __init__(
+            self, host, database, measurement, datalength=LENGTH):
         self.host = host
         self.data = []
         self.url = 'http://{}:8086/write?db={}&precision=ms'.format(host,
                                                                     database)
         self.measurement = measurement
-        self.session = session
         self.data_length = datalength
-        self.loop = loop
+        self.bus = get_bus()
 
     def _get_time_stamp(self):
         return int(time() * 1000)
 
-    def add_ir_data(self, ir):
-        lgr.debug("adding data: ir value: {}".format(ir))
-        ts = self._get_time_stamp()
-        ln = '{} ir={} {}'.format(self.measurement, ir, ts)
-        self.data.append(ln)
-        return
-
     @asyncio.coroutine
-    def add_open(self):
-        lgr.debug("adding open command")
+    def add_to_database(self, *datapoints):
+        for _data in datapoints:
+            self.data.append(self.create_measurement(_data))
+            yield from self.check_and_send_to_database()
+
+    def create_measurement(self, datapoint):
+        _datapoint = self._add_data_points(datapoint)
         ts = self._get_time_stamp()
-        ln = '{} open=1 {}'.format(self.measurement, ts)
-        self.data.append(ln)
+        ln = '{} {} {}'.format(self.measurement, _datapoint, ts)
+        return ln
 
-    @asyncio.coroutine
-    def add_close(self):
-        lgr.debug("adding close command")
-        ts = self._get_time_stamp()
-        ln = '{} close=1 {}'.format(self.measurement, ts)
-        self.data.append(ln)
-
-    def add_data_points(self, datapoints: dict):
-
+    def _add_data_points(self, datapoints: dict):
         lgr.debug("adding: {}".format(dict))
-        ts = self._get_time_stamp()
-        _datapoints = ("{}={}".format(key, value) for key, value in
-                       datapoints.items())
+        _datapoints = ','.join("{}={}".format(key, value) for key, value in
+                               datapoints.items())
+        return _datapoints
 
     # @asyncio.coroutine
-    def add_data(self, volts, milliamps):
-        lgr.debug("adding data: volts: {} amps: {}".format(volts, milliamps))
-        ts = self._get_time_stamp()
-        ln = '{} volts={},amps={} {}'.format(self.measurement, volts,
-                                             milliamps, ts)
-        self.data.append(ln)
+    # def clean_milliamps(self, milliamps):
+    #     if milliamps < 0:
+    #         return 0
+    #     elif milliamps > 0 and milliamps <= 0.5:
+    #         return 0.5
+    #     else:
+    #         return round(milliamps)
 
     @asyncio.coroutine
-    def clean_milliamps(self, milliamps):
-        if milliamps < 0:
-            return 0
-        elif milliamps > 0 and milliamps <= 0.5:
-            return 0.5
-        else:
-            return round(milliamps)
-
-    @asyncio.coroutine
-    def sender(self):
+    def check_and_send_to_database(self):
         """Checks the length of the data and
         if long enough sends it to the database."""
 
@@ -88,18 +73,24 @@ class DataBase:
     @asyncio.coroutine
     def send(self, data):
         try:
-            resp = yield from self.session.post(self.url, data=data)
+            # todo add a timeout when posting takes too long. (?)
+            resp = yield from self.bus.session.post(self.url, data=data)
+            # except Exception as e:
+            #     raise TestException("problems !")
             # 204 code from influx db means all is ok.
             assert resp.status == 204
-            return
+            resp.release()
+
+        except aiohttp.errors.ClientError as e:
+            lgr.exception(e)
+            self.bus.stop_test("Problems writing data to database")
         except aiohttp.errors.ClientOSError as e:
-            lgr.info("Problems writing data to database")
-            self.loop.stop()
+            lgr.exception(e)
+            self.bus.stop_test("Problems writing data to database")
         except AssertionError as e:
-            lgr.info("Response from influx db not correct response:")
-            self.loop.stop()
-        finally:
-            yield from resp.release()
+            lgr.exception(e)
+            self.bus.stop_test("Problems writing data to database")
+
         return True
 
 
