@@ -7,6 +7,6 @@
   "email_pass": "pass",
   "to_email":"recipient",
   "pvhubip": "192.168.0.112",
-  "blindid": id_int,
+  "blindid": "id_int",
   "cycletime": 60
 }

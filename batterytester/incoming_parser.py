@@ -23,7 +23,8 @@ class IncomingParser:
             self.state.ir = _ir
             self.database.add_ir_data(_ir)
         else:
-            lgr.info("incoming serial data is not correct: {}".format(incoming))
+            lgr.info(
+                "incoming serial data is not correct: {}".format(incoming))
             if self.current_retry > self.incoming_retries:
                 raise UserWarning("Incoming measurement data is not correct.")
             self.current_retry += 1

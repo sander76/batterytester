@@ -1,24 +1,23 @@
-import json
 import asyncio
+import json
 import logging
 import threading
-from asyncio.futures import CancelledError
 
-from arduino_connection import ArduinoConnection
 import aiohttp
 
-from incoming_parser import IncomingParser
-from states import States
+from batterytester.arduino_connection import ArduinoConnection
+from batterytester.incoming_parser import IncomingParser
+from batterytester.states import States
 
 SERIAL_SPEED = 115200
 lgr = logging.getLogger(__name__)
 
 
 class BatteryTest:
-    def __init__(self, serial_port, shade_id, power_view_hub_ip, loop, session, influx, command_delay=60):
+    def __init__(self, serial_port, shade_id, power_view_hub_ip,
+                 loop, session, influx, command_delay=60):
         self.loop = loop
         self.state = States()
-        self.state.ir = 0
         self.parser = IncomingParser(influx, self.state)
         self.arduino = ArduinoConnection(loop, serial_port, SERIAL_SPEED)
         self.session = session
@@ -87,15 +86,19 @@ class BatteryTest:
                 if self.state.ir == 0:
                     yield from self.send_open()
                 else:
-                    raise UserWarning("Ir sensor has value of one. Should be zero. Breaking loop")
+                    raise UserWarning(
+                        "Ir sensor has value of one. "
+                        "Should be zero. Breaking loop")
                 yield from asyncio.sleep(self.command_delay)
                 if self.state.ir == 1:
                     yield from self.send_close()
                 else:
-                    raise UserWarning("Ir sensor has value of zero. Should be one. Breaking loop.")
+                    raise UserWarning(
+                        "Ir sensor has value of zero. "
+                        "Should be one. Breaking loop.")
                 yield from asyncio.sleep(self.command_delay)
         except aiohttp.errors.ClientOSError:
-            lgr.info("Cannot connect to powerview hub.")
+            lgr.info("Cannot connect to PowerView hub.")
         except AssertionError as e:
             lgr.info("Something is wrong with the following PowerView ip address: {}".format(self.url))
         except UserWarning as e:
@@ -107,14 +110,13 @@ class BatteryTest:
     @asyncio.coroutine
     def cycle_sender(self):
         '''
-        coroutine to check the measurement buffer and if full to send the measurements to the database.
+        coroutine to check the measurement buffer
+         and if full to send the measurements to the database.
         :return:
         '''
         while 1:
             yield from self.influx.sender()
             yield from asyncio.sleep(4)
-            # except Exception as e:
-            #     self.loop.stop()
 
     @asyncio.coroutine
     def get_serial_data(self):
@@ -122,20 +124,6 @@ class BatteryTest:
             while 1:
                 _data = yield from self.arduino.get_byte_async(self.event)
                 self.parser.parse(_data)
-                # _line = _data.split(b';')
-                # if _line[0] == b'v':
-                #     # data is voltage and amps.
-                #     _voltage = float(_line[1])
-                #     _amps = float(_line[2])
-                #     yield from self.influx.add_data(_voltage, _amps)
-                # elif _line[0] == b'i':
-                #     # data is the ir sensor.
-                #     _ir = int(_line[1])
-                #     self.ir = _ir
-                #     yield from self.influx.add_ir_data(_ir)
-                # else:
-                #     lgr.info("incoming serial data is not correct: {}".format(_data))
-                #     self.loop.stop()
         except UserWarning as e:
             lgr.info(e)
             self.loop.stop()

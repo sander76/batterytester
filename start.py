@@ -1,17 +1,18 @@
 import argparse
 import asyncio
 import json
-
 import logging.handlers
 
 import aiohttp
-from batterytest import BatteryTest
-from database import DataBase
+
+from batterytester.batterytest import BatteryTest
+from batterytester.database import DataBase
 
 lgr = logging.getLogger()
 lgr.setLevel(logging.DEBUG)
 
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 mailformatter = logging.Formatter('%(asctime)s - %(message)s')
 
 if __name__ == "__main__":
@@ -23,7 +24,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     config = args.config
-    with open(config,'r') as fl:
+    with open(config, 'r') as fl:
         _config = json.load(fl)
 
     SERIAL_PORT = _config["serialport"]
@@ -35,7 +36,7 @@ if __name__ == "__main__":
     cycletime = _config["cycletime"]
     email = _config["from_email"]
     email_pass = _config["email_pass"]
-    toemail=_config["to_email"]
+    toemail = _config["to_email"]
 
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     session = aiohttp.ClientSession(loop=loop)
 
     # setup the influxdb database connection and parser
-    influx = DataBase(influx, database, measurement, session,loop, 10)
+    influx = DataBase(influx, database, measurement, session, loop, 10)
     lgr.info("***** starting measurement {} ******".format(measurement))
 
     battery = BatteryTest(serial_port=SERIAL_PORT,
