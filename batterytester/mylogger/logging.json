@@ -40,7 +40,3 @@
         "handlers": ["console", "info_file_handler", "error_file_handler"]
     }
 }
-
-//mh = logging.handlers.SMTPHandler(("smtp.gmail.com", 587), notify_from_email, notify_email_recipient,
-//                                      "batterytest {}".format(influx_measurement),
-//                                      (notify_from_email, notify_from_email_pass), secure=())

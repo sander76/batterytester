@@ -1,16 +1,62 @@
 import asyncio
+import os
 from asyncio.futures import CancelledError
+from asyncio import AbstractServer
+
 from threading import Thread
 
 import aiohttp
 import time
 
+import logging
+
+import datetime
+
 LOOP_TIME_OUT = 2
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def get_current_time():
+    return datetime.datetime.now().replace(microsecond=0)
+
+
+# def slugify(text: str) -> str:
+#     """Slugify a given text."""
+#     text = normalize('NFKD', text)
+#     text = text.lower()
+#     text = text.replace(" ", "_")
+#     text = text.translate(TBL_SLUGIFY)
+#     text = RE_SLUGIFY.sub("", text)
+#
+#     return text
+
+# todo: move this to the general library.
+class TestFailException(Exception):
+    pass
+
+
+def check_output_location(test_location):
+    if os.path.exists(test_location):
+        files = os.listdir(test_location)
+        if files:
+            print("TEST LOCATION ALLREADY CONTAINS FILES")
+            print("IF PROCEED ALL CONTAINING DATA WILL BE ERASED.")
+            proceed = input("PROCEED ? [y/n] >")
+            if proceed == 'y':
+                # clear all files in folder.
+                for _fl in files:
+                    os.remove(os.path.join(test_location,_fl))
+                return True
+            else:
+                return False
+    if not os.path.exists(test_location):
+        os.makedirs(test_location)
+    return True
 
 
 class Bus:
     def __init__(self):
-        self.all_tasks = []
         self.tasks = []
         self.threaded_tasks = []
         self.callbacks = []
@@ -28,9 +74,6 @@ class Bus:
     def add_callback(self, callback):
         self.callbacks.append(callback)
 
-    def add_task(self, task):
-        self.all_tasks.append(task)
-
     def start_test(self):
         for callback in self.callbacks:
             callback()
@@ -39,61 +82,35 @@ class Bus:
         try:
             self.loop.run_forever()
         finally:
+            all_tasks = asyncio.Task.all_tasks(self.loop)
             self.loop.close()
+
         return self.exit_message
 
     def stop_loop(self, future):
-        time.sleep(3)
         self.loop.stop()
 
     def stop_test(self, message=None):
-        # todo: log the message to email.
-        self.exit_message = message
-        # self.running = False
+        self.running = False
         task = self.loop.create_task(self._stop_test())
         task.add_done_callback(self.stop_loop)
 
     @asyncio.coroutine
     def _stop_test(self):
-        for task in self.tasks:
-            try:
-                task.cancel()
-            except CancelledError as e:
-                pass
-        for task in self.threaded_tasks:
-            task.stop()
-        while self.tasks or self.threaded_tasks:
+        _all_tasks = [_task for _task in asyncio.Task.all_tasks(self.loop) if
+                      not asyncio.Task.current_task(self.loop) == _task]
+        print("session:")
+        print(self.session)
+        yield from self.session.close()
+        # if self.session.closed:
+        #     break
+        yield from asyncio.sleep(2)
+
+        for _task in _all_tasks:
+            _task.cancel()
+        while _all_tasks or self.threaded_tasks:
             yield from asyncio.sleep(1)
-            self.tasks = [task for task in self.tasks if
+            _all_tasks = [task for task in _all_tasks if
                           not (task.done() or task.cancelled())]
             self.threaded_tasks = [task for task in self.threaded_tasks if
                                    task.is_alive()]
-
-        yield from self.session.close()
-
-        # @asyncio.coroutine
-        # def _stop_test(self):
-        #     while self.tasks or self.threaded_tasks:
-        #         self.tasks = [task for task in self.tasks if
-        #                       not task.done()]
-        #         tasks = [task for task in asyncio.Task.all_tasks(self.loop) if
-        #                  not task.done()]
-        #         self.threaded_tasks = [task for task in self.threaded_tasks if
-        #                                task.is_alive()]
-        #
-        #         yield from asyncio.sleep(1)
-        #     yield from self.session.close()
-
-
-bus = Bus()
-
-
-def get_bus() -> Bus:
-    return bus
-
-# class Looper:
-#     def __init__(self):
-#         self.looping = True
-#
-#     def stop_loop(self):
-#         self.looping = False

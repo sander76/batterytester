@@ -26,9 +26,9 @@ add this service to systemd.
 `sudo journalctl -f u battery1`
 
 ```
-+---------------+                 +-----------------+                      +-----------+                          +-----------+
-| BaseConnector |                 | IncomingParser  |                      | BaseTest  |                          | Database  |
-+---------------+                 +-----------------+                      +-----------+                          +-----------+
++-----------------+                 +-----------------+                      +-----------+                          +-----------+
+| SensorConnector |                 | IncomingParser  |                      | BaseTest  |                          | Database  |
++-----------------+                 +-----------------+                      +-----------+                          +-----------+
         |                                  |                                     |                                      |
         | Acquire raw sensor data          |                                     |                                      |
         |------------------------          |                                     |                                      |
@@ -59,3 +59,7 @@ add this service to systemd.
         |                                  |                                     |                                      |
 
 ```
+
+Entry point is creating a `main_test` 
+
+Example:
