@@ -2,3 +2,4 @@
 batterytester.egg-info
 .idea
 env
+__pycache__
