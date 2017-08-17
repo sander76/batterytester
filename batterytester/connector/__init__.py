@@ -40,6 +40,7 @@ class SensorConnector:
                 _raw_data = yield from self.raw_sensor_data_queue.get()
                 _sensor_data = self.sensor_data_parser.process(_raw_data)
                 for _values in _sensor_data:
+                    #print(_values)
                     yield from self.sensor_data_queue.put(_values)
         except CancelledError:
             _LOGGER.info("Stopped data parser")

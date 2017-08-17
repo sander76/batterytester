@@ -43,6 +43,7 @@ class AsyncioArduinoConnector(AsyncSensorConnector):
                 # Non blocking read.
                 _data = self.s.read(self.s.in_waiting)
                 yield from self.raw_sensor_data_queue.put(_data)
+                #print(str(_data))
                 yield from asyncio.sleep(0.5)
         except SerialException as e:
             lgr.exception(e)

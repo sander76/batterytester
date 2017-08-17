@@ -34,14 +34,16 @@ def find_reference_data(idx, location):
 
 
 class TestAtom:
-    def __init__(self, name, command, arguments, duration, report: Report):
+    def __init__(self, name, command, arguments, duration):
         self._name = name
         self._command = command
         self._args = arguments
         self._duration = duration
-        self.report = report
+        self.report = None
 
-    def prepare_test_atom(self, save_location, idx, current_loop):
+    def prepare_test_atom(self, save_location, idx, current_loop, report,
+                          **kwargs):
+        self.report = report
         self._idx = idx
         self._sensor_data_file_name = get_sensor_data_name(
             save_location, idx, current_loop)
@@ -56,9 +58,9 @@ class TestAtom:
 
     def _report_command_result(self, result):
         self.report.create_table(
-            ('COMMAND', '.'),
+            ('TEST COMMAND', '.'),
             ('command', self.name),
-            (ATTR_RESULT, result)
+            (ATTR_RESULT, 'success')
         )
 
         # self.report.H2('command')
@@ -71,7 +73,7 @@ class TestAtom:
 
         self.report.H1("START TEST ATOM")
 
-        #self.report.H2('Test data')
+        # self.report.H2('Test data')
 
         self.report.create_table(
             ("TEST DATA", "."),
@@ -79,13 +81,12 @@ class TestAtom:
             ('index', self._idx))
 
     @asyncio.coroutine
-    def _execute(self):
+    def execute(self):
         """Executes the defined command."""
         if self._args:
             _result = yield from self._command(**self._args)
         else:
             _result = yield from self._command()
-
         if not _result:
             raise TestFailException("Error executing command.")
         self._report_command_result(_result)

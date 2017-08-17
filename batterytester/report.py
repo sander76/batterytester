@@ -46,6 +46,7 @@ class Report:
         self._filename = os.path.join(self._output_path, SUMMARY_FILE_FORMAT)
 
     def create_summary_file(self):
+
         with open(self._filename,'w') as fl:
             fl.write('TEST SUMMARY FILE.\n\n')
 
