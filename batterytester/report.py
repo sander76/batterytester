@@ -13,9 +13,11 @@ ITALIC_FORMAT = '*{}*'
 BOLD_FORMAT = '**{}**'
 DL_VALUE_FORMAT = ':   {}'
 BLOCKQUOTE_FORMAT = '> {}'
-
+PROPERTY_FORMAT = '{} : {}'
 COL1_WIDTH = 30
+MIN_COL_WIDTH = 3
 TEXT_WIDTH = 80
+PROPERTY_WIDTH = 30
 
 
 def header(content, level):
@@ -38,7 +40,7 @@ class Report:
     def __init__(self, output_path):
         self.summary = []
         self._filename = None
-        self._output_path= output_path
+        self._output_path = output_path
         self.define_filename()
         self.create_summary_file()
 
@@ -46,10 +48,29 @@ class Report:
         self._filename = os.path.join(self._output_path, SUMMARY_FILE_FORMAT)
 
     def create_summary_file(self):
-
-        with open(self._filename,'w') as fl:
+        with open(self._filename, 'w') as fl:
             fl.write('TEST SUMMARY FILE.\n\n')
 
+    def atom_start_header(self):
+        _output = (
+            '',
+            '*' * TEXT_WIDTH,
+            '',
+            header('START TEST ATOM', 2),
+            '',
+            '*' * TEXT_WIDTH,
+            ''
+        )
+        self._output(*_output)
+
+    def interactive_property(self, property):
+        _key_width = max(len(property), PROPERTY_WIDTH)
+        _key = key.ljust(_key_width) + ":"
+        print(_key, end='')
+
+        def set_value(value):
+            print(value)
+            self.summary.append(_key + str(value))
 
     def p(self, content):
         self._output(((content), ''))
@@ -60,8 +81,11 @@ class Report:
     def H2(self, content):
         self._output((H2_FORMAT.format(content), ''))
 
+    def H3(self, content):
+        self._output((header(content, 3), ''))
+
     def line(self, char='-'):
-        self._output(char * TEXT_WIDTH)
+        self._output(('', char * TEXT_WIDTH, ''))
 
     def italic(self, content):
         self._output(italic(content))
@@ -88,14 +112,20 @@ class Report:
             result = 'FAIL'
         _content = bold(result)
         _content = header(_content, 2)
-        self._output(block_quote(_content))
+        self._output((block_quote(_content), ''))
 
     def create_property_table(self, *rows):
         """Creates a table of key value pairs."""
         header = ('property', 'value')
         self.create_table(header, *rows)
 
-    def create_table(self, header, *rows):
+    def create_property(self, key: str, value):
+        _key_width = max(len(key), PROPERTY_WIDTH)
+        _key = key.ljust(_key_width)
+        _ln = PROPERTY_FORMAT.format(_key, value)
+        self._output(_ln, add_new_line_to_file=True)
+
+    def create_table(self, header, *rows, col1_width=COL1_WIDTH):
         _colwidths = []
 
         def add_col_width(value, idx):
@@ -104,8 +134,9 @@ class Report:
                 if value > _old_val:
                     _colwidths[idx] = value
             except IndexError:
-                if idx == 0:
+                if col1_width and idx == 0:
                     value = max(value, COL1_WIDTH)
+                value = max(value, MIN_COL_WIDTH)
                 _colwidths.append(value)
 
         for idx, _col in enumerate(header):
@@ -116,15 +147,16 @@ class Report:
 
         output = []
         output.append(' | '.join(
-            (value.ljust(width) for value, width in zip(header, _colwidths))))
+            (value.ljust(width) for value, width in
+             zip(header, _colwidths))))
         output.append(' | '.join('-' * width for width in _colwidths))
 
         for _row in rows:
             output.append(
-                ' | '.join(
+                (' | '.join(
                     (str(value).ljust(width) for value, width in
                      zip(_row, _colwidths))
-                )
+                )).rstrip()
             )
         # add an empty line to the end.
         output.append('')
@@ -134,7 +166,7 @@ class Report:
         #     self.create_dl(property, value)
         # self._output(create_property(property, value))
 
-    def _output(self, output):
+    def _output(self, output, add_new_line_to_file=False):
         if isinstance(output, str):
             print(output)
             self.summary.append(output)
@@ -142,12 +174,14 @@ class Report:
             for _o in output:
                 print(_o)
             self.summary.extend(output)
+        if add_new_line_to_file:
+            self.summary.append('')
 
     def write_summary_to_file(self):
         if os.path.exists(self._filename):
             _mode = 'a'
         else:
-            _mode='w'
+            _mode = 'w'
         with open(self._filename, _mode) as fl:
             fl.write('\n'.join(self.summary))
         # reset the summary
@@ -169,37 +203,40 @@ class Report:
 
 
 if __name__ == "__main__":
-    rep = Report('test')
+    rep = Report('')
     mode = 'learning mode'
     current_loop = 5
     idx = 1
     rep.test_result(True)
     rep.H1("START")
     rep.line()
-    rep.H2('Test data')
-    # rep.create_property("property", "value")
-    # rep.create_property('mode', mode)
-    # rep.create_property('loop', current_loop)
-    # rep.create_property('index', idx)
-    # rep.create_property('sensor data path',
-    #                     'c:\\data\\test\\another test\\ and yet anotherr.')
+    rep.H1('Test data')
+    rep.create_property("property", "value")
+    rep.create_property('mode', mode)
+    rep.create_property('loop', current_loop)
+    rep.create_property('index', idx)
+    rep.create_property('sensor data path',
+                        'c:\\data\\test\\another test\\ and yet anotherr.')
 
-    d1 = datetime.datetime.now().replace(microsecond=0)
-    time.sleep(3)
-    d2 = datetime.datetime.now().replace(microsecond=0)
+    for _ln in rep.summary:
+        print(_ln)
 
-    rep.report_timing(d1, d2)
-    rep.create_table(
-        ("property", "value"),
-        ('mode', mode),
-        ('loop', current_loop),
-        ('index', idx),
-        (
-            'sensor data path',
-            'c:\\data\\test\\another test\\ and yet anotherr.')
-
-    )
-    rep.line()
-    print("result: *FAIL*")
-    rep.line()
-    # rep.create_table(('property', 'value'), (1, 2), (3, 4))
+        # d1 = datetime.datetime.now().replace(microsecond=0)
+        # time.sleep(3)
+        # d2 = datetime.datetime.now().replace(microsecond=0)
+        #
+        # rep.report_timing(d1, d2)
+        # rep.create_table(
+        #     ("property", "value"),
+        #     ('mode', mode),
+        #     ('loop', current_loop),
+        #     ('index', idx),
+        #     (
+        #         'sensor data path',
+        #         'c:\\data\\test\\another test\\ and yet anotherr.')
+        #
+        # )
+        # rep.line()
+        # print("result: *FAIL*")
+        # rep.line()
+        # # rep.create_table(('property', 'value'), (1, 2), (3, 4))

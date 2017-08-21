@@ -91,9 +91,10 @@ class Bus:
         self.loop.stop()
 
     def stop_test(self, message=None):
-        self.running = False
-        task = self.loop.create_task(self._stop_test())
-        task.add_done_callback(self.stop_loop)
+        if self.running:
+            self.running = False
+            task = self.loop.create_task(self._stop_test())
+            task.add_done_callback(self.stop_loop)
 
     @asyncio.coroutine
     def _stop_test(self):

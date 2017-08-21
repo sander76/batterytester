@@ -41,7 +41,8 @@ class TestAtom:
         self._duration = duration
         self.report = None
 
-    def prepare_test_atom(self, save_location, idx, current_loop, report,
+    def prepare_test_atom(self, save_location, idx, current_loop,
+                          report: Report,
                           **kwargs):
         self.report = report
         self._idx = idx
@@ -57,11 +58,13 @@ class TestAtom:
         return self._duration
 
     def _report_command_result(self, result):
-        self.report.create_table(
-            ('TEST COMMAND', '.'),
-            ('command', self.name),
-            (ATTR_RESULT, 'success')
-        )
+        self.report.H3('TEST_COMMAND')
+        self.report.create_property('command', self.name)
+        self.report.create_property(ATTR_RESULT, 'success')
+        # self.report.create_property_table(
+        #     ('command', self.name),
+        #     (ATTR_RESULT, 'success')
+        # )
 
         # self.report.H2('command')
         # # self.report._output(create_property('command', self.name))
@@ -71,14 +74,13 @@ class TestAtom:
     def report_start_test(self, **kwargs):
         current_loop = kwargs.get(ATTR_CURRENT_LOOP)
 
-        self.report.H1("START TEST ATOM")
-
-        # self.report.H2('Test data')
-
-        self.report.create_table(
-            ("TEST DATA", "."),
-            ('loop', current_loop),
-            ('index', self._idx))
+        self.report.atom_start_header()
+        self.report.H3('TEST DATA')
+        self.report.create_property('loop', current_loop)
+        self.report.create_property('index', self._idx)
+        # self.report.create_property_table(
+        #     ('loop', current_loop),
+        #     ('index', self._idx))
 
     @asyncio.coroutine
     def execute(self):
