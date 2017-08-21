@@ -61,11 +61,11 @@ class Report:
             '*' * TEXT_WIDTH,
             ''
         )
-        self._output(*_output)
+        self._output(_output)
 
     def interactive_property(self, property):
         _key_width = max(len(property), PROPERTY_WIDTH)
-        _key = key.ljust(_key_width) + ":"
+        _key = property.ljust(_key_width) + ":"
         print(_key, end='')
 
         def set_value(value):
