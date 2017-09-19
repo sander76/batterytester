@@ -1,17 +1,16 @@
+"""Test being performed"""
+
+import asyncio
 import logging
 import os
 
-import asyncio
 
-from batterytester.constants import RESULT_PASS, RESULT_FAIL, ATTR_RESULT, \
+from batterytester.helpers.constants import ATTR_RESULT, \
     ATTR_CURRENT_LOOP
-from batterytester.helpers import TestFailException
-from batterytester.report import Report
+from batterytester.helpers.helpers import TestFailException
+from batterytester.helpers.report import Report
 
-FILE_FORMAT = '.json'
-IDX_FORMAT = 'idx_{}'
-SENSOR_FILE_FORMAT = IDX_FORMAT + '-loop_{}' + FILE_FORMAT
-
+SENSOR_FILE_FORMAT = 'loop_{}-idx_{}.json'
 _LOGGING = logging.getLogger(__name__)
 
 
@@ -19,16 +18,16 @@ def get_sensor_data_name(save_location, test_sequence_number,
                          current_loop=0):
     _fname = os.path.join(
         save_location, SENSOR_FILE_FORMAT.format(
-            test_sequence_number, current_loop))
+            current_loop, test_sequence_number))
     _LOGGING.debug("saving data to %s" % _fname)
     return _fname
 
 
 def find_reference_data(idx, location):
-    _search = IDX_FORMAT.format(idx)
+    _search = SENSOR_FILE_FORMAT.format(0, idx)
 
     for _file in os.listdir(location):
-        if _file.startswith(_search):
+        if _file == _search:
             return _file
     return None
 
@@ -61,15 +60,6 @@ class TestAtom:
         self.report.H3('TEST_COMMAND')
         self.report.create_property('command', self.name)
         self.report.create_property(ATTR_RESULT, 'success')
-        # self.report.create_property_table(
-        #     ('command', self.name),
-        #     (ATTR_RESULT, 'success')
-        # )
-
-        # self.report.H2('command')
-        # # self.report._output(create_property('command', self.name))
-        # _result = RESULT_PASS if result else RESULT_FAIL
-        # self.report.create_property_table()
 
     def report_start_test(self, **kwargs):
         current_loop = kwargs.get(ATTR_CURRENT_LOOP)

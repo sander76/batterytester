@@ -3,7 +3,7 @@ Incoming parser receives incoming sensor data and cleans it.
 """
 import asyncio
 
-from batterytester.helpers import Bus
+from batterytester.bus import Bus
 
 
 class IncomingParser:

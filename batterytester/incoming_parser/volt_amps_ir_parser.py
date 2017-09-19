@@ -11,8 +11,8 @@ lgr = logging.getLogger(__name__)
 
 
 class VoltAmpsIrParser(IncomingParser):
-    def __init__(self,bus:Bus):
-        IncomingParser.__init__(self,bus)
+    def __init__(self, bus: Bus):
+        IncomingParser.__init__(self, bus)
         self.incoming_retries = 2
         self.current_retry = 0
         self.incoming_data = bytearray()  # all incoming data.

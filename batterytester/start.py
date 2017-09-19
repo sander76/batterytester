@@ -7,7 +7,8 @@ takes a json config file and initializes the correct instances.
 import importlib
 import json
 
-from batterytester.constants import ATTR_SENSOR_DATA_CONNECTOR, ATTR_DATABASE, \
+from batterytester.helpers.constants import ATTR_SENSOR_DATA_CONNECTOR, \
+    ATTR_DATABASE, \
     ATTR_PLATFORM, ATTR_ARGS, ATTR_SENSOR_DATA_PARSER, ATTR_MAIN_TEST
 
 

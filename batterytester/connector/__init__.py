@@ -12,7 +12,7 @@ from threading import Thread
 
 import logging
 
-from batterytester.helpers import Bus
+from batterytester.bus import Bus
 from batterytester.incoming_parser import IncomingParser
 
 _LOGGER = logging.getLogger(__name__)

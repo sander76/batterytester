@@ -1,12 +1,8 @@
 import datetime
 import os
 
-from batterytester.helpers import check_output_location
 
 SUMMARY_FILE_FORMAT = 'summary-report.md'
-
-# from batterytester.reporter import create_property
-import time
 
 H2_FORMAT = '## {}'
 ITALIC_FORMAT = '*{}*'
@@ -191,6 +187,9 @@ class Report:
         _header = ('started', 'stopped', 'duration[seconds]')
         _row = (str(start), str(stop), str((stop - start).total_seconds()))
         self.create_table(_header, _row)
+
+    def summarize_result(self, summary_table):
+        pass
 
     def write_intro(self, test_name):
         self.H1("TEST : {}".format(test_name))
