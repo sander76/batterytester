@@ -1,6 +1,8 @@
 import asyncio
 
 from batterytester.bus import Bus
+from batterytester.helpers.helpers import check_output_location
+from batterytester.main_test.loop_test import LoopTest
 
 
 class BaseConfig:
@@ -23,5 +25,20 @@ class BaseConfig:
         pass
 
     def get_sequence(self):
-        """Gets called to retrieve a list of test atoms to be performed."""
+        """Gets called to retrieve a list of test atoms to be performed.
+
+        Must return a sequence of test atoms."""
         pass
+
+    def start_test(self):
+        pass
+
+
+class LoopTestConfig(BaseConfig):
+    def __init__(self):
+        super().__init__()
+
+    def start_test(self):
+        if check_output_location(self.test_location):
+            sequence_test = LoopTest(self)
+            sequence_test.bus.start_test()

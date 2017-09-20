@@ -1,11 +1,11 @@
 import asyncio
 from aiopvapi.powerview_tool import PowerViewCommands
-from batterytester.helpers.base_config import BaseConfig
+from batterytester.helpers.base_config import LoopTestConfig
 from batterytester.helpers.helpers import TestFailException
 from batterytester.test_atom import TestAtom
 
 
-class TestConfig(BaseConfig):
+class TestConfig(LoopTestConfig):
     def __init__(self):
         super().__init__()
         self.hub_ip = '192.168.2.4'
@@ -48,3 +48,8 @@ class TestConfig(BaseConfig):
             TestAtom('shades close', self.move_shades, {'open': False}, 80)
         )
         return _val
+
+
+if __name__ == "__main__":
+    config = TestConfig()
+    config.start_test()

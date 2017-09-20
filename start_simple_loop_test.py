@@ -1,4 +1,4 @@
-import importlib
+import importlib.util
 from argparse import ArgumentParser
 
 from batterytester.helpers.helpers import check_output_location
