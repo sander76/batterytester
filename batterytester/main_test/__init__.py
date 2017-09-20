@@ -33,7 +33,7 @@ class BaseTest:
             self._report = report
         else:
             self._report = Report(config.test_location)
-        self._loopcount = config.loopcount
+        self._loopcount = config.loop_count
 
     def handle_sensor_data(self, sensor_data):
         """Sensor data can influence the main test.

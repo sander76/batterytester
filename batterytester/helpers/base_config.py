@@ -7,7 +7,7 @@ class BaseConfig:
 
     def __init__(self):
         self.bus = Bus()
-        self.loopcount = 1
+        self.loop_count = 1
         self.test_name = 'test_name'
         self.test_location = ''
 
