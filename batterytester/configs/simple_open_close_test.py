@@ -9,11 +9,11 @@ from batterytester.test_atom import TestAtom
 class TestConfig(LoopTestConfig):
     def __init__(self):
         super().__init__()
-        self.hub_ip = '192.168.2.4'
+        self.hub_ip = '192.168.0.106'
         self.test_name = 'simple test'
         self.test_location = 'test_results/simple_open_close_test'
         self.loop_count = 1000
-        self.shade_ids = [['1', 18390]]
+        self.shade_ids = [['1', 46232]]
         self.shades = []
         self.powerview_commands = PowerViewCommands(self.hub_ip, self.bus.loop,
                                                     self.bus.session)

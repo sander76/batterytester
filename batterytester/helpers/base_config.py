@@ -32,4 +32,4 @@ class BaseConfig:
     def start_test(self, add_time_stamp_to_report=True):
         if add_time_stamp_to_report:
             self.test_location = str(
-                get_current_time()) + '_' + self.test_location
+                int(get_current_time().timestamp())) + '_' + self.test_location
