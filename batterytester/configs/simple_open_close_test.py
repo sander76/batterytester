@@ -1,6 +1,5 @@
 import asyncio
 from aiopvapi.powerview_tool import PowerViewCommands
-from batterytester.bus import Bus
 from batterytester.helpers.base_config import BaseConfig
 from batterytester.helpers.helpers import TestFailException
 from batterytester.test_atom import TestAtom
@@ -13,13 +12,6 @@ class TestConfig(BaseConfig):
         self.test_name = 'simple test'
         self.test_location = 'test_results/simple_open_close_test'
         self.loop_count = 1000
-        # self.shade_ids = [['1', 4091],
-        #                   ['2', 41033],
-        #                   ['3', 16661],
-        #                   ['5', 30152],
-        #                   ['4', 3477],
-        #                   ['6', 64608],
-        #                   ['7', 20313]]
         self.shade_ids = [['1', 18390]]
         self.shades = []
         self.powerview_commands = PowerViewCommands(self.hub_ip, self.bus.loop,
