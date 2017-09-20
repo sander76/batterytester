@@ -1,9 +1,6 @@
 import asyncio
 
 from batterytester.bus import Bus
-from batterytester.helpers.helpers import check_output_location
-from batterytester.main_test.loop_test import LoopTest
-
 
 class BaseConfig:
     """Base class for a test configuration"""
@@ -34,11 +31,3 @@ class BaseConfig:
         pass
 
 
-class LoopTestConfig(BaseConfig):
-    def __init__(self):
-        super().__init__()
-
-    def start_test(self):
-        if check_output_location(self.test_location):
-            sequence_test = LoopTest(self)
-            sequence_test.bus.start_test()

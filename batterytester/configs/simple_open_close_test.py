@@ -1,7 +1,8 @@
 import asyncio
 from aiopvapi.powerview_tool import PowerViewCommands
-from batterytester.helpers.base_config import LoopTestConfig
+
 from batterytester.helpers.helpers import TestFailException
+from batterytester.helpers.loop_test_config import LoopTestConfig
 from batterytester.test_atom import TestAtom
 
 
