@@ -1,6 +1,8 @@
 import asyncio
 
 from batterytester.bus import Bus
+from batterytester.helpers.helpers import get_current_time
+
 
 class BaseConfig:
     """Base class for a test configuration"""
@@ -27,7 +29,7 @@ class BaseConfig:
         Must return a sequence of test atoms."""
         pass
 
-    def start_test(self):
-        pass
-
-
+    def start_test(self, add_time_stamp_to_report=True):
+        if add_time_stamp_to_report:
+            self.test_location = str(
+                get_current_time()) + '_' + self.test_location

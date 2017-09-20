@@ -8,6 +8,7 @@ class LoopTestConfig(BaseConfig):
         super().__init__()
 
     def start_test(self, add_time_stamp_to_report=True):
-        if check_output_location(self.test_location, add_time_stamp_to_report):
+        super().start_test(add_time_stamp_to_report)
+        if check_output_location(self.test_location):
             sequence_test = LoopTest(self)
             sequence_test.bus.start_test()

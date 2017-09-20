@@ -36,9 +36,7 @@ class TestFailException(Exception):
     pass
 
 
-def check_output_location(test_location, add_timestamp=True):
-    if add_timestamp:
-        test_location = str(get_current_time()) + '_' + test_location
+def check_output_location(test_location):
     if os.path.exists(test_location):
         files = os.listdir(test_location)
         if files:
