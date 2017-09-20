@@ -193,12 +193,6 @@ class Report:
 
     def write_intro(self, test_name):
         self.H1("TEST : {}".format(test_name))
-        # self.p('started: {}'.format(str(get)))
-        # self._output(
-        #     create_property('test name', test_name)
-        # )
-        # self._output(
-        #     create_property('creation date', str(datetime.datetime.now())))
 
 
 if __name__ == "__main__":

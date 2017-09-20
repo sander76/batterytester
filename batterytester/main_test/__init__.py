@@ -126,7 +126,7 @@ class BaseTest:
                         yield from self.init_test_atom(_current_loop,atom)
                         yield from self._perform_test(
                             _current_loop, idx, atom)
-
+                self._report.write_summary_to_file()
                 self.bus.stop_test('')
 
         except TestFailException as e:
@@ -140,9 +140,6 @@ class BaseTest:
         finally:
             # write any remaining information to file.
             self._flush_report()
-
-
-
             self.bus.stop_test('')
 
     @asyncio.coroutine
