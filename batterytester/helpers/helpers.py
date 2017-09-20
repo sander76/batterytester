@@ -36,23 +36,23 @@ class TestFailException(Exception):
     pass
 
 
-def check_output_location(test_location):
+def check_output_location(test_location, add_timestamp=True):
+    if add_timestamp:
+        test_location = str(get_current_time()) + '_' + test_location
     if os.path.exists(test_location):
         files = os.listdir(test_location)
         if files:
-            print("TEST LOCATION ALLREADY CONTAINS FILES:")
+            print("TEST LOCATION ALREADY CONTAINS FILES:")
             print(test_location)
             print("IF PROCEED ALL CONTAINING DATA WILL BE ERASED.")
             proceed = input("PROCEED ? [y/n] >")
             if proceed == 'y':
                 # clear all files in folder.
                 for _fl in files:
-                    os.remove(os.path.join(test_location,_fl))
+                    os.remove(os.path.join(test_location, _fl))
                 return True
             else:
                 return False
     if not os.path.exists(test_location):
         os.makedirs(test_location)
     return True
-
-
