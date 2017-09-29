@@ -12,7 +12,7 @@ from threading import Thread
 
 import logging
 
-from batterytester.bus import Bus
+#from batterytester.bus import Bus
 from batterytester.incoming_parser import IncomingParser
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class SensorConnector:
     def __init__(
             self,
             sensor_data_parser: IncomingParser,
-            bus: Bus
+            bus
     ):
         self.bus = bus
         self.sensor_data_queue = asyncio.Queue(loop=self.bus.loop)
@@ -52,7 +52,7 @@ class AsyncSensorConnector(SensorConnector):
     def __init__(
             self,
             sensor_data_parser: IncomingParser,
-            bus: Bus):
+            bus):
         SensorConnector.__init__(
             self,
             sensor_data_parser, bus)
@@ -83,7 +83,7 @@ class AsyncSensorConnector(SensorConnector):
 class ThreadedSensorConnector(SensorConnector):
     def __init__(
             self,
-            sensor_data_parser: IncomingParser, bus: Bus):
+            sensor_data_parser: IncomingParser, bus):
         SensorConnector.__init__(
             self,
             sensor_data_parser, bus)

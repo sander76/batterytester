@@ -38,7 +38,7 @@ class Report:
         self._filename = None
         self._output_path = output_path
         self.define_filename()
-        self.create_summary_file()
+        #self.create_summary_file()
 
     def define_filename(self):
         self._filename = os.path.join(self._output_path, SUMMARY_FILE_FORMAT)
@@ -157,10 +157,6 @@ class Report:
         # add an empty line to the end.
         output.append('')
         self._output(output)
-
-        # def create_property(self, property, value):
-        #     self.create_dl(property, value)
-        # self._output(create_property(property, value))
 
     def _output(self, output, add_new_line_to_file=False):
         if isinstance(output, str):

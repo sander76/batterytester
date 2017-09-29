@@ -1,11 +1,12 @@
 import asyncio
 import logging
+import os
 from asyncio.futures import CancelledError
 
 from batterytester.connector import SensorConnector
 from batterytester.database import DataBase
-from batterytester.helpers.base_config import BaseConfig
-from batterytester.helpers.helpers import TestFailException, get_current_time
+from batterytester.helpers.helpers import TestFailException, get_current_time, \
+    check_output_location
 from batterytester.helpers.report import Report
 
 lgr = logging.getLogger(__name__)
@@ -16,24 +17,43 @@ BASE_TEST_LOCATION = 'test_results'
 class BaseTest:
     def __init__(
             self,
-            config: BaseConfig,
+            test_name: str,
+            loop_count: int,
+
+            bus,
+            # config: BaseConfig,
             sensor_data_connector: SensorConnector = None,
             database: DataBase = None,
-            report: Report = None
+            report: Report = None,
+            add_time_stamp_to_report=True,
+            test_location: str = None,
     ):
-        self._config = config
-        self.bus = config.bus
-        self.test_name = config.test_name
+        # self._config = config
+        self.bus = bus
+        self.test_name = test_name
         self.sensor_data_connector = sensor_data_connector
         self.database = database
         self.bus.add_async_task(self._messager())
         self.bus.add_async_task(self.async_test())
-        self.test_location = config.test_location
+
+        self.test_location = test_name
+        if test_location:
+            self.test_location = os.path.join(test_location,
+                                              self.test_location)
+        if add_time_stamp_to_report:
+            self.test_location = (str(int(get_current_time().timestamp()))
+                                  + '_'
+                                  + self.test_location)
         if report:
             self._report = report
         else:
-            self._report = Report(config.test_location)
-        self._loopcount = config.loop_count
+            self._report = Report(self.test_location)
+        self._loopcount = loop_count
+
+    def start_test(self, add_time_stamp_to_report=True):
+        if check_output_location(self.test_location):
+            self._report.create_summary_file()
+            self.bus._start_test()
 
     def handle_sensor_data(self, sensor_data):
         """Sensor data can influence the main test.
@@ -46,7 +66,7 @@ class BaseTest:
         sequence they are in.
         """
 
-        _seq = self._config.get_sequence()
+        _seq = self.get_sequence()
         _stored_atom_results = {}
         for _idx, _atom in enumerate(_seq):
             _atom.prepare_test_atom(
@@ -66,30 +86,29 @@ class BaseTest:
         self.started = get_current_time()
 
     @asyncio.coroutine
-    def notify_fail(self, loop, idx, message):
-        """Method to be implemented for notification of test fail
-        (like using email or telegram ?)
-        """
-        return
+    def get_sequence(self):
+        """Gets called to retrieve a list of test atoms to be performed.
+
+        Must return a sequence of test atoms."""
+        raise NotImplemented("No sequence of atoms to test.")
 
     @asyncio.coroutine
     def test_warmup(self):
         """
         actions performed on the test subject before a new test
         is started. Should raise an TestFailException when an error occurs.
-        :return:
         """
 
-        yield from self._config.test_warmup()
+        pass
 
     @asyncio.coroutine
     def loop_warmup(self):
         """
         actions performed before a new loop with a fresh sequence test
         is started. Should raise an TestFailException when an error occurs.
-        :return:
         """
-        yield from self._config.loop_warmup()
+
+        pass
 
     @asyncio.coroutine
     def _perform_test(self, current_loop, idx, atom):
@@ -112,6 +131,8 @@ class BaseTest:
     def async_test(self):
         _current_loop = 0
         idx = 0
+        # self.bus.loop.create_task(self.)
+        yield from self.bus.notifier.notify("*{}*: Starting the test.".format(self.test_name))
         yield from self._start_test()
         yield from self.test_warmup()
         try:
@@ -123,15 +144,15 @@ class BaseTest:
                     # starting state.
                     yield from self.loop_warmup()
                     for idx, atom in enumerate(self._test_sequence):
-                        yield from self.init_test_atom(_current_loop,atom)
+                        yield from self.init_test_atom(_current_loop, atom)
                         yield from self._perform_test(
                             _current_loop, idx, atom)
-                self._report.write_summary_to_file()
+                    self._report.write_summary_to_file()
                 self.bus.stop_test('')
 
         except TestFailException as e:
             self._report.final_test_result(False, e)
-            yield from self.notify_fail(_current_loop, idx, e)
+            yield from self.bus.notifier.notify_fail(_current_loop, idx, e)
             # self.bus.stop_test('')
         except CancelledError:
             lgr.debug("stopping loop test")
@@ -140,7 +161,10 @@ class BaseTest:
         finally:
             # write any remaining information to file.
             self._flush_report()
-            self.bus.stop_test('')
+            yield from self.bus.notifier.notify(
+                "*{}*: Stopping test".format(
+                    self.test_name))
+            # self.bus.stop_test('')
 
     @asyncio.coroutine
     def _messager(self):

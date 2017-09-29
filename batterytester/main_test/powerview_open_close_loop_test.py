@@ -1,19 +1,31 @@
 import asyncio
+
 from aiopvapi.powerview_tool import PowerViewCommands
 
+from batterytester.bus import Bus, TelegramBus
 from batterytester.helpers.helpers import TestFailException
-from batterytester.helpers.loop_test_config import LoopTestConfig
+from batterytester.main_test import BaseTest
 from batterytester.test_atom import TestAtom
 
 
-class TestConfig(LoopTestConfig):
-    def __init__(self):
-        super().__init__()
-        self.hub_ip = '192.168.0.106'
-        self.test_name = 'simple test'
-        self.test_location = 'test_results/simple_open_close_test'
-        self.loop_count = 1000
-        self.shade_ids = [['1', 46232]]
+class PowerViewOpenCloseLoopTest(BaseTest):
+    def __init__(self, test_name,
+                 loop_count, delay, shade_ids, hub_ip, test_location=None,
+                 telegram_token=None, chat_id=None):
+        if telegram_token and chat_id:
+            bus = TelegramBus(telegram_token, chat_id)
+        else:
+            bus = Bus()
+        self.delay = delay
+        super().__init__(test_name, loop_count, bus,
+                         sensor_data_connector=None,
+                         database=None,
+                         report=None,
+                         test_location=test_location
+
+                         )
+        self.hub_ip = hub_ip
+        self.shade_ids = shade_ids
         self.shades = []
         self.powerview_commands = PowerViewCommands(self.hub_ip, self.bus.loop,
                                                     self.bus.session)
@@ -45,12 +57,11 @@ class TestConfig(LoopTestConfig):
 
     def get_sequence(self):
         _val = (
-            TestAtom('shades open', self.move_shades, {'open': True}, 80),
-            TestAtom('shades close', self.move_shades, {'open': False}, 80)
+            TestAtom(name='shades open',
+                     command=self.move_shades,
+                     arguments={'open': True},
+                     duration=self.delay),
+            TestAtom('shades close', self.move_shades, {'open': False},
+                     self.delay)
         )
         return _val
-
-
-if __name__ == "__main__":
-    config = TestConfig()
-    config.start_test()
