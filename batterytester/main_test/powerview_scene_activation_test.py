@@ -46,6 +46,8 @@ class PowerViewSceneActivationLoopTest(BaseTest):
                         _scenes.append(new_scene)
         else:
             raise TestFailException("Error getting scenes")
+        if len(_scenes)==0:
+            raise TestFailException("No scenes collected")
         return _scenes
 
     @asyncio.coroutine

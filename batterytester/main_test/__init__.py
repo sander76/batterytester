@@ -132,10 +132,11 @@ class BaseTest:
         _current_loop = 0
         idx = 0
         # self.bus.loop.create_task(self.)
-        yield from self.bus.notifier.notify("*{}*: Starting the test.".format(self.test_name))
-        yield from self._start_test()
-        yield from self.test_warmup()
         try:
+            yield from self.bus.notifier.notify("*{}*: Starting the test.".format(self.test_name))
+            yield from self._start_test()
+            yield from self.test_warmup()
+
             while self.bus.running:
                 for _current_loop in range(self._loopcount):
                     self.init_test_loop(_current_loop)
