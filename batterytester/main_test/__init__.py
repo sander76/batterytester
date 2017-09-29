@@ -42,7 +42,7 @@ class BaseTest:
                                               self.test_location)
         if add_time_stamp_to_report:
             self.test_location = (
-                str(int(get_current_time().strftime('%Y-%m-%d_%H-%M-%S')))
+                get_current_time().strftime('%Y-%m-%d_%H-%M-%S')
                 + '_'
                 + self.test_location)
         if report:
