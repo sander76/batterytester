@@ -41,9 +41,10 @@ class BaseTest:
             self.test_location = os.path.join(test_location,
                                               self.test_location)
         if add_time_stamp_to_report:
-            self.test_location = (str(int(get_current_time().timestamp()))
-                                  + '_'
-                                  + self.test_location)
+            self.test_location = (
+                str(int(get_current_time().strftime('%Y-%m-%d_%H-%M-%S')))
+                + '_'
+                + self.test_location)
         if report:
             self._report = report
         else:
@@ -133,7 +134,8 @@ class BaseTest:
         idx = 0
         # self.bus.loop.create_task(self.)
         try:
-            yield from self.bus.notifier.notify("*{}*: Starting the test.".format(self.test_name))
+            yield from self.bus.notifier.notify(
+                "*{}*: Starting the test.".format(self.test_name))
             yield from self._start_test()
             yield from self.test_warmup()
 

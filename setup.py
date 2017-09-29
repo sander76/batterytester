@@ -2,7 +2,7 @@ from distutils.core import setup
 from setuptools import find_packages
 setup(
     name='batterytester',
-    version='1.2.3',
+    version='1.2.4',
     packages = find_packages(),
     url='',
     license='',
