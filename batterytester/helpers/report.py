@@ -80,6 +80,9 @@ class Report:
     def H3(self, content):
         self._output((header(content, 3), ''))
 
+    def EmptyLine(self):
+        self._output('')
+
     def line(self, char='-'):
         self._output(('', char * TEXT_WIDTH, ''))
 

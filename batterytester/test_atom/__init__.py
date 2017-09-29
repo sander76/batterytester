@@ -4,7 +4,6 @@ import asyncio
 import logging
 import os
 
-
 from batterytester.helpers.constants import ATTR_RESULT, \
     ATTR_CURRENT_LOOP
 from batterytester.helpers.helpers import TestFailException
@@ -68,9 +67,7 @@ class TestAtom:
         self.report.H3('TEST DATA')
         self.report.create_property('loop', current_loop)
         self.report.create_property('index', self._idx)
-        # self.report.create_property_table(
-        #     ('loop', current_loop),
-        #     ('index', self._idx))
+        self.report.create_property('duration', self.duration)
 
     @asyncio.coroutine
     def execute(self):

@@ -32,8 +32,8 @@ class PowerViewOpenCloseLoopTest(BaseTest):
 
     @asyncio.coroutine
     def get_shades(self):
-        for _shade in self.shade_ids:
-            _shade = yield from self.powerview_commands.get_shade(_shade[1])
+        for _shade_id in self.shade_ids:
+            _shade = yield from self.powerview_commands.get_shade(_shade_id[1])
             if _shade:
                 self.shades.append(_shade)
             else:
