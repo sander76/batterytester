@@ -10,7 +10,7 @@ test = PowerViewSceneActivationLoopTest(
     # delay between execution of test atoms.
     delay=80,
     # List of shade ids being used in the test
-    scene_ids=[56159, 12744],
+    scene_ids=(56159, 12744),
     # ip address of the powerview hub
     hub_ip='192.168.0.106',
     # for reporting use the provided telegram api token.
@@ -18,4 +18,6 @@ test = PowerViewSceneActivationLoopTest(
     # Chat_id where messages need to be sent to.
     chat_id=None
 )
-test.start_test()
+
+if __name__=="__main__":
+    test.start_test()

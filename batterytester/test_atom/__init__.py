@@ -1,4 +1,4 @@
-"""Test being performed"""
+"""Individual test being performed"""
 
 import asyncio
 import logging
@@ -44,8 +44,6 @@ class TestAtom:
                           **kwargs):
         self.report = report
         self._idx = idx
-        self._sensor_data_file_name = get_sensor_data_name(
-            save_location, idx, current_loop)
 
     @property
     def name(self):

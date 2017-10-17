@@ -11,7 +11,7 @@ from batterytester.incoming_parser import IncomingParser
 
 lgr = logging.getLogger(__name__)
 
-class AsyncioArduinoConnector(AsyncSensorConnector):
+class AsyncSerialConnector(AsyncSensorConnector):
     def __init__(
             self,
             bus: Bus,
@@ -29,6 +29,7 @@ class AsyncioArduinoConnector(AsyncSensorConnector):
     @asyncio.coroutine
     def async_listen_for_data(self, *args):
         """Long running task.
+
         Listens for incoming raw data and puts it into the
         raw_sensor_data_queue
         """
@@ -37,7 +38,6 @@ class AsyncioArduinoConnector(AsyncSensorConnector):
                 # Non blocking read.
                 _data = self.s.read(self.s.in_waiting)
                 yield from self.raw_sensor_data_queue.put(_data)
-                # print(str(_data))
                 yield from asyncio.sleep(0.5)
         except SerialException as e:
             lgr.exception(e)

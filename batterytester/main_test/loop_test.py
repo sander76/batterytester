@@ -1,5 +1,5 @@
 from batterytester.bus import Bus
-from batterytester.main_test import BaseTest
+from batterytester.main_test.base_test import BaseTest
 
 
 class LoopTest(BaseTest):

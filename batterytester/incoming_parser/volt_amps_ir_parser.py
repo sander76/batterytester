@@ -4,7 +4,7 @@ Incoming parser receives incoming sensor data and cleans it.
 
 import logging
 
-from batterytester.helpers import Bus
+from batterytester.bus import Bus
 from batterytester.incoming_parser import IncomingParser
 
 lgr = logging.getLogger(__name__)

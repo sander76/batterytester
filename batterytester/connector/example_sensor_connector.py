@@ -4,11 +4,10 @@ Randomly generates data every 5 seconds and puts it into the sensor_data_queue.
 """
 
 import asyncio
+import logging
 import random
 import string
 from asyncio.futures import CancelledError
-
-import logging
 
 from batterytester.connector import AsyncSensorConnector
 from batterytester.helpers import Bus

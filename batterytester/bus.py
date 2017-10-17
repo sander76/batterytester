@@ -70,6 +70,7 @@ class Bus:
 
 
 class TelegramBus(Bus):
-    def __init__(self, telegram_token, chat_id):
+    def __init__(self, telegram_token, chat_id, test_name):
         super().__init__()
-        self.notifier = TelegramNotifier(self.loop, telegram_token, chat_id)
+        self.notifier = TelegramNotifier(self.loop, telegram_token, chat_id,
+                                         test_name=test_name)

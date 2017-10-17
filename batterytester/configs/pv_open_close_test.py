@@ -18,4 +18,6 @@ test = PowerViewOpenCloseLoopTest(
     # Chat_id where messages need to be sent to.
     chat_id=None
 )
-test.start_test()
+
+if __name__ == "__main__":
+    test.start_test()

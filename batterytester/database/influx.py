@@ -3,9 +3,11 @@ import logging
 from time import time
 import aiohttp
 import async_timeout
+from aiohttp.client_exceptions import ClientError
 
+from batterytester.bus import Bus
 from batterytester.database import DataBase
-from batterytester.helpers import Bus
+
 LENGTH = 30
 
 lgr = logging.getLogger(__name__)
@@ -76,8 +78,7 @@ class Influx(DataBase):
             if resp.status != 204:
                 self.bus.stop_test(
                     "Wrong response code {}".format(resp.status))
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError) as err:
+        except (asyncio.TimeoutError, ClientError) as err:
             lgr.exception(err)
             self.bus.stop_test("Problems writing data to database")
         finally:

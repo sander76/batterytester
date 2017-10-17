@@ -70,5 +70,5 @@ class IncomingParserChunked(IncomingParser):
             return
 
     def _interpret(self, measurement):
-        # Interprets an incoming measurement
+        """Interprets an incoming measurement"""
         raise NotImplemented

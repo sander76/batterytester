@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock
 
 from batterytester.incoming_parser import IncomingParser
 from batterytester.incoming_parser.volt_amps_ir_parser import VoltAmpsIrParser
@@ -6,7 +7,8 @@ from batterytester.incoming_parser.volt_amps_ir_parser import VoltAmpsIrParser
 
 class TestIncomingParser(unittest.TestCase):
     def setUp(self):
-        self.parser = VoltAmpsIrParser()
+        mock = Mock()
+        self.parser = VoltAmpsIrParser(mock)
         self.measurement = []
 
     def test_extract1(self):

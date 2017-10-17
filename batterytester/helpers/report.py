@@ -212,23 +212,3 @@ if __name__ == "__main__":
 
     for _ln in rep.summary:
         print(_ln)
-
-        # d1 = datetime.datetime.now().replace(microsecond=0)
-        # time.sleep(3)
-        # d2 = datetime.datetime.now().replace(microsecond=0)
-        #
-        # rep.report_timing(d1, d2)
-        # rep.create_table(
-        #     ("property", "value"),
-        #     ('mode', mode),
-        #     ('loop', current_loop),
-        #     ('index', idx),
-        #     (
-        #         'sensor data path',
-        #         'c:\\data\\test\\another test\\ and yet anotherr.')
-        #
-        # )
-        # rep.line()
-        # print("result: *FAIL*")
-        # rep.line()
-        # # rep.create_table(('property', 'value'), (1, 2), (3, 4))
