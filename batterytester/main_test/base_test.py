@@ -2,13 +2,16 @@ import asyncio
 import os
 from asyncio import CancelledError
 
+import logging
+
 from batterytester.bus import TelegramBus, Bus
 from batterytester.connector import SensorConnector
 from batterytester.database import DataBase
 from batterytester.helpers.helpers import get_current_time, \
     check_output_location, TestFailException
 from batterytester.helpers.report import Report
-from batterytester.main_test import lgr
+
+lgr = logging.getLogger(__name__)
 
 
 class BaseTest:
