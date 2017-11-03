@@ -2,7 +2,7 @@ from batterytester.main_test.base_test import BaseTest
 
 
 class BaseReferenceTest(BaseTest):
-    def __init__(self):
+    def __init__(self,learning_mode):
         pass
 
     def perform_test(self, current_loop, idx, atom):
