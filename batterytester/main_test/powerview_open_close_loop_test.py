@@ -46,7 +46,7 @@ class PowerViewOpenCloseLoopTest(BaseTest):
 
     def __init__(self, test_name,
                  loop_count, delay, shade_ids, hub_ip, test_location=None,
-                 telegram_token=None, chat_id=None):
+                 telegram_token=None, chat_id=None,shade_delay=3):
         """Initializes the class"""
         self.delay = delay
         super().__init__(test_name, loop_count,
@@ -61,6 +61,7 @@ class PowerViewOpenCloseLoopTest(BaseTest):
         self.hub_ip = hub_ip
         self.shade_ids = shade_ids
         self.shades = []
+        self.shade_delay=shade_delay
         self.powerview_commands = PowerViewCommands(self.hub_ip, self.bus.loop,
                                                     self.bus.session)
 
@@ -82,7 +83,7 @@ class PowerViewOpenCloseLoopTest(BaseTest):
                 result = yield from _shade.open()
             else:
                 result = yield from _shade.close()
-            yield from asyncio.sleep(6)
+            yield from asyncio.sleep(self.shade_delay)
         return result
 
     @asyncio.coroutine

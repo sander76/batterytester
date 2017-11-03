@@ -16,7 +16,9 @@ test = PowerViewOpenCloseLoopTest(
     # for reporting use the provided telegram api token.
     telegram_token=None,
     # Chat_id where messages need to be sent to.
-    chat_id=None
+    chat_id=None,
+    # Delay between individual shade open close commands.
+    shade_delay=3
 )
 
 if __name__ == "__main__":

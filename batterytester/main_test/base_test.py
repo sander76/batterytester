@@ -12,7 +12,6 @@ from batterytester.main_test import lgr
 
 
 class BaseTest:
-
     def __init__(
             self,
             test_name: str,
@@ -57,7 +56,6 @@ class BaseTest:
         if check_output_location(self.test_location):
             self._report.create_summary_file()
             self.bus._start_test()
-
 
     def handle_sensor_data(self, sensor_data):
         """Sensor data can influence the main test.

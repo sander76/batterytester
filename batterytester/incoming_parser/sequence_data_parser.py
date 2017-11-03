@@ -16,11 +16,13 @@ def create_sensor_data_container(value, sequence) -> dict:
 
 
 class SequenceDataParser(IncomingParserChunked):
-    def __init__(self, bus: Bus):
-        """
+    """Data parser where date comes in at a predefined sequence.
+    Testing of this data is done by checking whether sequences are in the
+    right order.
+            """
 
-        :param sequence: the amount of cycles that is in the sequence.
-        """
+    def __init__(self, bus: Bus):
+
         self._seq = None
         self._prev_seq = None
         IncomingParserChunked.__init__(self, bus)
