@@ -28,3 +28,6 @@ class PowerViewCustomCommandsReferenceTest(BaseTest):
             yield from self.powerview.get_scenes()
         except PvApiConnectionError:
             raise TestFailException("Failed to warmup the test.")
+
+    def get_sequence(self):
+        return self.custom_sequence(self)

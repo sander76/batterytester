@@ -103,7 +103,6 @@ class BaseTest:
         self._report.write_intro(self.test_name)
         self.started = get_current_time()
 
-    @asyncio.coroutine
     def get_sequence(self):
         """Gets called to retrieve a list of test atoms to be performed.
 

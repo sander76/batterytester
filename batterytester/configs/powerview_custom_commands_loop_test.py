@@ -10,6 +10,7 @@ test = PowerViewCustomCommandsReferenceTest(
 
 
 def get_sequence(self: PowerViewCustomCommandsReferenceTest):
+    #self=args[0]
     _val = (
         TestAtom(
             name='open shade',
@@ -39,7 +40,7 @@ def get_sequence(self: PowerViewCustomCommandsReferenceTest):
     return _val
 
 
-test.get_sequence = get_sequence
+test.custom_sequence = get_sequence
 
 if __name__ == "__main__":
     test.start_test()
