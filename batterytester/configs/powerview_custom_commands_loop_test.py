@@ -5,39 +5,39 @@ from batterytester.test_atom import TestAtom
 test = PowerViewCustomCommandsReferenceTest(
     test_name='custom test',
     loop_count=10,
-    hub_ip='192.168.0.100'
+    hub_ip='192.168.0.108'
 )
 
 
 def get_sequence(self: PowerViewCustomCommandsReferenceTest):
-    #self=args[0]
     _val = (
         TestAtom(
             name='open shade',
             command=self.powerview.open_shade,
-            arguments={'shade_id': 1},
-            duration=30
+            arguments={'shade_id': 61865},
+            duration=20
         ),
         TestAtom(
             name='open shade',
             command=self.powerview.open_shade,
-            arguments={'shade_id': 2},
-            duration=30,
+            arguments={'shade_id': 18918},
+            duration=20,
         ),
         TestAtom(
             name='close shade',
             command=self.powerview.close_shade,
-            arguments={'shade_id': 2},
-            duration=30
+            arguments={'shade_id': 18918},
+            duration=20
         ),
         TestAtom(
             name='close shade',
             command=self.powerview.close_shade,
-            arguments={'shade_id': 1},
-            duration=30,
+            arguments={'shade_id': 61865},
+            duration=20,
         )
     )
     return _val
+
 
 
 test.custom_sequence = get_sequence

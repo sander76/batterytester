@@ -4,6 +4,9 @@ import asyncio
 import logging
 import os
 
+from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
+    PvApiResponseStatusError
+
 from batterytester.helpers.constants import ATTR_RESULT, \
     ATTR_CURRENT_LOOP, ATTR_LEARNING_MODE
 from batterytester.helpers.helpers import TestFailException
@@ -85,14 +88,14 @@ class TestAtom:
     @asyncio.coroutine
     def execute(self):
         """Executes the defined command."""
-        if self._args:
-            _result = yield from self._command(**self._args)
-        else:
-            _result = yield from self._command()
-        if not _result:
-            raise TestFailException("Error executing command.")
-        self._report_command_result(_result)
-        return _result
+        try:
+            if self._args:
+                _result = yield from self._command(**self._args)
+            else:
+                _result = yield from self._command()
+        except (PvApiConnectionError,PvApiError,PvApiResponseStatusError) as err:
+            self._report_command_result(_result)
+            raise TestFailException(err)
 
 
 class ReferenceTestAtom(TestAtom):
