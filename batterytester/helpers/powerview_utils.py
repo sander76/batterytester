@@ -13,19 +13,22 @@ class PowerView:
         self.session = session
 
     @asyncio.coroutine
-    def get_scenes(self, hub_ip, loop_, session):
+    def get_scenes(self):
         self.scenes = []
-        _scenes = yield from (Scenes(hub_ip, loop_, session)).get_resources()
+        _scenes = yield from (
+        Scenes(self.hub_ip, self.loop, self.session)).get_resources()
         for _scene in _scenes[ATTR_SCENE_DATA]:
-            self.scenes.append(Scene(_scene, hub_ip, loop_, session))
+            self.scenes.append(
+                Scene(_scene, self.hub_ip, self.loop, self.session))
 
     @asyncio.coroutine
-    def get_shades(self, hub_ip, loop_, session):
+    def get_shades(self):
         self.shades = []
-        _shade_resource = Shades(hub_ip, loop_, session)
+        _shade_resource = Shades(self.hub_ip, self.loop, self.session)
         _shades = yield from _shade_resource.get_resources()
         for shade in _shades[ATTR_SHADE_DATA]:
-            self.shades.append(Shade(shade, hub_ip, loop_, session))
+            self.shades.append(
+                Shade(shade, self.hub_ip, self.loop, self.session))
 
     def get_shade_by_id(self, id) -> Shade:
         for _shade in self.shades:
