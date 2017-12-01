@@ -8,8 +8,8 @@ from aiopvapi.shades import Shades, ATTR_SHADE_DATA
 
 class PowerView:
     def __init__(self, hub_ip, loop_, session):
-        self.hub_ip = hub_ip,
-        self.loop = loop_,
+        self.hub_ip = hub_ip
+        self.loop = loop_
         self.session = session
 
     @asyncio.coroutine
