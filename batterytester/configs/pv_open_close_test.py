@@ -1,3 +1,7 @@
+"""PowerView open close loop test.
+
+Running shades in an open/close loop."""
+
 from batterytester.main_test.powerview_open_close_loop_test import \
     PowerViewOpenCloseLoopTest
 

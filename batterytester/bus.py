@@ -34,7 +34,7 @@ class Bus:
         try:
             self.loop.run_forever()
         finally:
-            all_tasks = asyncio.Task.all_tasks(self.loop)
+            #all_tasks = asyncio.Task.all_tasks(self.loop)
             self.loop.close()
 
         return self.exit_message

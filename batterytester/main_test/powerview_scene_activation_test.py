@@ -7,7 +7,7 @@ from aiopvapi.scenes import Scenes, ATTR_SCENE_DATA
 
 from batterytester.bus import Bus, TelegramBus
 from batterytester.helpers.helpers import TestFailException
-from batterytester.main_test.base_test import BaseTest
+from batterytester.main_test import BaseTest
 from batterytester.test_atom import TestAtom
 
 
@@ -15,7 +15,8 @@ class PowerViewSceneActivationLoopTest(BaseTest):
     def __init__(self, test_name,
                  loop_count, delay, scene_ids, hub_ip, test_location=None,
                  telegram_token=None, chat_id=None):
-        #todo: check whether this value is used as default when no delay is defined in the test atom.
+        # todo: check whether this value is used as default
+        # when no delay is defined in the test atom.
         self.delay = delay
         super().__init__(test_name, loop_count,
                          sensor_data_connector=None,

@@ -1,24 +1,18 @@
+"""PowerView open close loop test. Running shades in an open/close loop."""
+
 import asyncio
 
 from aiopvapi.powerview_tool import PowerViewCommands
-
-from batterytester.bus import Bus, TelegramBus
 from batterytester.helpers.helpers import TestFailException
-from batterytester.main_test.base_test import BaseTest
+from batterytester.main_test import BaseTest
 from batterytester.test_atom import TestAtom
 
 
 class PowerViewOpenCloseLoopTest(BaseTest):
-    """Executes PowerView open and close hub commands.
-
-    :param test_name: Name of the test
-    :param loop_count: The amount of loops this test should run.
-    :param delay: Delay between each command [seconds]
-    :param shade_ids: The shades part of the test.
-    :param hub_ip: Ip address of the PowerView hub.
-    :param test_location: The folder location where report data is stored.
-    :param telegram_token: For notification a telegram token can be supplied.
-    :param chat_id: The telegram chat id where the notifications should be sent to.
+    """Executes PowerView open and close hub commands in a sequence.
+    Per Atom an array of shades is sent to their open and close position.
+    Within that atom each shade command (open/close) is sent in sequence with
+    a certain delay.
 
     Report is stored as markdown.
     Database is json data file.
@@ -45,9 +39,20 @@ class PowerViewOpenCloseLoopTest(BaseTest):
     """
 
     def __init__(self, test_name,
-                 loop_count, delay, shade_ids, hub_ip, test_location=None,
-                 telegram_token=None, chat_id=None,shade_delay=3):
-        """Initializes the class"""
+                 loop_count: int, delay: int, shade_ids, hub_ip,
+                 test_location=None,
+                 telegram_token=None, chat_id=None, shade_delay=3):
+        """
+        :param str test_name: Name of the test
+        :param int loop_count: The amount of loops this test should run.
+        :param int delay: Delay in seconds between each command
+        :param list shade_ids: The shades part of the test.
+        :param str hub_ip: Ip address of the PowerView hub.
+        :param str test_location: The folder location where report data is stored. If None no test data is stored.
+        :param str telegram_token: For notification a telegram token can be supplied.
+        :param str chat_id: The telegram chat id where the notifications should be sent to.
+        :param int shade_delay: Delay between firing individual shades.
+        """
         self.delay = delay
         super().__init__(test_name, loop_count,
                          sensor_data_connector=None,
@@ -56,12 +61,11 @@ class PowerViewOpenCloseLoopTest(BaseTest):
                          test_location=test_location,
                          telegram_token=telegram_token,
                          telegram_chat_id=chat_id
-
                          )
         self.hub_ip = hub_ip
         self.shade_ids = shade_ids
         self.shades = []
-        self.shade_delay=shade_delay
+        self.shade_delay = shade_delay
         self.powerview_commands = PowerViewCommands(self.hub_ip, self.bus.loop,
                                                     self.bus.session)
 
@@ -99,7 +103,9 @@ class PowerViewOpenCloseLoopTest(BaseTest):
                      command=self._move_shades,
                      arguments={'open': True},
                      duration=self.delay),
-            TestAtom('shades close', self._move_shades, {'open': False},
-                     self.delay)
+            TestAtom('shades close',
+                     command=self._move_shades,
+                     arguments={'open': False},
+                     duration=self.delay)
         )
         return _val

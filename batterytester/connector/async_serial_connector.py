@@ -11,20 +11,24 @@ from batterytester.incoming_parser import IncomingParser
 
 lgr = logging.getLogger(__name__)
 
+
 class AsyncSerialConnector(AsyncSensorConnector):
     def __init__(
             self,
             bus: Bus,
             sensor_data_parser: IncomingParser,
             serial_port,
-            serial_speed):
-        AsyncSensorConnector.__init__(self, sensor_data_parser, bus)
+            serial_speed,
+            read_delay=0.5
+    ):
+        super().__init__(sensor_data_parser,bus)
         # setting timeout at zero. This makes the read method non-blocking.
         self.s = Serial(
             port=serial_port,
             baudrate=serial_speed,
             timeout=0
         )
+        self.read_delay = read_delay
 
     @asyncio.coroutine
     def async_listen_for_data(self, *args):
@@ -38,9 +42,9 @@ class AsyncSerialConnector(AsyncSensorConnector):
                 # Non blocking read.
                 _data = self.s.read(self.s.in_waiting)
                 yield from self.raw_sensor_data_queue.put(_data)
-                yield from asyncio.sleep(0.5)
-        except SerialException as e:
-            lgr.exception(e)
+                yield from asyncio.sleep(self.read_delay)
+        except SerialException as err:
+            lgr.exception(err)
             self.s.close()
             self.bus.stop_test('Error reading from serial port.')
         except CancelledError:

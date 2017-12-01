@@ -9,15 +9,38 @@ from batterytester.bus import Bus
 class IncomingParser:
     def __init__(self, bus: Bus):
         self.bus = bus
+        self.separator = b'\n'
 
     def process(self, raw_incoming) -> list:
         """Entry point for processing raw incoming sensor data."""
         raise NotImplemented
 
+    def _extract(self, measurement: list):
+        """
+        Consumes the raw incoming data and cuts it into consumable,
+        interpretable chunks.
+
+        :param measurement:
+        :return:
+        """
+        try:
+            # Look for the first separator from the start of the incoming data
+            _idx = self.incoming_data.index(self.separator)
+            # Put this part to the measurement list
+            measurement.append(self.incoming_data[:_idx])
+            # Cut away that part from the incoming data byte array.
+            self.incoming_data = self.incoming_data[_idx + 1:]
+            # Further consume the incoming data by calling this method again.
+            self._extract(measurement)
+        except ValueError:
+            # No more separator found. Any data left in the raw incoming list
+            # interpreted when new data has come in. For now returning and
+            # preparing for further interpretation.
+            return
+
 
 class IncomingParserChunked(IncomingParser):
-    """Incoming data parser where data is coming in as a stream.
-    """
+    """Incoming data parser where data is coming in as a stream."""
 
     def __init__(self, bus: Bus):
         IncomingParser.__init__(self, bus)
@@ -46,29 +69,6 @@ class IncomingParserChunked(IncomingParser):
                 clean_data.append(val)
         return clean_data
 
-    def _extract(self, measurement: list):
-        """
-        Consumes the raw incoming data and cuts it into consumable,
-        interpretable chunks.
-
-        :param measurement:
-        :return:
-        """
-        try:
-            # Look for the first separator from the start of the incoming data
-            _idx = self.incoming_data.index(self.separator)
-            # Put this part to the measurement list
-            measurement.append(self.incoming_data[:_idx])
-            # Cut away that part from the incoming data byte array.
-            self.incoming_data = self.incoming_data[_idx + 1:]
-            # Further consume the incoming data by calling this method again.
-            self._extract(measurement)
-        except ValueError:
-            # No more separator found. Any data left in the raw incoming list
-            # interpreted when new data has come in. For now returning and
-            # preparing for further interpretation.
-            return
-
     def _interpret(self, measurement):
-        """Interprets an incoming measurement"""
+        """Interprets an incoming measurement and returns the result"""
         raise NotImplemented

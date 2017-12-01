@@ -51,9 +51,7 @@ class AsyncSensorConnector(SensorConnector):
             self,
             sensor_data_parser: IncomingParser,
             bus):
-        SensorConnector.__init__(
-            self,
-            sensor_data_parser, bus)
+        super().__init__(sensor_data_parser,bus)
         self.bus.add_async_task(self.async_listen_for_data())
 
     @asyncio.coroutine

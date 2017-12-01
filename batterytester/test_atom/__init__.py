@@ -5,7 +5,7 @@ import logging
 import os
 
 from batterytester.helpers.constants import ATTR_RESULT, \
-    ATTR_CURRENT_LOOP
+    ATTR_CURRENT_LOOP, ATTR_LEARNING_MODE
 from batterytester.helpers.helpers import TestFailException
 from batterytester.helpers.report import Report
 
@@ -31,7 +31,22 @@ def find_reference_data(idx, location):
     return None
 
 
+class RefGetter:
+    def __init__(self, key, attribute):
+        self._key = key
+        self._attribute = attribute
+
+    def get_ref(self, results):
+        _ref = results[self._key]
+        _val = getattr(_ref, self._attribute)
+        return _val
+
+
 class TestAtom:
+    """Basic test atom.
+
+    Starts test execution and creates a basic report."""
+
     def __init__(self, name, command, arguments, duration):
         self._name = name
         self._command = command
@@ -78,3 +93,41 @@ class TestAtom:
             raise TestFailException("Error executing command.")
         self._report_command_result(_result)
         return _result
+
+
+class ReferenceTestAtom(TestAtom):
+    """
+    A single test atom part of a test sequence.
+    """
+
+    def __init__(
+            self, name, command,
+            arguments, duration,
+            result_key: str = None):
+        super().__init__(name, command, arguments, duration)
+        # sensor data is stored here.
+        self.sensor_data = []
+        # reference sensor data to be stored here.
+        self.reference_data = None
+        # used for storing a global property to be used by other
+        # test_atoms.
+        self._result_key = result_key
+
+        # the above result key is stored in the below dict (initialized when
+        # preparing the test atom (prepare_test_atom).
+        self._stored_atom_results = None
+
+    def prepare_test_atom(
+            self, save_location, idx, current_loop, report, **kwargs):
+        self._stored_atom_results = kwargs.get('stored_atom_results')
+        super().prepare_test_atom(
+            save_location, idx, current_loop, report, **kwargs)
+
+    def process_sensor_data(self):
+        """Perform sensor data processing for comparisson with the reference
+        data."""
+        pass
+
+    def reference_compare(self) -> bool:
+        self.report.H3('REFERENCE TEST')
+        return True

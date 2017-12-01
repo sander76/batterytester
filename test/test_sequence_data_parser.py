@@ -42,6 +42,3 @@ class TestInterpretMethod(unittest.TestCase):
         _result = self.parser._interpret(_input)
         self.assertIsNone(_result)
 
-# class TestExtractMethod(unittest.TestCase):
-#     def setUp(self):
-#         self.parser=SequenceDataParser()

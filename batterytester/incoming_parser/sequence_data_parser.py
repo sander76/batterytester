@@ -16,7 +16,7 @@ def create_sensor_data_container(value, sequence) -> dict:
 
 
 class SequenceDataParser(IncomingParserChunked):
-    """Data parser where date comes in at a predefined sequence.
+    """Data parser where data comes in at a predefined sequence.
     Testing of this data is done by checking whether sequences are in the
     right order.
             """

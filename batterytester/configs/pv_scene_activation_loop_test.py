@@ -19,5 +19,5 @@ test = PowerViewSceneActivationLoopTest(
     chat_id=None
 )
 
-if __name__=="__main__":
+if __name__ == "__main__":
     test.start_test()

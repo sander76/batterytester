@@ -3,7 +3,7 @@ import asyncio
 import logging
 from asyncio.futures import CancelledError
 
-from batterytester.main_test.base_test import BaseTest
+from batterytester.main_test import BaseTest
 
 _LOGGER = logging.getLogger(__name__)
 

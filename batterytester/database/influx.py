@@ -33,8 +33,10 @@ class Influx(DataBase):
     def _get_time_stamp(self):
         return int(time() * 1000)
 
-    @asyncio.coroutine
+
     def add_to_database(self, *datapoints):
+        #todo : remove `yield from` and make a task out of it. This function
+        # must return immediately.
         for _data in datapoints:
             self.data.append(self._create_measurement(_data))
             yield from self._check_and_send_to_database()
