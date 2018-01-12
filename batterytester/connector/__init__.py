@@ -35,8 +35,9 @@ class SensorConnector:
         puts data into the sensor_data_queue."""
 
         try:
-            while self.bus.running:
+            while True: # self.bus.running:
                 _raw_data = yield from self.raw_sensor_data_queue.get()
+                # todo: a list is returned here. Convert it to a generator.
                 _sensor_data = self.sensor_data_parser.process(_raw_data)
                 for _values in _sensor_data:
                     yield from self.sensor_data_queue.put(_values)

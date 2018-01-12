@@ -1,6 +1,6 @@
 from batterytester.main_test.powerview_ledgate_reference_test import \
     PowerViewLedgateReferenceTest, PowerView
-from batterytester.test_atom.boolean_reference_test_atom import \
+from batterytester.atom.boolean_reference_atom import \
     BooleanReferenceTestAtom
 
 test = PowerViewLedgateReferenceTest(
@@ -32,5 +32,5 @@ def get_sequence(self: PowerViewLedgateReferenceTest):
 
 test.get_sequence = get_sequence
 
-if __name__=="__main__":
+if __name__ == "__main__":
     test.start_test()

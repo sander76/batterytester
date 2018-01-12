@@ -5,7 +5,7 @@ import asyncio
 from aiopvapi.powerview_tool import PowerViewCommands
 from batterytester.helpers.helpers import TestFailException
 from batterytester.main_test import BaseTest
-from batterytester.test_atom import TestAtom
+from batterytester.atom import Atom
 
 
 class PowerViewOpenCloseLoopTest(BaseTest):
@@ -99,13 +99,13 @@ class PowerViewOpenCloseLoopTest(BaseTest):
 
     def get_sequence(self):
         _val = (
-            TestAtom(name='shades open',
-                     command=self._move_shades,
-                     arguments={'open': True},
-                     duration=self.delay),
-            TestAtom('shades close',
-                     command=self._move_shades,
-                     arguments={'open': False},
-                     duration=self.delay)
+            Atom(name='shades open',
+                 command=self._move_shades,
+                 arguments={'open': True},
+                 duration=self.delay),
+            Atom('shades close',
+                 command=self._move_shades,
+                 arguments={'open': False},
+                 duration=self.delay)
         )
         return _val

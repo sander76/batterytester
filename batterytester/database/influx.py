@@ -7,14 +7,17 @@ from aiohttp.client_exceptions import ClientError
 
 from batterytester.bus import Bus
 from batterytester.database import DataBase
+from batterytester.helpers.helpers import Measurement
 
 LENGTH = 30
 
 lgr = logging.getLogger(__name__)
 
 
-# def setup(args):
-#     return Influx(**args)
+def line_format_datapoint(measurement: Measurement):
+    _datapoints = ','.join("{}={}".format(key, value) for key, value in
+                           measurement.values.items())
+    return _datapoints
 
 
 class Influx(DataBase):
@@ -29,29 +32,18 @@ class Influx(DataBase):
         self.measurement = measurement
         self.data_length = datalength
 
-    # todo: move timestamp to the moment of datacollection.
-    def _get_time_stamp(self):
-        return int(time() * 1000)
-
-
     def add_to_database(self, *datapoints):
-        #todo : remove `yield from` and make a task out of it. This function
+        # todo : remove `yield from` and make a task out of it. This function
         # must return immediately.
         for _data in datapoints:
             self.data.append(self._create_measurement(_data))
             yield from self._check_and_send_to_database()
 
-    def _create_measurement(self, datapoint):
-        _datapoint = self._add_data_points(datapoint)
-        ts = self._get_time_stamp()
-        ln = '{} {} {}'.format(self.measurement, _datapoint, ts)
+    def _create_measurement(self, measurement: Measurement):
+        _datapoint = line_format_datapoint(measurement)
+        ln = '{} {} {}'.format(
+            self.measurement, _datapoint, measurement.timestamp)
         return ln
-
-    def _add_data_points(self, datapoints: dict):
-        lgr.debug("adding: {}".format(dict))
-        _datapoints = ','.join("{}={}".format(key, value) for key, value in
-                               datapoints.items())
-        return _datapoints
 
     @asyncio.coroutine
     def _check_and_send_to_database(self):
@@ -60,7 +52,7 @@ class Influx(DataBase):
 
         if len(self.data) > self.data_length:
             _data = self.prepare_data()
-            # clear the list so asyncio can start populate
+            # clear the list so asyncio can start populating
             # it while processing the next yields.
             self.data = []
             yield from self._send(_data)

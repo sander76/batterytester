@@ -8,7 +8,7 @@ from aiopvapi.scenes import Scenes, ATTR_SCENE_DATA
 from batterytester.bus import Bus, TelegramBus
 from batterytester.helpers.helpers import TestFailException
 from batterytester.main_test import BaseTest
-from batterytester.test_atom import TestAtom
+from batterytester.atom import Atom
 
 
 class PowerViewSceneActivationLoopTest(BaseTest):
@@ -55,8 +55,8 @@ class PowerViewSceneActivationLoopTest(BaseTest):
         _scenes = yield from self.get_scenes()
 
         for _scene in _scenes:
-            test_atom = TestAtom(_scene.name, _scene.activate, None,
-                                 self.delay)
+            test_atom = Atom(_scene.name, _scene.activate, None,
+                             self.delay)
             self._atoms.append(test_atom)
 
     @asyncio.coroutine

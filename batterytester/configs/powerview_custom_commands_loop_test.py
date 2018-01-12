@@ -1,6 +1,6 @@
 from batterytester.main_test.powerview_custom_commands_reference_test import \
     PowerViewCustomCommandsReferenceTest
-from batterytester.test_atom import TestAtom
+from batterytester.atom import Atom
 
 test = PowerViewCustomCommandsReferenceTest(
     test_name='custom test',
@@ -11,25 +11,25 @@ test = PowerViewCustomCommandsReferenceTest(
 
 def get_sequence(self: PowerViewCustomCommandsReferenceTest):
     _val = (
-        TestAtom(
+        Atom(
             name='open shade',
             command=self.powerview.open_shade,
             arguments={'shade_id': 61865},
             duration=20
         ),
-        TestAtom(
+        Atom(
             name='open shade',
             command=self.powerview.open_shade,
             arguments={'shade_id': 18918},
             duration=20,
         ),
-        TestAtom(
+        Atom(
             name='close shade',
             command=self.powerview.close_shade,
             arguments={'shade_id': 18918},
             duration=20
         ),
-        TestAtom(
+        Atom(
             name='close shade',
             command=self.powerview.close_shade,
             arguments={'shade_id': 61865},

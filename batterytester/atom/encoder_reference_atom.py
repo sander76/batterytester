@@ -4,7 +4,7 @@ import logging
 import os
 
 from batterytester.helpers.constants import ATTR_LEARNING_MODE
-from batterytester.test_atom import TestAtom, get_sensor_data_name, \
+from batterytester.atom import Atom, get_sensor_data_name, \
     find_reference_data
 
 SENSOR_DATA_DELTA = 'delta'
@@ -235,7 +235,7 @@ class SensorData:
         self._get_movements()
 
 
-class EncoderReferenceTestAtom(TestAtom):
+class EncoderReferenceAtom(Atom):
     """
     A single test atom part of a test sequence.
     """

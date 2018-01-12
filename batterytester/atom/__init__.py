@@ -45,7 +45,7 @@ class RefGetter:
         return _val
 
 
-class TestAtom:
+class Atom:
     """Basic test atom.
 
     Starts test execution and creates a basic report."""
@@ -98,7 +98,7 @@ class TestAtom:
             raise TestFailException(err)
 
 
-class ReferenceTestAtom(TestAtom):
+class ReferenceAtom(Atom):
     """
     A single test atom part of a test sequence.
     """
@@ -126,11 +126,11 @@ class ReferenceTestAtom(TestAtom):
         super().prepare_test_atom(
             save_location, idx, current_loop, report, **kwargs)
 
-    def process_sensor_data(self):
-        """Perform sensor data processing for comparisson with the reference
-        data."""
+    def _process_sensor_data(self):
+        """Perform sensor data processing."""
         pass
 
     def reference_compare(self) -> bool:
+        """Compare sensor data with reference data"""
         self.report.H3('REFERENCE TEST')
-        return True
+        return False

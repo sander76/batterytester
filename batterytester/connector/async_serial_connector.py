@@ -19,7 +19,7 @@ class AsyncSerialConnector(AsyncSensorConnector):
             sensor_data_parser: IncomingParser,
             serial_port,
             serial_speed,
-            read_delay=0.5
+            read_delay=1
     ):
         super().__init__(sensor_data_parser,bus)
         # setting timeout at zero. This makes the read method non-blocking.

@@ -1,16 +1,11 @@
 import asyncio
 import os
-from asyncio.futures import CancelledError
-from asyncio import AbstractServer
-
-from threading import Thread
-
-import aiohttp
-import time
+from collections import namedtuple
 
 import logging
 
 import datetime
+
 
 LOOP_TIME_OUT = 2
 
@@ -54,3 +49,6 @@ def check_output_location(test_location):
     if not os.path.exists(test_location):
         os.makedirs(test_location)
     return True
+
+
+Measurement = namedtuple('Measurement', ['values', 'timestamp'])

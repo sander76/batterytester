@@ -3,7 +3,15 @@ Incoming parser receives incoming sensor data and cleans it.
 """
 import asyncio
 
+from time import time
+from typing import Sequence
+
 from batterytester.bus import Bus
+from batterytester.helpers.helpers import Measurement
+
+
+def get_time_stamp():
+    return int(time() * 1000)
 
 
 class IncomingParser:
@@ -11,7 +19,7 @@ class IncomingParser:
         self.bus = bus
         self.separator = b'\n'
 
-    def process(self, raw_incoming) -> list:
+    def process(self, raw_incoming) -> Sequence[Measurement]:
         """Entry point for processing raw incoming sensor data."""
         raise NotImplemented
 
@@ -25,9 +33,11 @@ class IncomingParser:
         """
         try:
             # Look for the first separator from the start of the incoming data
+            # Raises value error if no separator is found.
             _idx = self.incoming_data.index(self.separator)
             # Put this part to the measurement list
-            measurement.append(self.incoming_data[:_idx])
+            measurement.append(
+                Measurement(self.incoming_data[:_idx], get_time_stamp()))
             # Cut away that part from the incoming data byte array.
             self.incoming_data = self.incoming_data[_idx + 1:]
             # Further consume the incoming data by calling this method again.
@@ -49,7 +59,7 @@ class IncomingParserChunked(IncomingParser):
         self.incoming_data = bytearray()  # all incoming data.
         self.separator = b'\n'
 
-    def process(self, raw_incoming):
+    def process(self, raw_incoming)->Sequence[Measurement]:
         """Entry point for processing raw incoming sensor data.
         Gets called by long running task _parser inside the serial connector
         class."""

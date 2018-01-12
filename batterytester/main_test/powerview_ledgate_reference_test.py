@@ -7,11 +7,8 @@ from batterytester.helpers.helpers import TestFailException
 from batterytester.helpers.powerview_utils import PowerView
 from batterytester.incoming_parser.boolean_parser import BooleanParser
 from batterytester.main_test import BaseReferenceTest
-from batterytester.test_atom.boolean_reference_test_atom import \
+from batterytester.atom.boolean_reference_atom import \
     BooleanReferenceTestAtom
-
-
-
 
 
 class PowerViewLedgateReferenceTest(BaseReferenceTest):

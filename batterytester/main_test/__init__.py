@@ -18,7 +18,6 @@ class BaseTest:
             self,
             test_name: str,
             loop_count: int,
-            # config: BaseConfig,
             sensor_data_connector: SensorConnector = None,
             database: DataBase = None,
             report: Report = None,
@@ -223,7 +222,6 @@ class BaseReferenceTest(BaseTest):
                  report: Report = None,
                  add_time_stamp_to_report=True,
                  test_location: str = None,
-                 reference_test_location: str = None,
                  telegram_token=None,
                  telegram_chat_id=None):
         super().__init__(
@@ -237,12 +235,10 @@ class BaseReferenceTest(BaseTest):
             telegram_token=telegram_token,
             telegram_chat_id=telegram_chat_id)
         self._learning_mode = learning_mode
-        self._reference_test_location = reference_test_location
         self.summary = {'total_tests': 0, 'failures': []}
 
     def perform_test(self):
         super().perform_test()
-        self._active_atom.process_sensor_data()
         if not self._learning_mode:
             # Actual testing mode. reference data
             # and testing data can be compared.

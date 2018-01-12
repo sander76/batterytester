@@ -1,6 +1,8 @@
 import asyncio
 from batterytester.bus import Bus
 
+
+
 class DataBase:
     def __init__(self, bus: Bus):
         self.bus = bus
