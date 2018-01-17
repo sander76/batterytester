@@ -2,8 +2,8 @@ import datetime
 
 import logging
 
-from batterytester.bus import Bus
-from batterytester.incoming_parser import IncomingParser
+from batterytester.core.bus import Bus
+from batterytester.core.sensor import IncomingParser
 
 _LOGGER = logging.getLogger(__name__)
 

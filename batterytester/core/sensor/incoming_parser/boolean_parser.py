@@ -1,14 +1,15 @@
 """Parser which evaluates to true or false."""
 import logging
 
-from batterytester.incoming_parser import IncomingParserChunked
+from batterytester.core.sensor.incoming_parser import IncomingParserChunked
 
 LOGGER = logging.getLogger(__name__)
+
 
 class BooleanParser(IncomingParserChunked):
     """Parser which get binary data and evaluates"""
 
-    def _interpret(self, measurement):
+    def _interpret(self, chunk):
         """Interpret incoming raw measurement.
 
         Expecting data in form of a:0 or a:1
@@ -17,7 +18,7 @@ class BooleanParser(IncomingParserChunked):
         :returns dictionary with sensor name and boolean value {name:true/false}
         """
         try:
-            sensorname, value = measurement.split(b':')
+            sensorname, value = chunk.split(b':')
             if value == b'0':
                 value = False
             else:
@@ -26,6 +27,5 @@ class BooleanParser(IncomingParserChunked):
             _val = {sensorname.decode('utf-8'): value}
             return _val
         except Exception as err:
-            LOGGER.warning('Incorrect measurement format: %s',measurement)
+            LOGGER.warning('Incorrect measurement format: %s', chunk)
             return None
-

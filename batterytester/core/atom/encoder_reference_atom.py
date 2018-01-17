@@ -1,11 +1,10 @@
-import asyncio
-import json
 import logging
 import os
 
-from batterytester.helpers.constants import ATTR_LEARNING_MODE
-from batterytester.atom import Atom, get_sensor_data_name, \
+
+from batterytester.core.atom import Atom, get_sensor_data_name, \
     find_reference_data
+from batterytester.core.helpers.constants import ATTR_LEARNING_MODE
 
 SENSOR_DATA_DELTA = 'delta'
 SENSOR_DATA_LENGTH = 'length'
@@ -20,10 +19,8 @@ _LOGGING = logging.getLogger(__name__)
 
 import json
 
-from batterytester.helpers.helpers import TestFailException
-from batterytester.helpers.report import Report
-from batterytester.incoming_parser.sequence_data_parser import INCOMING_VALUE, \
-    INCOMING_SEQUENCE
+from batterytester.core.helpers.report import Report
+from batterytester.core.sensor.incoming_parser.sequence_data_parser import INCOMING_VALUE
 
 MOVEMENT_COUNT = 'pulse_count'
 MOVEMENT_DURATION = 'duration'

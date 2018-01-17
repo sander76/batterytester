@@ -1,7 +1,7 @@
-from batterytester.atom import ReferenceAtom
+from batterytester.core.atom import ReferenceAtom
 
 
-class BooleanReferenceTestAtom(ReferenceAtom):
+class BooleanReferenceAtom(ReferenceAtom):
     def __init__(
             self,
             name,

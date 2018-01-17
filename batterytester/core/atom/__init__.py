@@ -7,10 +7,9 @@ import os
 from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
     PvApiResponseStatusError
 
-from batterytester.helpers.constants import ATTR_RESULT, \
-    ATTR_CURRENT_LOOP, ATTR_LEARNING_MODE
-from batterytester.helpers.helpers import TestFailException
-from batterytester.helpers.report import Report
+from batterytester.core.helpers.constants import ATTR_RESULT, ATTR_CURRENT_LOOP
+from batterytester.core.helpers.helpers import TestFailException
+from batterytester.core.helpers.report import Report
 
 SENSOR_FILE_FORMAT = 'loop_{}-idx_{}.json'
 _LOGGING = logging.getLogger(__name__)
@@ -56,12 +55,16 @@ class Atom:
         self._args = arguments
         self._duration = duration
         self.report = None
+        self._idx = None
+        self._loop = None
 
-    def prepare_test_atom(self, save_location, idx, current_loop,
-                          report: Report,
-                          **kwargs):
-        self.report = report
-        self._idx = idx
+    @property
+    def loop(self):
+        return self._loop
+
+    @property
+    def idx(self):
+        return self._idx
 
     @property
     def name(self):
@@ -70,6 +73,13 @@ class Atom:
     @property
     def duration(self):
         return self._duration
+
+    def prepare_test_atom(self, save_location, idx, current_loop,
+                          report: Report,
+                          **kwargs):
+        self.report = report
+        self._idx = idx
+        self._loop = current_loop
 
     def _report_command_result(self, result):
         self.report.H3('TEST_COMMAND')
@@ -88,12 +98,15 @@ class Atom:
     @asyncio.coroutine
     def execute(self):
         """Executes the defined command."""
+        _result = None
         try:
             if self._args:
                 _result = yield from self._command(**self._args)
             else:
                 _result = yield from self._command()
-        except (PvApiConnectionError,PvApiError,PvApiResponseStatusError) as err:
+        except (
+                PvApiConnectionError, PvApiError,
+                PvApiResponseStatusError) as err:
             self._report_command_result(_result)
             raise TestFailException(err)
 

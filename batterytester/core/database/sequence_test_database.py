@@ -1,8 +1,8 @@
 import asyncio
 import json
 
-from batterytester.bus import Bus
-from batterytester.database import DataBase
+from batterytester.core.bus import Bus
+from batterytester.core.database import DataBase
 
 
 class SequenceTestDatabase(DataBase):

@@ -1,31 +1,24 @@
 import asyncio
 
 from aiopvapi.helpers.constants import ATTR_ID
-from aiopvapi.powerview_tool import PowerViewCommands
 from aiopvapi.resources.scene import Scene
 from aiopvapi.scenes import Scenes, ATTR_SCENE_DATA
 
-from batterytester.bus import Bus, TelegramBus
-from batterytester.helpers.helpers import TestFailException
-from batterytester.main_test import BaseTest
-from batterytester.atom import Atom
+from batterytester.core.helpers.helpers import TestFailException
+from batterytester.main_test import BaseTest, get_bus
+from batterytester.core.atom import Atom
 
 
 class PowerViewSceneActivationLoopTest(BaseTest):
     def __init__(self, test_name,
                  loop_count, delay, scene_ids, hub_ip, test_location=None,
                  telegram_token=None, chat_id=None):
-        # todo: check whether this value is used as default
-        # when no delay is defined in the test atom.
         self.delay = delay
-        super().__init__(test_name, loop_count,
-                         sensor_data_connector=None,
-                         database=None,
-                         report=None,
+        bus = get_bus(telegram_token, chat_id, test_name)
+        super().__init__(bus, test_name, loop_count,
                          test_location=test_location,
                          telegram_token=telegram_token,
                          telegram_chat_id=chat_id
-
                          )
         self.hub_ip = hub_ip
         self.scene_ids = scene_ids

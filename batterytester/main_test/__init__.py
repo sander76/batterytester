@@ -3,22 +3,35 @@ import os
 import logging
 
 from asyncio import CancelledError
-from batterytester.bus import TelegramBus, Bus
-from batterytester.connector import SensorConnector
-from batterytester.database import DataBase
-from batterytester.helpers.helpers import get_current_time, \
-    check_output_location, TestFailException
-from batterytester.helpers.report import Report
+from typing import Union, Sequence
+
+from batterytester.core.atom import ReferenceAtom
+from batterytester.core.bus import TelegramBus, Bus
+from batterytester.core.helpers.helpers import get_current_time, \
+    check_output_location, TestFailException, Measurement
+from batterytester.core.sensor import Sensor
+
+from batterytester.core.database import DataBase
+
+from batterytester.core.helpers.report import Report
 
 LOGGER = logging.getLogger(__name__)
+
+
+def get_bus(telegram_token=None,telegram_chat_id=None,test_name=None):
+    if telegram_token and telegram_chat_id:
+        return TelegramBus(telegram_token, telegram_chat_id, test_name)
+    else:
+        return Bus()
 
 
 class BaseTest:
     def __init__(
             self,
+            bus: Bus,
             test_name: str,
             loop_count: int,
-            sensor_data_connector: SensorConnector = None,
+            sensor: Union[Sensor, Sequence[Sensor], None] = None,
             database: DataBase = None,
             report: Report = None,
             add_time_stamp_to_report=True,
@@ -29,7 +42,7 @@ class BaseTest:
 
         :param test_name: The name of the test.
         :param loop_count: The amount of loops to run
-        :param sensor_data_connector: If a sensor is used.
+        :param sensor: A Sensor or a list of sensors (iterable)
         :param database: If a database is used.
         :param report: A specific report type. Otherwise a default is created.
         :param add_time_stamp_to_report:
@@ -38,13 +51,19 @@ class BaseTest:
         :param telegram_token: for notifications.
         :param telegram_chat_id: for notifications.
         """
-        if telegram_token and telegram_chat_id:
-            self.bus = TelegramBus(telegram_token, telegram_chat_id, test_name)
-        else:
-            self.bus = Bus()
-
+        self.bus=bus
         self.test_name = test_name
-        self.sensor_data_connector = sensor_data_connector
+
+        if isinstance(sensor, Sensor):
+            self.sensor = (sensor,)
+        else:
+            self.sensor = sensor
+        if self.sensor:
+            self.sensor_data_queue = asyncio.Queue(loop=self.bus.loop)
+            for _sensor in self.sensor:
+                # Add one sensor_data_queue to all sensors.
+                _sensor.sensor_data_queue = self.sensor_data_queue
+
         self.database = database
         self.bus.add_async_task(self._messager())
         self.bus.add_async_task(self.async_test())
@@ -55,9 +74,9 @@ class BaseTest:
                                               self.test_location)
         if add_time_stamp_to_report:
             self.test_location = (
-                get_current_time().strftime('%Y-%m-%d_%H-%M-%S')
-                + '_'
-                + self.test_location)
+                    get_current_time().strftime('%Y-%m-%d_%H-%M-%S')
+                    + '_'
+                    + self.test_location)
         if report:
             self._report = report
         else:
@@ -73,7 +92,7 @@ class BaseTest:
             self._report.create_summary_file()
             self.bus._start_test()
 
-    def handle_sensor_data(self, sensor_data):
+    def handle_sensor_data(self, sensor_data: Measurement):
         """Handle sensor data by sending it to the active atom or store
         it in a database.
         """
@@ -164,7 +183,7 @@ class BaseTest:
                     yield from self.loop_warmup()
                     for idx, atom in enumerate(self._test_sequence):
                         self._active_atom = atom
-                        self._active_index = idx
+                        #self._active_index = idx
                         yield from self._atom_init()
                         yield from self.atom_warmup()
                         yield from self.perform_test()
@@ -200,10 +219,10 @@ class BaseTest:
         interaction.
 
         Finally it is added to the database."""
-        if self.sensor_data_connector:
+        if self.sensor_data_queue:
             try:
                 while self.bus.running:
-                    sensor_data = yield from self.sensor_data_connector.sensor_data_queue.get()
+                    sensor_data = yield from self.sensor_data_queue.get()
                     self.handle_sensor_data(sensor_data)
                 LOGGER.debug("stopping message loop.")
             except CancelledError as e:
@@ -214,10 +233,11 @@ class BaseTest:
 
 class BaseReferenceTest(BaseTest):
     def __init__(self,
+                 bus,
                  test_name: str,
                  loop_count: int,
                  learning_mode,
-                 sensor_data_connector: SensorConnector = None,
+                 sensor: Union[Sensor, Sequence[Sensor], None] = None,
                  database: DataBase = None,
                  report: Report = None,
                  add_time_stamp_to_report=True,
@@ -225,9 +245,10 @@ class BaseReferenceTest(BaseTest):
                  telegram_token=None,
                  telegram_chat_id=None):
         super().__init__(
+            bus,
             test_name,
             loop_count,
-            sensor_data_connector=sensor_data_connector,
+            sensor=sensor,
             database=database,
             report=report,
             add_time_stamp_to_report=add_time_stamp_to_report,
@@ -246,4 +267,8 @@ class BaseReferenceTest(BaseTest):
             _success = self._active_atom.reference_compare()
             if not _success:
                 self.summary['failures'].append(
-                    (self._active_loop, self._active_index))
+                    (self._active_loop,  self.active_atom.idx))
+
+    @property
+    def active_atom(self) -> ReferenceAtom:
+        return self._active_atom

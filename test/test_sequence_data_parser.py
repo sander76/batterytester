@@ -1,14 +1,15 @@
 import unittest
 from unittest.mock import Mock
 
-from batterytester.helpers.helpers import TestFailException
-from batterytester.incoming_parser.sequence_data_parser import \
+from batterytester.core.bus import Bus
+from batterytester.core.helpers.helpers import TestFailException
+from batterytester.core.sensor.incoming_parser.sequence_data_parser import \
     SequenceDataParser, create_sensor_data_container
 
 
 class TestInterpretMethod(unittest.TestCase):
     def setUp(self):
-        bus = Mock()
+        bus = Mock(spec=Bus)
         self.parser = SequenceDataParser(bus)
 
     def test_sequence_order(self):

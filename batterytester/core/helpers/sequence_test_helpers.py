@@ -1,5 +1,5 @@
-from batterytester.helpers.report import Report
-from batterytester.incoming_parser.sequence_data_parser import INCOMING_VALUE
+from batterytester.core.helpers.report import Report
+from batterytester.core.sensor.incoming_parser.sequence_data_parser import INCOMING_VALUE
 
 MOVEMENT_COUNT = 'pulse_count'
 MOVEMENT_DURATION = 'duration'

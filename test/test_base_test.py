@@ -3,7 +3,7 @@
 #
 # import asyncio
 #
-# from batterytester.connector.arduino_connector import ThreadedSensorConnector
+# from batterytester.sensor.arduino_connector import ThreadedSensorConnector
 # from batterytester.database.influx import Influx
 
 #

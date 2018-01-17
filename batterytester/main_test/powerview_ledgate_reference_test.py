@@ -2,13 +2,11 @@ import asyncio
 
 from aiopvapi.helpers.aiorequest import PvApiConnectionError
 
-from batterytester.connector.async_serial_connector import AsyncSerialConnector
-from batterytester.helpers.helpers import TestFailException
-from batterytester.helpers.powerview_utils import PowerView
-from batterytester.incoming_parser.boolean_parser import BooleanParser
-from batterytester.main_test import BaseReferenceTest
-from batterytester.atom.boolean_reference_atom import \
-    BooleanReferenceTestAtom
+from batterytester.core.database.influx import Influx
+from batterytester.core.helpers.helpers import TestFailException
+from batterytester.core.helpers.powerview_utils import PowerView
+from batterytester.core.sensor.led_gate_sensor import LedGateSensor
+from batterytester.main_test import BaseReferenceTest, get_bus
 
 
 class PowerViewLedgateReferenceTest(BaseReferenceTest):
@@ -18,23 +16,27 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
                  serial_port: str,
                  baud_rate: int,
                  hub_ip,
+                 influx_host='172.22.3.21',
+                 influx_database='menc',
                  test_location: str = None,
                  telegram_token=None,
                  telegram_chat_id=None,
-
                  ):
-        boolean_parser = BooleanParser(self.bus)
-        sensor_data_connector = AsyncSerialConnector(
-            self.bus, boolean_parser, serial_port, baud_rate)
+        bus = get_bus(telegram_token,telegram_chat_id,test_name)
+        led_gate_sensor = LedGateSensor(bus, serial_port, baud_rate)
+
+        _database = Influx(bus, influx_host, influx_database, test_name)
 
         super().__init__(
+            bus,
             test_name,
             loop_count,
+            database=_database,
             learning_mode=False,
+            sensor=led_gate_sensor,
             test_location=test_location,
             telegram_token=telegram_token,
-            telegram_chat_id=telegram_chat_id,
-            sensor_data_connector=sensor_data_connector
+            telegram_chat_id=telegram_chat_id
         )
         self.powerview = PowerView(hub_ip, self.bus.loop, self.bus.session)
 
@@ -46,13 +48,12 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
         except PvApiConnectionError:
             raise TestFailException("Failed to warmup the test.")
 
-    @property
-    def active_atom(self) -> BooleanReferenceTestAtom:
-        return self._active_atom
-
     def handle_sensor_data(self, sensor_data):
         """Sensor data to be added to the active atom."""
-        self.active_atom.sensor_data.append(sensor_data)
+        if self.active_atom:
+            self.active_atom.sensor_data.append(sensor_data)
+        self.database.add_to_database(sensor_data,atom)
+        # todo: add it to the influx database too.
 
     def get_sequence(self):
         raise NotImplementedError

@@ -1,23 +1,30 @@
 import asyncio
 import logging
-from time import time
-import aiohttp
+from typing import Union
+
 import async_timeout
 from aiohttp.client_exceptions import ClientError
 
-from batterytester.bus import Bus
-from batterytester.database import DataBase
-from batterytester.helpers.helpers import Measurement
+from batterytester.core.atom import Atom
+from batterytester.core.bus import Bus
+from batterytester.core.database import DataBase
+from batterytester.core.helpers.helpers import Measurement
 
 LENGTH = 30
 
 lgr = logging.getLogger(__name__)
 
 
-def line_format_datapoint(measurement: Measurement):
-    _datapoints = ','.join("{}={}".format(key, value) for key, value in
-                           measurement.values.items())
-    return _datapoints
+def line_format_fields(measurement: Measurement):
+    """Create the fields and their values."""
+    return ','.join("{}={}".format(key, value) for key, value in
+                    measurement.values.items())
+
+
+def line_protocol_tags(atom: Atom):
+    if atom:
+        return ',idx={},loop={}'.format(atom.idx, atom.loop)
+    return ''
 
 
 class Influx(DataBase):
@@ -27,22 +34,29 @@ class Influx(DataBase):
         DataBase.__init__(self, bus)
         self.host = host
         self.data = []
-        self.url = 'http://{}:8086/write?db={}&precision=ms'.format(host,
-                                                                    database)
+        self.url = 'http://{}:8086/write?db={}&precision=ms'.format(
+            host, database)
         self.measurement = measurement
         self.data_length = datalength
 
-    def add_to_database(self, *datapoints):
-        # todo : remove `yield from` and make a task out of it. This function
-        # must return immediately.
+    def add_to_database(self, *datapoints, atom: Union(Atom, None)):
         for _data in datapoints:
-            self.data.append(self._create_measurement(_data))
+            self.data.append(self._create_measurement(_data, atom))
+            # todo: convert this to a long running task.
             yield from self._check_and_send_to_database()
 
-    def _create_measurement(self, measurement: Measurement):
-        _datapoint = line_format_datapoint(measurement)
-        ln = '{} {} {}'.format(
-            self.measurement, _datapoint, measurement.timestamp)
+    def _create_measurement(self, measurement: Measurement, atom=None):
+        """Transform data according to line format protocol.
+
+        <measurement>[,<tag-key>=<tag-value>...] <field-key>=<field-value>[,<field2-key>=<field2-value>...] [unix-nano-timestamp]
+
+        example:
+        cpu,host=serverA,region=us_west value=0.64
+        """
+        _datapoint = line_format_fields(measurement)
+        ln = '{}{} {} {}'.format(
+            self.measurement, line_protocol_tags(atom),
+            line_format_fields(measurement), measurement.timestamp)
         return ln
 
     @asyncio.coroutine

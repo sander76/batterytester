@@ -3,7 +3,7 @@ from threading import Thread
 
 import aiohttp
 
-from batterytester.helpers.notifier import BaseNotifier, TelegramNotifier
+from batterytester.core.helpers.notifier import BaseNotifier, TelegramNotifier
 
 
 class Bus:

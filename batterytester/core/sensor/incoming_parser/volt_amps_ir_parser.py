@@ -4,8 +4,8 @@ Incoming parser receives incoming sensor data and cleans it.
 
 import logging
 
-from batterytester.bus import Bus
-from batterytester.incoming_parser import IncomingParser
+from batterytester.core.bus import Bus
+from batterytester.core.sensor import IncomingParser
 
 lgr = logging.getLogger(__name__)
 
@@ -57,6 +57,7 @@ class VoltAmpsIrParser(IncomingParser):
     #         return
 
     def _interpret(self, measurement):
+        """Must return key value pairs."""
         _line = measurement.split(b';')
         try:
             data = {}

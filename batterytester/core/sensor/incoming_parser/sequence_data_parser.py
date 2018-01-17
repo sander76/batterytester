@@ -1,8 +1,8 @@
 import logging
 
-from batterytester.bus import Bus
-from batterytester.helpers.helpers import TestFailException
-from batterytester.incoming_parser import IncomingParserChunked
+from batterytester.core.bus import Bus
+from batterytester.core.helpers.helpers import TestFailException
+from batterytester.core.sensor.incoming_parser import IncomingParserChunked
 
 _LOGGING = logging.getLogger(__name__)
 

@@ -1,11 +1,12 @@
 """PowerView open close loop test. Running shades in an open/close loop."""
 
 import asyncio
+from typing import Union
 
 from aiopvapi.powerview_tool import PowerViewCommands
-from batterytester.helpers.helpers import TestFailException
-from batterytester.main_test import BaseTest
-from batterytester.atom import Atom
+
+from batterytester.main_test import BaseTest, get_bus
+from batterytester.core.atom import Atom
 
 
 class PowerViewOpenCloseLoopTest(BaseTest):
@@ -41,7 +42,7 @@ class PowerViewOpenCloseLoopTest(BaseTest):
     def __init__(self, test_name,
                  loop_count: int, delay: int, shade_ids, hub_ip,
                  test_location=None,
-                 telegram_token=None, chat_id=None, shade_delay=3):
+                 telegram_token=Union(None,str), chat_id=None, shade_delay=3):
         """
         :param str test_name: Name of the test
         :param int loop_count: The amount of loops this test should run.
@@ -53,11 +54,9 @@ class PowerViewOpenCloseLoopTest(BaseTest):
         :param str chat_id: The telegram chat id where the notifications should be sent to.
         :param int shade_delay: Delay between firing individual shades.
         """
+        bus = get_bus(telegram_token,chat_id,test_name)
         self.delay = delay
-        super().__init__(test_name, loop_count,
-                         sensor_data_connector=None,
-                         database=None,
-                         report=None,
+        super().__init__(bus,test_name, loop_count,
                          test_location=test_location,
                          telegram_token=telegram_token,
                          telegram_chat_id=chat_id

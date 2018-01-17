@@ -9,8 +9,8 @@ import random
 import string
 from asyncio.futures import CancelledError
 
-from batterytester.connector import AsyncSensorConnector
-from batterytester.helpers import Bus
+from batterytester.core.sensor.connector import AsyncSensorConnector
+from batterytester.core.helpers import Bus
 
 _LOGGER = logging.getLogger(__name__)
 

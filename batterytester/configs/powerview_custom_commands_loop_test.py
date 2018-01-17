@@ -1,6 +1,6 @@
 from batterytester.main_test.powerview_custom_commands_reference_test import \
     PowerViewCustomCommandsReferenceTest
-from batterytester.atom import Atom
+from batterytester.core.atom import Atom
 
 test = PowerViewCustomCommandsReferenceTest(
     test_name='custom test',
