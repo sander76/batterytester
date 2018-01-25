@@ -1,4 +1,3 @@
-import datetime
 import os
 
 
@@ -59,9 +58,9 @@ class Report:
         )
         self._output(_output)
 
-    def interactive_property(self, property):
-        _key_width = max(len(property), PROPERTY_WIDTH)
-        _key = property.ljust(_key_width) + ":"
+    def interactive_property(self, property_):
+        _key_width = max(len(property_), PROPERTY_WIDTH)
+        _key = property_.ljust(_key_width) + ":"
         print(_key, end='')
 
         def set_value(value):
@@ -97,8 +96,8 @@ class Report:
         self.italic(content)
         self.line()
 
-    def create_dl(self, property, value):
-        self._output(property)
+    def create_dl(self, property_, value):
+        self._output(property_)
         self._output(DL_VALUE_FORMAT.format(value))
 
     def final_test_result(self, success: bool, reason):

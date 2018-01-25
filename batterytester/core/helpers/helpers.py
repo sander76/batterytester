@@ -1,6 +1,4 @@
-import asyncio
 import os
-from collections import namedtuple
 
 import logging
 
@@ -51,4 +49,5 @@ def check_output_location(test_location):
     return True
 
 
-Measurement = namedtuple('Measurement', ['values', 'timestamp'])
+# Measurement = namedtuple('Measurement', ['values', 'timestamp'])
+# #todo: convert this to a dict ?

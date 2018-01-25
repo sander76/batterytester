@@ -5,6 +5,7 @@ from typing import Union
 
 from aiopvapi.powerview_tool import PowerViewCommands
 
+from batterytester.core.helpers.helpers import TestFailException
 from batterytester.main_test import BaseTest, get_bus
 from batterytester.core.atom import Atom
 
@@ -42,7 +43,7 @@ class PowerViewOpenCloseLoopTest(BaseTest):
     def __init__(self, test_name,
                  loop_count: int, delay: int, shade_ids, hub_ip,
                  test_location=None,
-                 telegram_token=Union(None,str), chat_id=None, shade_delay=3):
+                 telegram_token=Union[None,str], chat_id=None, shade_delay=3):
         """
         :param str test_name: Name of the test
         :param int loop_count: The amount of loops this test should run.
@@ -79,10 +80,10 @@ class PowerViewOpenCloseLoopTest(BaseTest):
             yield from asyncio.sleep(6)
 
     @asyncio.coroutine
-    def _move_shades(self, open=False):
+    def _move_shades(self, open_=False):
         result = True
         for _shade in self.shades:
-            if open:
+            if open_:
                 result = yield from _shade.open()
             else:
                 result = yield from _shade.close()

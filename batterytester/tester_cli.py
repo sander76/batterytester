@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from pprint import pprint
 import inspect
 import re
 from batterytester.main_test.powerview_open_close_loop_test import PowerViewOpenCloseLoopTest

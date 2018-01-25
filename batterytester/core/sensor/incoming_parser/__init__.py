@@ -6,7 +6,7 @@ from time import time
 from typing import Sequence, Generator
 
 from batterytester.core.bus import Bus
-from batterytester.core.helpers.helpers import Measurement
+from batterytester.core.helpers.constants import ATTR_VALUES, ATTR_TIMESTAMP
 
 
 def get_time_stamp():
@@ -18,7 +18,7 @@ class IncomingParser:
         self.bus = bus
         self.separator = b'\n'
 
-    def process(self, raw_incoming) -> Sequence[Measurement]:
+    def process(self, raw_incoming) -> Sequence[dict]:
         """Entry point for processing raw incoming sensor data."""
         raise NotImplemented
 
@@ -57,16 +57,17 @@ class IncomingParserChunked(IncomingParser):
         self.current_retry = 0
         self.incoming_data = bytearray()  # all incoming data.
 
-    def _extract(self) -> Generator[Measurement, None, None]:
+    def _extract(self) -> Generator[dict, None, None]:
         """Extracts raw chunks of data from the stream"""
 
         _split = self.incoming_data.split(self.separator)
         self.incoming_data = bytearray(_split[-1])
-        for _chunk in (_split[i] for i in range(len(_split)-1)):
+        for _chunk in (_split[i] for i in range(len(_split) - 1)):
             if _chunk != b'':
-                yield Measurement(self._interpret(_chunk), get_time_stamp())
+                yield {ATTR_VALUES: self._interpret(_chunk),
+                       ATTR_TIMESTAMP: get_time_stamp()}
 
-    def process(self, raw_incoming) -> Sequence[Measurement]:
+    def process(self, raw_incoming) -> Sequence[dict]:
         """Entry point for processing raw incoming sensor data.
         Gets called by long running task _parser inside the serial sensor
         class."""
@@ -82,7 +83,7 @@ class IncomingParserChunked(IncomingParser):
 
         for _measurement in self._extract():
             yield _measurement
-            #yield self._interpret(_measurement)
+            # yield self._interpret(_measurement)
         # #     val = self._interpret(_measurement)
         #     if val is not None:
         #         clean_data.append(val)

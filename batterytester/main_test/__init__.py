@@ -8,7 +8,7 @@ from typing import Union, Sequence
 from batterytester.core.atom import ReferenceAtom
 from batterytester.core.bus import TelegramBus, Bus
 from batterytester.core.helpers.helpers import get_current_time, \
-    check_output_location, TestFailException, Measurement
+    check_output_location, TestFailException
 from batterytester.core.sensor import Sensor
 
 from batterytester.core.database import DataBase
@@ -92,10 +92,13 @@ class BaseTest:
             self._report.create_summary_file()
             self.bus._start_test()
 
-    def handle_sensor_data(self, sensor_data: Measurement):
+    def handle_sensor_data(self, sensor_data: dict):
         """Handle sensor data by sending it to the active atom or store
         it in a database.
+        Cannot be a blocking io call. Needs to return immediately
         """
+        self.bus.message_bus.send_sensor_data(sensor_data)
+        #todo: check whether this is implemented correctly at other locations.
         pass
 
     def _loop_init(self):
@@ -204,7 +207,7 @@ class BaseTest:
             yield from self.bus.notifier.notify(
                 "*{}*: Stopping test".format(
                     self.test_name))
-            # self.bus.stop_test('')
+            self.bus.stop_test('')
 
     @asyncio.coroutine
     def _atom_init(self):
@@ -223,7 +226,7 @@ class BaseTest:
             try:
                 while self.bus.running:
                     sensor_data = yield from self.sensor_data_queue.get()
-                    self.handle_sensor_data(sensor_data)
+                    yield from self.handle_sensor_data(sensor_data)
                 LOGGER.debug("stopping message loop.")
             except CancelledError as e:
                 return
@@ -258,8 +261,9 @@ class BaseReferenceTest(BaseTest):
         self._learning_mode = learning_mode
         self.summary = {'total_tests': 0, 'failures': []}
 
+    @asyncio.coroutine
     def perform_test(self):
-        super().perform_test()
+        yield from super().perform_test()
         if not self._learning_mode:
             # Actual testing mode. reference data
             # and testing data can be compared.

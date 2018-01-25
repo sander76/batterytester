@@ -3,6 +3,7 @@ from threading import Thread
 
 import aiohttp
 
+from batterytester.core.helpers.messaging import Messaging
 from batterytester.core.helpers.notifier import BaseNotifier, TelegramNotifier
 
 
@@ -16,6 +17,8 @@ class Bus:
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.exit_message = None
         self.notifier = BaseNotifier()
+        self.message_bus = Messaging(self.loop)
+        self.loop.run_until_complete(self.message_bus.start())
 
     def add_async_task(self, coro):
         self.tasks.append(self.loop.create_task(coro))
@@ -27,6 +30,8 @@ class Bus:
         self.callbacks.append(callback)
 
     def _start_test(self):
+        #start the ws message bus.
+
         for callback in self.callbacks:
             callback()
         for task in self.threaded_tasks:
@@ -38,6 +43,7 @@ class Bus:
             self.loop.close()
 
         return self.exit_message
+
 
     def stop_loop(self, future):
         self.loop.stop()
@@ -54,6 +60,7 @@ class Bus:
                       not asyncio.Task.current_task(self.loop) == _task]
         print("session:")
         print(self.session)
+        yield from self.message_bus.stop_message_bus()
         yield from self.session.close()
         # if self.session.closed:
         #     break

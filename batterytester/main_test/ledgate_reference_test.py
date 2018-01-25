@@ -1,31 +1,29 @@
 import asyncio
 
-from aiopvapi.helpers.aiorequest import PvApiConnectionError
-
 from batterytester.core.database.influx import Influx
-from batterytester.core.helpers.helpers import TestFailException
-from batterytester.core.helpers.powerview_utils import PowerView
 from batterytester.core.sensor.led_gate_sensor import LedGateSensor
 from batterytester.main_test import BaseReferenceTest, get_bus
 
 
-class PowerViewLedgateReferenceTest(BaseReferenceTest):
+class LedgateReferenceTest(BaseReferenceTest):
+    """Ledgate test test ;-)"""
+
     def __init__(self,
                  test_name: str,
                  loop_count: int,
                  serial_port: str,
                  baud_rate: int,
-                 hub_ip,
                  influx_host='172.22.3.21',
                  influx_database='menc',
                  test_location: str = None,
                  telegram_token=None,
                  telegram_chat_id=None,
                  ):
-        bus = get_bus(telegram_token,telegram_chat_id,test_name)
+        bus = get_bus(telegram_token, telegram_chat_id, test_name)
         led_gate_sensor = LedGateSensor(bus, serial_port, baud_rate)
 
-        _database = Influx(bus, influx_host, influx_database, test_name)
+        # _database = Influx(bus, influx_host, influx_database, test_name)
+        _database = None
 
         super().__init__(
             bus,
@@ -38,22 +36,19 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
             telegram_token=telegram_token,
             telegram_chat_id=telegram_chat_id
         )
-        self.powerview = PowerView(hub_ip, self.bus.loop, self.bus.session)
 
     @asyncio.coroutine
     def test_warmup(self):
-        try:
-            yield from self.powerview.get_shades()
-            yield from self.powerview.get_scenes()
-        except PvApiConnectionError:
-            raise TestFailException("Failed to warmup the test.")
+        pass
 
-    def handle_sensor_data(self, sensor_data):
+    @asyncio.coroutine
+    def handle_sensor_data(self, sensor_data: dict):
+        super().handle_sensor_data(sensor_data)
         """Sensor data to be added to the active atom."""
         if self.active_atom:
             self.active_atom.sensor_data.append(sensor_data)
-        self.database.add_to_database(sensor_data,atom)
-        # todo: add it to the influx database too.
+        if self.database:
+            self.database.add_to_database(sensor_data, self.active_atom)
 
     def get_sequence(self):
         raise NotImplementedError

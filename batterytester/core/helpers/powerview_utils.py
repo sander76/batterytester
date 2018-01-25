@@ -30,14 +30,14 @@ class PowerView:
             self.shades.append(
                 Shade(shade, self.hub_ip, self.loop, self.session))
 
-    def get_shade_by_id(self, id) -> Shade:
+    def get_shade_by_id(self, id_) -> Shade:
         for _shade in self.shades:
-            if _shade.id == id:
+            if _shade.id == id_:
                 return _shade
 
-    def get_scene_by_id(self, id) -> Scene:
+    def get_scene_by_id(self, id_) -> Scene:
         for _scene in self.scenes:
-            if _scene.id == id:
+            if _scene.id == id_:
                 return _scene
 
     @asyncio.coroutine

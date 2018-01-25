@@ -12,3 +12,6 @@ RESULT_PASS = 'pass'
 RESULT_FAIL = 'fail'
 ATTR_RESULT = 'result'
 
+ATTR_VALUES = 'v'
+ATTR_TIMESTAMP = 't'
+
