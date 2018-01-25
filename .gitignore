@@ -1,7 +1,8 @@
-/pcbs
 batterytester.egg-info
 .idea
 env
 venv
 __pycache__
 summary-report.md
+.cache
+build
