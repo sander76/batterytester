@@ -31,7 +31,6 @@ class ThreadedSerialSensorConnector(ThreadedSensorConnector):
             try_delay=10):
         super().__init__(bus)
         self.s = Serial()
-        #self.s.timeout = LOOP_TIME_OUT
         self.serial_port = serial_port
         self.s.port = serial_port
         self.s.baudrate = serial_speed
@@ -39,7 +38,8 @@ class ThreadedSerialSensorConnector(ThreadedSensorConnector):
 
     def connect(self):
         try:
-            LOGGER.debug("Connecting to serial port {}.".format(self.serial_port))
+            LOGGER.debug(
+                "Connecting to serial port {}.".format(self.serial_port))
             self.s.open()
         except SerialException as err:
 
@@ -47,7 +47,6 @@ class ThreadedSerialSensorConnector(ThreadedSensorConnector):
             self.bus.stop_test()
         except Exception as err:
             LOGGER.exception(err)
-
 
     def stop(self):
         self.s.close()
@@ -57,7 +56,7 @@ class ThreadedSerialSensorConnector(ThreadedSensorConnector):
             try:
                 data = self.s.read(self.s.in_waiting or 1)
                 self.bus.loop.call_soon_threadsafe(
-                    self.raw_sensor_data_queue.put_nowait(data))
+                    self.raw_sensor_data_queue.put_nowait,data)
             except SerialException:
                 LOGGER.error("error reading from serial port")
                 break
