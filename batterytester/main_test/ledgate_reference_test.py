@@ -22,8 +22,8 @@ class LedgateReferenceTest(BaseReferenceTest):
         bus = get_bus(telegram_token, telegram_chat_id, test_name)
         led_gate_sensor = LedGateSensor(bus, serial_port, baud_rate)
 
-        # _database = Influx(bus, influx_host, influx_database, test_name)
-        _database = None
+        _database = Influx(bus, influx_host, influx_database, test_name)
+        #_database = None
 
         super().__init__(
             bus,
@@ -41,7 +41,6 @@ class LedgateReferenceTest(BaseReferenceTest):
     def test_warmup(self):
         pass
 
-    @asyncio.coroutine
     def handle_sensor_data(self, sensor_data: dict):
         super().handle_sensor_data(sensor_data)
         """Sensor data to be added to the active atom."""

@@ -5,3 +5,4 @@ aiopvapi
 pyserial
 requests
 wheel
+telepot

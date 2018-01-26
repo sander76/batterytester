@@ -7,7 +7,7 @@ test = LedgateReferenceTest(
     test_name='ledgate_test',
     loop_count=10,
     #serial_port='ttyACM0',
-    serial_port='COM11',
+    serial_port='COM4',
     baud_rate=9600
 )
 

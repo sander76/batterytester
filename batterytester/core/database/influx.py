@@ -12,7 +12,7 @@ from batterytester.core.helpers.constants import ATTR_VALUES, ATTR_TIMESTAMP
 
 LENGTH = 30
 
-lgr = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def line_format_fields(measurement: dict):
@@ -46,7 +46,7 @@ class Influx(DataBase):
         self.data = []
         self.url = 'http://{}:8086/write?db={}&precision=ms'.format(
             host, database)
-        self.measurement = measurement
+        self.measurement = measurement #actually the name of the test.
         self.data_length = datalength
 
     @asyncio.coroutine
@@ -100,12 +100,13 @@ test_name,loop=x,index=x temp=82 1465839830100400200
         resp = None
         try:
             with async_timeout.timeout(5, loop=self.bus.loop):
+                LOGGER.debug("Sending data to database")
                 resp = yield from self.bus.session.post(self.url, data=data)
             if resp.status != 204:
                 self.bus.stop_test(
                     "Wrong response code {}".format(resp.status))
         except (asyncio.TimeoutError, ClientError) as err:
-            lgr.exception(err)
+            LOGGER.exception(err)
             self.bus.stop_test("Problems writing data to database")
         finally:
             if resp is not None:

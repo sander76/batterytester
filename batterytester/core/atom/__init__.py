@@ -3,11 +3,14 @@
 import asyncio
 import logging
 import os
+from collections import OrderedDict
 
 from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
     PvApiResponseStatusError
 
-from batterytester.core.helpers.constants import ATTR_RESULT, ATTR_CURRENT_LOOP
+from batterytester.core.helpers.constants import ATTR_RESULT, \
+    ATTR_CURRENT_LOOP, KEY_VALUE, KEY_ATOM_NAME, KEY_ATOM_DURATION, \
+    RESULT_UNKNOWN, KEY_ATOM_LOOP, KEY_ATOM_INDEX, KEY_ATOM_STATUS
 from batterytester.core.helpers.helpers import TestFailException
 from batterytester.core.helpers.report import Report
 
@@ -57,6 +60,7 @@ class Atom:
         self.report = None
         self._idx = None
         self._loop = None
+        self._result = ''
 
     @property
     def loop(self):
@@ -81,19 +85,34 @@ class Atom:
         self._idx = idx
         self._loop = current_loop
 
+    def get_atom_data(self):
+        return OrderedDict({
+            KEY_ATOM_NAME: {KEY_VALUE: self._name},
+            KEY_ATOM_LOOP: {KEY_VALUE: self._loop},
+            KEY_ATOM_INDEX: {KEY_VALUE: self._idx},
+            KEY_ATOM_DURATION: {KEY_VALUE: self.duration},
+            KEY_ATOM_STATUS: {KEY_VALUE: RESULT_UNKNOWN},
+
+        })
+
+    def get_atom_result(self):
+        return OrderedDict({
+
+        })
+
     def _report_command_result(self, result):
         self.report.H3('TEST_COMMAND')
         self.report.create_property('command', self.name)
         self.report.create_property(ATTR_RESULT, 'success')
 
-    def report_start_test(self, **kwargs):
-        current_loop = kwargs.get(ATTR_CURRENT_LOOP)
-
-        self.report.atom_start_header()
-        self.report.H3('TEST DATA')
-        self.report.create_property('loop', current_loop)
-        self.report.create_property('index', self._idx)
-        self.report.create_property('duration', self.duration)
+    # def report_start_test(self, **kwargs):
+    #     current_loop = kwargs.get(ATTR_CURRENT_LOOP)
+    #
+    #     self.report.atom_start_header()
+    #     self.report.H3('TEST DATA')
+    #     self.report.create_property('loop', current_loop)
+    #     self.report.create_property('index', self._idx)
+    #     self.report.create_property('duration', self.duration)
 
     @asyncio.coroutine
     def execute(self):

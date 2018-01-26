@@ -3,12 +3,18 @@ import os
 import logging
 
 from asyncio import CancelledError
+from collections import OrderedDict
 from typing import Union, Sequence
 
 from batterytester.core.atom import ReferenceAtom
+from batterytester.core.helpers.constants import KEY_VALUE, KEY_TEST_NAME, \
+    KEY_TEST_START_TIME, KEY_TEST_LOOPS
 from batterytester.core.bus import TelegramBus, Bus
 from batterytester.core.helpers.helpers import get_current_time, \
-    check_output_location, TestFailException
+    check_output_location, TestFailException, get_current_time_string, \
+    get_time_string
+from batterytester.core.helpers.messaging import CACHE_ATOM_DATA, \
+    CACHE_TEST_DATA
 from batterytester.core.sensor import Sensor
 
 from batterytester.core.database import DataBase
@@ -18,7 +24,7 @@ from batterytester.core.helpers.report import Report
 LOGGER = logging.getLogger(__name__)
 
 
-def get_bus(telegram_token=None,telegram_chat_id=None,test_name=None):
+def get_bus(telegram_token=None, telegram_chat_id=None, test_name=None):
     if telegram_token and telegram_chat_id:
         return TelegramBus(telegram_token, telegram_chat_id, test_name)
     else:
@@ -51,7 +57,7 @@ class BaseTest:
         :param telegram_token: for notifications.
         :param telegram_chat_id: for notifications.
         """
-        self.bus=bus
+        self.bus = bus
         self.test_name = test_name
 
         if isinstance(sensor, Sensor):
@@ -74,7 +80,7 @@ class BaseTest:
                                               self.test_location)
         if add_time_stamp_to_report:
             self.test_location = (
-                    get_current_time().strftime('%Y-%m-%d_%H-%M-%S')
+                    get_current_time_string()
                     + '_'
                     + self.test_location)
         if report:
@@ -92,14 +98,24 @@ class BaseTest:
             self._report.create_summary_file()
             self.bus._start_test()
 
+    def get_test_data(self):
+        """Returns an ordered dict containing test data to be used
+        for reporting and feedback"""
+
+        return OrderedDict({
+            KEY_TEST_NAME: {KEY_VALUE: self.test_name},
+            KEY_TEST_START_TIME: {KEY_VALUE: get_time_string(self.started)},
+            KEY_TEST_LOOPS: {KEY_VALUE: self._loopcount}
+        })
+
     def handle_sensor_data(self, sensor_data: dict):
         """Handle sensor data by sending it to the active atom or store
         it in a database.
         Cannot be a blocking io call. Needs to return immediately
         """
-        self.bus.message_bus.send_sensor_data(sensor_data)
-        #todo: check whether this is implemented correctly at other locations.
-        pass
+
+        self.bus.message_bus.send_data(sensor_data)
+        # todo: check whether this is implemented correctly at other locations.
 
     def _loop_init(self):
         """Loads the actual test atoms and configures them according to the
@@ -121,8 +137,10 @@ class BaseTest:
 
     @asyncio.coroutine
     def _test_init(self):
-        self._report.write_intro(self.test_name)
         self.started = get_current_time()
+        self.bus.message_bus.send_data_cached(self.get_test_data(),
+                                              CACHE_TEST_DATA)
+        self._report.write_intro(self.test_name)
 
     def get_sequence(self):
         """Gets called to retrieve a list of test atoms to be performed.
@@ -186,7 +204,7 @@ class BaseTest:
                     yield from self.loop_warmup()
                     for idx, atom in enumerate(self._test_sequence):
                         self._active_atom = atom
-                        #self._active_index = idx
+                        # self._active_index = idx
                         yield from self._atom_init()
                         yield from self.atom_warmup()
                         yield from self.perform_test()
@@ -212,7 +230,9 @@ class BaseTest:
     @asyncio.coroutine
     def _atom_init(self):
         """Method to be performed at the start of each new test-atom"""
-        self._active_atom.report_start_test(current_loop=self._active_loop)
+        self.bus.message_bus.send_data_cached(
+            self._active_atom.get_atom_data(), CACHE_ATOM_DATA)
+        #self._active_atom.report_start_test(current_loop=self._active_loop)
 
     @asyncio.coroutine
     def _messager(self):
@@ -226,7 +246,7 @@ class BaseTest:
             try:
                 while self.bus.running:
                     sensor_data = yield from self.sensor_data_queue.get()
-                    yield from self.handle_sensor_data(sensor_data)
+                    self.handle_sensor_data(sensor_data)
                 LOGGER.debug("stopping message loop.")
             except CancelledError as e:
                 return
@@ -271,7 +291,7 @@ class BaseReferenceTest(BaseTest):
             _success = self._active_atom.reference_compare()
             if not _success:
                 self.summary['failures'].append(
-                    (self._active_loop,  self.active_atom.idx))
+                    (self._active_loop, self.active_atom.idx))
 
     @property
     def active_atom(self) -> ReferenceAtom:

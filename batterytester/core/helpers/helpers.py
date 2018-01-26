@@ -4,7 +4,6 @@ import logging
 
 import datetime
 
-
 LOOP_TIME_OUT = 2
 
 _LOGGER = logging.getLogger(__name__)
@@ -12,6 +11,14 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_current_time():
     return datetime.datetime.now().replace(microsecond=0)
+
+
+def get_time_string(datetime_obj: datetime.datetime):
+    return datetime_obj.strftime('%Y-%m-%d_%H-%M-%S')
+
+
+def get_current_time_string():
+    return get_current_time().strftime('%Y-%m-%d_%H-%M-%S')
 
 
 # def slugify(text: str) -> str:
@@ -47,7 +54,6 @@ def check_output_location(test_location):
     if not os.path.exists(test_location):
         os.makedirs(test_location)
     return True
-
 
 # Measurement = namedtuple('Measurement', ['values', 'timestamp'])
 # #todo: convert this to a dict ?

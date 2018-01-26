@@ -8,6 +8,13 @@ from aiohttp import web
 ATTR_MESSAGE_BUS_ADDRESS = '127.0.0.1'
 ATTR_MESSAGE_BUS_PORT = 8567
 
+URL_CLOSE = 'close'
+URL_ATOM = 'atom'  # General info about the current atom.
+URL_TEST = 'test'  # General test information.
+
+CACHE_ATOM_DATA = 'atom_data' # Cache key where to store atom data.
+CACHE_TEST_DATA = 'test_data' # Cache key where to store test info.
+
 
 class Messaging:
     def __init__(self, loop):
@@ -16,13 +23,10 @@ class Messaging:
         self.loop = loop
         self.app = web.Application()
         self.app.router.add_get('/ws', self.sensor_handler)
-        self.handler=None
-        self.server=None
-        self._report=None
-
-    @report.setter
-    def report(self,value):
-        pass
+        self.handler = None
+        self.server = None
+        self._report = None
+        self.test_cache = {}
 
     async def sensor_handler(self, request):
         ws = web.WebSocketResponse()
@@ -32,10 +36,12 @@ class Messaging:
         try:
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
-                    if msg.data == 'close':
+                    if msg.data == URL_CLOSE:
                         await ws.close()
-                    if msg.data == 'sensors':
-                        ws.send_str('sensors')
+                    elif msg.data == URL_ATOM:
+                        ws.send_str(self.test_cache[CACHE_ATOM_DATA])
+                    elif msg.data == URL_TEST:
+                        ws.send_str(self.test_cache[CACHE_TEST_DATA])
                 elif msg.type in (aiohttp.WSMsgType.CLOSE,
                                   aiohttp.WSMsgType.CLOSING,
                                   aiohttp.WSMsgType.CLOSED):
@@ -44,10 +50,18 @@ class Messaging:
             self.sensor_sockets.remove(ws)
         return ws
 
-    def send_sensor_data(self, measurement: dict):
-        _js = json.dumps(measurement)
+    def send_data(self, data: dict):
+        _js = json.dumps(data)
+        self._send_to_ws(_js)
+
+    def send_data_cached(self, data: dict, cache_key: str):
+        _js = json.dumps(data)
+        self.test_cache[cache_key] = _js
+        self._send_to_ws(_js)
+
+    def _send_to_ws(self, data: str):
         for _ws in self.sensor_sockets:
-            _ws.send_str(_js)
+            _ws.send_str(data)
 
     async def start(self):
         self.handler = self.app.make_handler()
@@ -55,7 +69,6 @@ class Messaging:
 
         self.server = await self.loop.create_server(
             self.handler, ATTR_MESSAGE_BUS_ADDRESS, ATTR_MESSAGE_BUS_PORT)
-
 
     async def stop_message_bus(self):
         self.server.close()

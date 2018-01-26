@@ -10,8 +10,18 @@ ATTR_CURRENT_LOOP = 'current_loop'
 
 RESULT_PASS = 'pass'
 RESULT_FAIL = 'fail'
+RESULT_UNKNOWN = 'unknown'
 ATTR_RESULT = 'result'
 
 ATTR_VALUES = 'v'
 ATTR_TIMESTAMP = 't'
 
+KEY_ATOM_LOOP = 'loop'
+KEY_ATOM_INDEX = 'idx'
+KEY_VALUE = 'val'
+KEY_ATOM_NAME = 'atom_name'
+KEY_ATOM_DURATION = 'atom_dur'
+KEY_ATOM_STATUS = 'stat'
+KEY_TEST_NAME = 'test_name'
+KEY_TEST_LOOPS = 'loops'
+KEY_TEST_START_TIME = 'start_time'
