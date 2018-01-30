@@ -5,7 +5,7 @@ import aiohttp
 
 from aiohttp import web
 
-ATTR_MESSAGE_BUS_ADDRESS = '*.*.*.*'
+ATTR_MESSAGE_BUS_ADDRESS = '0.0.0.0'
 ATTR_MESSAGE_BUS_PORT = 8567
 
 URL_CLOSE = 'close'

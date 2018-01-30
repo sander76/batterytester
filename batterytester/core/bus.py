@@ -62,7 +62,7 @@ class Bus:
 
     def _start_test(self):
         # start the ws message bus.
-
+        # todo: add keyboard interruption handling
         for callback in self.callbacks:
             callback()
         for task in self.threaded_tasks:
