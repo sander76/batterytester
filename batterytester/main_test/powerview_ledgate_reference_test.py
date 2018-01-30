@@ -3,7 +3,8 @@ import asyncio
 from aiopvapi.helpers.aiorequest import PvApiConnectionError
 
 from batterytester.core.database.influx import Influx
-from batterytester.core.helpers.helpers import TestFailException
+from batterytester.core.helpers.helpers import FatalTestFailException
+
 from batterytester.core.helpers.powerview_utils import PowerView
 from batterytester.core.sensor.led_gate_sensor import LedGateSensor
 from batterytester.main_test import BaseReferenceTest, get_bus
@@ -46,7 +47,7 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
             yield from self.powerview.get_shades()
             yield from self.powerview.get_scenes()
         except PvApiConnectionError:
-            raise TestFailException("Failed to warmup the test.")
+            raise FatalTestFailException("Failed to warmup the test.")
 
     @asyncio.coroutine
     def handle_sensor_data(self, sensor_data):
