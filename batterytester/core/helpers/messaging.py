@@ -5,15 +5,15 @@ import aiohttp
 
 from aiohttp import web
 
-ATTR_MESSAGE_BUS_ADDRESS = '127.0.0.1'
+ATTR_MESSAGE_BUS_ADDRESS = '*.*.*.*'
 ATTR_MESSAGE_BUS_PORT = 8567
 
 URL_CLOSE = 'close'
 URL_ATOM = 'atom'  # General info about the current atom.
 URL_TEST = 'test'  # General test information.
 
-CACHE_ATOM_DATA = 'atom_data' # Cache key where to store atom data.
-CACHE_TEST_DATA = 'test_data' # Cache key where to store test info.
+CACHE_ATOM_DATA = 'atom_data'  # Cache key where to store atom data.
+CACHE_TEST_DATA = 'test_data'  # Cache key where to store test info.
 
 
 class Messaging:
