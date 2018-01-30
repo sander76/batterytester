@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from asyncio import CancelledError
 from typing import Union
 
 import async_timeout
@@ -9,8 +10,9 @@ from batterytester.core.atom import Atom
 from batterytester.core.bus import Bus
 from batterytester.core.database import DataBase
 from batterytester.core.helpers.constants import ATTR_VALUES, ATTR_TIMESTAMP
+from batterytester.core.helpers.helpers import FatalTestFailException
 
-LENGTH = 30
+LENGTH = 5
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +20,8 @@ LOGGER = logging.getLogger(__name__)
 def line_format_fields(measurement: dict):
     """Create the fields and their values."""
     return ','.join("{}={}".format(key, value) for key, value in
-                    measurement.get(ATTR_VALUES).items())
+                    measurement.items() if
+                    key != ATTR_TIMESTAMP)
 
 
 def line_protocol_tags(atom: Atom):
@@ -27,6 +30,7 @@ def line_protocol_tags(atom: Atom):
     return ''
 
 
+# todo: write the buffer to the database when the test ends.
 # todo: write tests.
 
 class Influx(DataBase):
@@ -46,15 +50,16 @@ class Influx(DataBase):
         self.data = []
         self.url = 'http://{}:8086/write?db={}&precision=ms'.format(
             host, database)
-        self.measurement = measurement #actually the name of the test.
+        self.measurement = measurement  # actually the name of the test.
         self.data_length = datalength
+        self.bus.add_async_task(
+            self._check_and_send_to_database())
+        self.bus.add_closing_task(self._flush())
 
     @asyncio.coroutine
     def _add_to_database(self, datapoint, atom: Union[Atom, None]):
 
         self.data.append(self._create_measurement(datapoint, atom))
-        # todo: convert this to a long running task.
-        yield from self._check_and_send_to_database()
 
     def _create_measurement(self, measurement: dict, atom=None):
         """Transform data according to line format protocol.
@@ -79,26 +84,45 @@ test_name,loop=x,index=x temp=82 1465839830100400200
 
     @asyncio.coroutine
     def _check_and_send_to_database(self):
-        """Checks the length of the data and
+        """Checks the length of the data list and
         if long enough sends it to the database."""
 
-        if len(self.data) > self.data_length:
-            _data = self.prepare_data()
-            # clear the list so asyncio can start populating
-            # it while processing the next yields.
-            self.data = []
-            yield from self._send(_data)
+        try:
+            while self.bus.running:
+                if len(self.data) > self.data_length:
+                    LOGGER.debug("buffer limit exceeded. Flushing data")
+                    yield from self._flush()
+                else:
+                    yield from asyncio.sleep(5)
+        except CancelledError:
+            LOGGER.info("Test cancelled. Closing database.")
+
+        # Flush remaining data before loop is closed.
+        # _data = self.prepare_data()
+        # self.bus.add_closing_task(self._send(_data))
         return
 
     def prepare_data(self):
-        _data = '\n'.join(self.data)
-        _data += '\n'
-        return _data
+        if self.data:
+            _data = '\n'.join(self.data)
+            _data += '\n'
+            return _data
+
+    @asyncio.coroutine
+    def _flush(self):
+        _data = self.prepare_data()
+        # clear the list so asyncio can start populating
+        # it while processing the next yields.
+
+        self.data = []
+        if _data:
+            yield from self._send(_data)
 
     @asyncio.coroutine
     def _send(self, data):
         resp = None
         try:
+            LOGGER.debug("Flushing")
             with async_timeout.timeout(5, loop=self.bus.loop):
                 LOGGER.debug("Sending data to database")
                 resp = yield from self.bus.session.post(self.url, data=data)
@@ -107,8 +131,7 @@ test_name,loop=x,index=x temp=82 1465839830100400200
                     "Wrong response code {}".format(resp.status))
         except (asyncio.TimeoutError, ClientError) as err:
             LOGGER.exception(err)
-            self.bus.stop_test("Problems writing data to database")
+            raise FatalTestFailException("Error sending data to database")
         finally:
             if resp is not None:
                 yield from resp.release()
-        return True

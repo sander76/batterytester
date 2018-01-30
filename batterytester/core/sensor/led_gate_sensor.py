@@ -9,7 +9,6 @@ from batterytester.core.sensor.incoming_parser.boolean_parser import \
 
 class LedGateSensor(Sensor):
     def __init__(self, bus, serialport, serialspeed):
-        # connector = AsyncSerialConnector(bus, serialport, serialspeed)
         connector = ThreadedSerialSensorConnector(bus, serialport, serialspeed)
         parser = BooleanParser(bus)
         super().__init__(bus, connector, parser)

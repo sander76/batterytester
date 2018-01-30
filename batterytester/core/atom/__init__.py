@@ -11,7 +11,8 @@ from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
 from batterytester.core.helpers.constants import ATTR_RESULT, \
     ATTR_CURRENT_LOOP, KEY_VALUE, KEY_ATOM_NAME, KEY_ATOM_DURATION, \
     RESULT_UNKNOWN, KEY_ATOM_LOOP, KEY_ATOM_INDEX, KEY_ATOM_STATUS
-from batterytester.core.helpers.helpers import TestFailException
+from batterytester.core.helpers.helpers import NonFatalTestFailException
+
 from batterytester.core.helpers.report import Report
 
 SENSOR_FILE_FORMAT = 'loop_{}-idx_{}.json'
@@ -127,7 +128,7 @@ class Atom:
                 PvApiConnectionError, PvApiError,
                 PvApiResponseStatusError) as err:
             self._report_command_result(_result)
-            raise TestFailException(err)
+            raise NonFatalTestFailException(err)
 
 
 class ReferenceAtom(Atom):

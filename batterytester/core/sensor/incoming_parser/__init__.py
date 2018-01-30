@@ -64,8 +64,9 @@ class IncomingParserChunked(IncomingParser):
         self.incoming_data = bytearray(_split[-1])
         for _chunk in (_split[i] for i in range(len(_split) - 1)):
             if _chunk != b'':
-                yield {ATTR_VALUES: self._interpret(_chunk),
-                       ATTR_TIMESTAMP: get_time_stamp()}
+                val = self._interpret(_chunk)
+                val[ATTR_TIMESTAMP] = get_time_stamp()
+                yield val
 
     def process(self, raw_incoming) -> Sequence[dict]:
         """Entry point for processing raw incoming sensor data.
@@ -89,6 +90,6 @@ class IncomingParserChunked(IncomingParser):
         #         clean_data.append(val)
         # return clean_data
 
-    def _interpret(self, measurement):
+    def _interpret(self, measurement) -> dict:
         """Interprets an incoming measurement and returns the result"""
         return measurement

@@ -23,7 +23,6 @@ class LedgateReferenceTest(BaseReferenceTest):
         led_gate_sensor = LedGateSensor(bus, serial_port, baud_rate)
 
         _database = Influx(bus, influx_host, influx_database, test_name)
-        #_database = None
 
         super().__init__(
             bus,

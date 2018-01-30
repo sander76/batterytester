@@ -35,5 +35,6 @@ class Sensor:
                     yield from self.sensor_data_queue.put(_measurement)
         except CancelledError:
             _LOGGER.info("Stopped data parser")
-        except Exception as e:
-            _LOGGER.exception(e)
+        except Exception:
+            _LOGGER.error("Data parser encountered and error")
+            raise

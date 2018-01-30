@@ -26,6 +26,11 @@ class AsyncSensorConnector(SensorConnector):
     def __init__(self, bus):
         super().__init__(bus)
         self.bus.add_async_task(self.async_listen_for_data())
+        self.bus.add_closing_task(self.close_method())
+
+
+    async def close_method(self):
+        pass
 
     @asyncio.coroutine
     def async_listen_for_data(self, *args):

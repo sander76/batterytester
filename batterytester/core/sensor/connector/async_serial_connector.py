@@ -29,7 +29,7 @@ class AsyncSerialConnector(AsyncSensorConnector):
 
     @asyncio.coroutine
     def async_listen_for_data(self, *args):
-        """Long running task.
+        """Long running task inside a separate thread.
 
         Listens for incoming raw data and puts it into the
         raw_sensor_data_queue

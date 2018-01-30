@@ -18,7 +18,7 @@ ATTR_TIMESTAMP = 't'
 
 KEY_ATOM_LOOP = 'loop'
 KEY_ATOM_INDEX = 'idx'
-KEY_VALUE = 'val'
+KEY_VALUE = 'v'
 KEY_ATOM_NAME = 'atom_name'
 KEY_ATOM_DURATION = 'atom_dur'
 KEY_ATOM_STATUS = 'stat'

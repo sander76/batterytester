@@ -6,3 +6,4 @@ pyserial
 requests
 wheel
 telepot
+async_timeout

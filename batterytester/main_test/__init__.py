@@ -11,8 +11,8 @@ from batterytester.core.helpers.constants import KEY_VALUE, KEY_TEST_NAME, \
     KEY_TEST_START_TIME, KEY_TEST_LOOPS
 from batterytester.core.bus import TelegramBus, Bus
 from batterytester.core.helpers.helpers import get_current_time, \
-    check_output_location, TestFailException, get_current_time_string, \
-    get_time_string
+    check_output_location, get_current_time_string, \
+    get_time_string, NonFatalTestFailException
 from batterytester.core.helpers.messaging import CACHE_ATOM_DATA, \
     CACHE_TEST_DATA
 from batterytester.core.sensor import Sensor
@@ -72,8 +72,8 @@ class BaseTest:
 
         self.database = database
         self.bus.add_async_task(self._messager())
-        self.bus.add_async_task(self.async_test())
-
+        #self.bus.add_async_task(self.async_test())
+        self.bus.main_test_task = asyncio.ensure_future(self.async_test())
         self.test_location = test_name
         if test_location:
             self.test_location = os.path.join(test_location,
@@ -194,24 +194,23 @@ class BaseTest:
             yield from self._test_init()
             yield from self.test_warmup()
 
-            while self.bus.running:
-                for _current_loop in range(self._loopcount):
-                    self._active_loop = _current_loop
-                    self._loop_init()
+            #while self.bus.running:
+            for _current_loop in range(self._loopcount):
+                self._active_loop = _current_loop
+                self._loop_init()
 
-                    # performing actions on test subject to get into the proper
-                    # starting state.
-                    yield from self.loop_warmup()
-                    for idx, atom in enumerate(self._test_sequence):
-                        self._active_atom = atom
-                        # self._active_index = idx
-                        yield from self._atom_init()
-                        yield from self.atom_warmup()
-                        yield from self.perform_test()
-                    self._report.write_summary_to_file()
-                self.bus.stop_test('')
+                # performing actions on test subject to get into the proper
+                # starting state.
+                yield from self.loop_warmup()
+                for idx, atom in enumerate(self._test_sequence):
+                    self._active_atom = atom
+                    # self._active_index = idx
+                    yield from self._atom_init()
+                    yield from self.atom_warmup()
+                    yield from self.perform_test()
+                self._report.write_summary_to_file()
 
-        except TestFailException as e:
+        except NonFatalTestFailException as e:
             self._report.final_test_result(False, e)
             yield from self.bus.notifier.notify_fail(_current_loop, idx, e)
             self.bus.stop_test('')
@@ -225,7 +224,6 @@ class BaseTest:
             yield from self.bus.notifier.notify(
                 "*{}*: Stopping test".format(
                     self.test_name))
-            self.bus.stop_test('')
 
     @asyncio.coroutine
     def _atom_init(self):

@@ -32,7 +32,11 @@ def get_current_time_string():
 #     return text
 
 
-class TestFailException(Exception):
+class NonFatalTestFailException(Exception):
+    pass
+
+
+class FatalTestFailException(Exception):
     pass
 
 

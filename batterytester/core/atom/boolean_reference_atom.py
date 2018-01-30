@@ -21,7 +21,7 @@ class BooleanReferenceAtom(ReferenceAtom):
         _result = {}
         if self.sensor_data:
             for _data in self.sensor_data:
-                for key, value in _data.get(ATTR_VALUES).items():
+                for key, value in _data.items():
                     _result[key] = value
             return _result
 
