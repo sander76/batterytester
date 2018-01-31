@@ -117,6 +117,7 @@ class Atom:
 
     @asyncio.coroutine
     def execute(self):
+        #todo: store the execution of the command also in the database.
         """Executes the defined command."""
         _result = None
         try:
