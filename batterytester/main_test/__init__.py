@@ -12,7 +12,7 @@ from batterytester.core.helpers.constants import KEY_VALUE, KEY_TEST_NAME, \
 from batterytester.core.bus import TelegramBus, Bus
 from batterytester.core.helpers.helpers import get_current_time, \
     check_output_location, get_current_time_string, \
-    get_time_string, NonFatalTestFailException
+    get_time_string, NonFatalTestFailException, FatalTestFailException
 from batterytester.core.helpers.messaging import CACHE_ATOM_DATA, \
     CACHE_TEST_DATA
 from batterytester.core.sensor import Sensor
@@ -211,11 +211,12 @@ class BaseTest:
                     yield from self.atom_warmup()
                     yield from self.perform_test()
                 self._report.write_summary_to_file()
-
-        except NonFatalTestFailException as e:
-            self._report.final_test_result(False, e)
-            yield from self.bus.notifier.notify_fail(_current_loop, idx, e)
-            self.bus.stop_test('')
+        #todo: how to handle NonFatalTestFailException?
+        except FatalTestFailException as err:
+            self._report.final_test_result(False, err)
+            yield from self.bus.notifier.notify_fail(_current_loop, idx, err)
+            #self.bus.stop_test('')
+            raise
         except CancelledError:
             LOGGER.debug("stopping loop test")
         except Exception as e:

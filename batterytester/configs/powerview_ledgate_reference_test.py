@@ -4,6 +4,11 @@ from batterytester.main_test.powerview_ledgate_reference_test import \
 
 
 class PvLedGateReferenceTest(PowerViewLedgateReferenceTest):
+    """Ledgate sensor.
+
+    When the sensor is open it will return True.
+    if sensor is blocked it will return False.
+    """
     def get_sequence(self):
         _val = (
             BooleanReferenceAtom(
@@ -11,14 +16,14 @@ class PvLedGateReferenceTest(PowerViewLedgateReferenceTest):
                 command=self.powerview.open_shade,
                 arguments={'shade_id': 9416},
                 duration=30,
-                reference={'7': False}
+                reference={'7': True}
             ),
             BooleanReferenceAtom(
                 'close shade',
                 command=self.powerview.close_shade,
                 arguments={'shade_id': 9416},
                 duration=30,
-                reference={'7': True}
+                reference={'7': False}
             )
         )
         return _val
@@ -27,7 +32,7 @@ class PvLedGateReferenceTest(PowerViewLedgateReferenceTest):
 test = PvLedGateReferenceTest(
     test_name='ledgate_test',
     loop_count=10,
-    serial_port='COM6',
+    serial_port='COM4',
     baud_rate=9600,
     hub_ip='192.168.0.1'
 )
