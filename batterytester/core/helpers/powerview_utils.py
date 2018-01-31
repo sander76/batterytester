@@ -12,6 +12,7 @@ class PowerView:
         self.loop = loop_
         self.session = session
 
+
     @asyncio.coroutine
     def get_scenes(self):
         self.scenes = []
