@@ -28,7 +28,10 @@ class Bus:
         self.notifier = BaseNotifier()
         self.message_bus = Messaging(self.loop)
         # Initialize the message bus
-        self.loop.run_until_complete(self.message_bus.start())
+        try:
+            self.loop.run_until_complete(self.message_bus.start())
+        except Exception as err:
+            LOGGER.error(err)
 
     def task_finished_callback(self, future):
         try:
@@ -73,6 +76,8 @@ class Bus:
             LOGGER.error("Main test loop cancelled.")
         except FatalTestFailException as err:
             LOGGER.error(err)
+        except KeyboardInterrupt:
+            LOGGER.info("Test stopped due to keyboard interrupt.")
         finally:
             self.loop.run_until_complete(self.stop_test())
             # todo: double check whether all tasks finished checking all_tasks like below.
