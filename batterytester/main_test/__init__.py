@@ -57,6 +57,9 @@ class BaseTest:
         :param telegram_token: for notifications.
         :param telegram_chat_id: for notifications.
         """
+
+        # todo: create multiple message queues where you can subscribe to.
+        # The report can plugin to that. The telegram messenger, database etc.
         self.bus = bus
         self.test_name = test_name
 
@@ -72,7 +75,6 @@ class BaseTest:
 
         self.database = database
         self.bus.add_async_task(self._messager())
-        #self.bus.add_async_task(self.async_test())
         self.bus.main_test_task = asyncio.ensure_future(self.async_test())
         self.test_location = test_name
         if test_location:
@@ -230,7 +232,6 @@ class BaseTest:
         """Method to be performed at the start of each new test-atom"""
         self.bus.message_bus.send_data_cached(
             self._active_atom.get_atom_data(), CACHE_ATOM_DATA)
-        #self._active_atom.report_start_test(current_loop=self._active_loop)
 
     @asyncio.coroutine
     def _messager(self):
