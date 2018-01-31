@@ -16,6 +16,8 @@ CACHE_ATOM_DATA = 'atom_data'  # Cache key where to store atom data.
 CACHE_TEST_DATA = 'test_data'  # Cache key where to store test info.
 
 
+# todo: move the websocket server to a separate process and connect to it with a client connection. Another option would be to use mqtt for easier pub sub actions.
+
 class Messaging:
     def __init__(self, loop):
         self.sensor_sockets = []
@@ -55,7 +57,9 @@ class Messaging:
         self._send_to_ws(_js)
 
     def send_data_cached(self, data: dict, cache_key: str):
+        data['type'] = cache_key
         _js = json.dumps(data)
+
         self.test_cache[cache_key] = _js
         self._send_to_ws(_js)
 
@@ -65,8 +69,6 @@ class Messaging:
 
     async def start(self):
         self.handler = self.app.make_handler()
-        # self.server = self.loop.run_until_complete(f)
-
         self.server = await self.loop.create_server(
             self.handler, ATTR_MESSAGE_BUS_ADDRESS, ATTR_MESSAGE_BUS_PORT)
 

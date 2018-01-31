@@ -58,22 +58,24 @@
         var sensor_div = document.getElementById("sensor_data");
         var test_div = document.getElementById("test_data");
         var atom_div = document.getElementById("atom_data");
-        
-        function make_url(){
+
+        function make_url() {
             let url = "ws://" + ip_input.value + ":8567/ws"
             console.log(url);
             return url
         }
+        var ws;
 
         function open_socket(url) {
-            var ws = new WebSocket(url);
+            ws = new WebSocket(url);
             ws.onopen = function (event) {
                 console.log('connection opened.')
-                connection_status.innerHTML="connected.";
+                connection_status.innerHTML = "connected.";
+                init();
             }
             ws.onclose = function (event) {
                 console.log('connection closed.')
-                connection_status.innerHTML="closed."
+                connection_status.innerHTML = "closed."
             }
             ws.onmessage = function (event) {
                 var _js = JSON.parse(event.data);
@@ -82,8 +84,13 @@
 
         }
 
+        function init() {
+            ws.send('atom') // Get cached atom data.
+            ws.send('test') // Get cached sensor data.
+        }
+
         function connect(e) {
-            connect.innerHTML="connecting"
+            connect.innerHTML = "connecting"
             open_socket(make_url());
         }
 
@@ -115,6 +122,15 @@
             this.val.innerHTML = value['v'];
         }
 
+        function TestElement() {
+            PropertyElement.call(this);
+        }
+        TestElement.prototype = Object.create(PropertyElement.prototype);
+        TestElement.prototype.constructor = PropertyElement;
+        TestElement.prototype.update = function (key, value) {
+            this.prop.innerHTML = key;
+            this.val.innerHTML = value['v']
+        }
 
 
         function parse_data(data, data_container, data_div, property_element) {
@@ -132,17 +148,26 @@
         }
 
         function parse_sensor(data) {
-            let tp = data['atom_name'];
-            if (tp != undefined) {
-                //Atom data.
-                parse_data(data, atom_data, atom_div, AtomElement)
-            } else {
+            let tp = data["type"];
+            if (tp === undefined) {
                 //Sensor data.
                 parse_data(data, sensor_data, sensor_div, PropertyElement)
+            } else if (tp === "atom_data") {
+                //Atom data.
+                parse_data(data, atom_data, atom_div, AtomElement)
+            } else if (tp === "test_data") {
+                //Test data.
+                parse_data(data, test_data, test_div, TestElement)
             }
 
 
         }
+        var params = new URLSearchParams(window.location.search)
+        let _server = params.get("server");
+        if (_server){
+            ip_input.value=_server;
+        }
+        
         //open_socket();
     </script>
 </body>

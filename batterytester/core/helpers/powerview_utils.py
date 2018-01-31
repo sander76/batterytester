@@ -12,12 +12,11 @@ class PowerView:
         self.loop = loop_
         self.session = session
 
-
     @asyncio.coroutine
     def get_scenes(self):
         self.scenes = []
         _scenes = yield from (
-        Scenes(self.hub_ip, self.loop, self.session)).get_resources()
+            Scenes(self.hub_ip, self.loop, self.session)).get_resources()
         for _scene in _scenes[ATTR_SCENE_DATA]:
             self.scenes.append(
                 Scene(_scene, self.hub_ip, self.loop, self.session))
