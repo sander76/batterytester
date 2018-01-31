@@ -23,7 +23,7 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
                  telegram_token=None,
                  telegram_chat_id=None,
                  ):
-        bus = get_bus(telegram_token,telegram_chat_id,test_name)
+        bus = get_bus(telegram_token, telegram_chat_id, test_name)
         led_gate_sensor = LedGateSensor(bus, serial_port, baud_rate)
 
         _database = Influx(bus, influx_host, influx_database, test_name)
@@ -49,14 +49,12 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
         except PvApiConnectionError:
             raise FatalTestFailException("Failed to warmup the test.")
 
-    @asyncio.coroutine
     def handle_sensor_data(self, sensor_data):
-        yield from super().handle_sensor_data(sensor_data)
+        super().handle_sensor_data(sensor_data)
         """Sensor data to be added to the active atom."""
         if self.active_atom:
             self.active_atom.sensor_data.append(sensor_data)
-        self.database.add_to_database(sensor_data,self.active_atom)
-        # todo: add it to the influx database too.
+        self.database.add_to_database(sensor_data, self.active_atom)
 
     def get_sequence(self):
         raise NotImplementedError
