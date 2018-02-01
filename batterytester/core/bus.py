@@ -95,6 +95,8 @@ class Bus:
                     await _task
             except TimeoutError:
                 LOGGER.error("problem finishing task: %s", _task)
+            except Exception as err:
+                LOGGER.error(err)
 
         await self.message_bus.stop_message_bus()
         await self.session.close()

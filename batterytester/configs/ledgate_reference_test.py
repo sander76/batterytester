@@ -1,5 +1,7 @@
 import asyncio
 
+import logging
+
 from batterytester.core.atom.boolean_reference_atom import BooleanReferenceAtom
 from batterytester.main_test.ledgate_reference_test import LedgateReferenceTest
 
@@ -37,4 +39,5 @@ def get_sequence(*args):
 test.get_sequence = get_sequence
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     test.start_test()

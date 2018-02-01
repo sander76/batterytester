@@ -130,8 +130,11 @@ test_name,loop=x,index=x temp=82 1465839830100400200
                 self.bus.stop_test(
                     "Wrong response code {}".format(resp.status))
         except (asyncio.TimeoutError, ClientError) as err:
-            LOGGER.exception(err)
+            LOGGER.error(err)
             raise FatalTestFailException("Error sending data to database")
+        except asyncio.CancelledError:
+            LOGGER.debug("sending to database cancelled.")
+
         finally:
             if resp is not None:
                 yield from resp.release()
