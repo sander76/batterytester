@@ -2,7 +2,7 @@ import asyncio
 
 from aiopvapi.helpers.aiorequest import PvApiConnectionError
 
-from batterytester.core.database.influx import Influx
+from batterytester.core.datahandlers.influx import Influx
 from batterytester.core.helpers.helpers import FatalTestFailException
 
 from batterytester.core.helpers.powerview_utils import PowerView
@@ -32,12 +32,10 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
             bus,
             test_name,
             loop_count,
-            database=_database,
             learning_mode=False,
+            data_handlers=_database,
             sensor=led_gate_sensor,
             test_location=test_location,
-            telegram_token=telegram_token,
-            telegram_chat_id=telegram_chat_id
         )
         self.powerview = PowerView(hub_ip, self.bus.loop, self.bus.session)
 
@@ -54,7 +52,7 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
         """Sensor data to be added to the active atom."""
         if self.active_atom:
             self.active_atom.sensor_data.append(sensor_data)
-        self.database.add_to_database(sensor_data, self.active_atom)
+        # self.database.add_to_database(sensor_data, self.active_atom)
 
     def get_sequence(self):
         raise NotImplementedError

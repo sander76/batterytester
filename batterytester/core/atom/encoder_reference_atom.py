@@ -19,7 +19,7 @@ _LOGGING = logging.getLogger(__name__)
 
 import json
 
-from batterytester.core.helpers.report import Report
+from batterytester.core.datahandlers.report import Report
 from batterytester.core.sensor.incoming_parser.sequence_data_parser import INCOMING_VALUE
 
 MOVEMENT_COUNT = 'pulse_count'

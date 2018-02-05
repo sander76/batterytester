@@ -84,12 +84,23 @@
 
         }
 
+        function clear_data(){
+            sensor_data={};
+            atom_data={};
+            test_data={}
+            sensor_div.innerHTML="";
+            test_div.innerHTML="";
+            atom_div.innerHTML="";
+        }
+
         function init() {
             ws.send('atom') // Get cached atom data.
             ws.send('test') // Get cached sensor data.
         }
 
         function connect(e) {
+            if (ws){ws.close()}
+            clear_data();
             connect.innerHTML = "connecting"
             open_socket(make_url());
         }
@@ -109,7 +120,7 @@
         }
         PropertyElement.prototype.update = function (key, value) {
             this.prop.innerHTML = key;
-            this.val.innerHTML = value;
+            this.val.innerHTML = value['v'];
         }
 
         function AtomElement() {
@@ -118,8 +129,14 @@
         AtomElement.prototype = Object.create(PropertyElement.prototype);
         AtomElement.prototype.constructor = PropertyElement;
         AtomElement.prototype.update = function (key, value) {
+            if (key ==="reference_data"){
+                this.val.innerHTML = JSON.stringify(value['v']);
+            }
+            else{
+                this.val.innerHTML = value['v'];
+            }
             this.prop.innerHTML = key;
-            this.val.innerHTML = value['v'];
+            
         }
 
         function TestElement() {
@@ -148,16 +165,19 @@
         }
 
         function parse_sensor(data) {
-            let tp = data["type"];
-            if (tp === undefined) {
+            let subj = data["subj"];
+            delete data.subj;
+            if (subj === "sensor_data") {
                 //Sensor data.
                 parse_data(data, sensor_data, sensor_div, PropertyElement)
-            } else if (tp === "atom_data") {
+            } else if (subj === "atom_warmup") {
                 //Atom data.
                 parse_data(data, atom_data, atom_div, AtomElement)
-            } else if (tp === "test_data") {
+            } else if (subj === "test_warmup") {
                 //Test data.
                 parse_data(data, test_data, test_div, TestElement)
+            } else if (subj ==="atom_executing"){
+                parse_data(data,atom_data,atom_div,AtomElement)
             }
 
 
