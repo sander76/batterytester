@@ -8,6 +8,7 @@ import logging
 from async_timeout import timeout
 from threading import Thread
 
+from batterytester.core.helpers.message_data import FatalData
 from batterytester.core.helpers.constants import KEY_ERROR, KEY_VALUE
 from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.datahandlers.messaging import Messaging
@@ -54,8 +55,8 @@ class Bus:
         try:
             for _subscriber in self.subscriptions[subject]:
                 # todo: Creating a shallow copy now to prevent the handler from modifying the original data.
-                _data = dict(data)
-                _subscriber(subject, _data)
+                #_data = dict(data)
+                _subscriber(subject, data)
         except KeyError:
             LOGGER.debug('No subscribers to subject {}.'.format(subject))
 
@@ -69,7 +70,7 @@ class Bus:
         except Exception as err:
             # todo: During cancellation this task can be run multiple times. This needs to be prevented.
             LOGGER.error(err)
-            self.notify(subj.TEST_FATAL, {KEY_ERROR: {KEY_VALUE: err}})
+            self.notify(subj.TEST_FATAL, FatalData(err))
             """An exception is raised. Meaning one of the long running 
             tasks has encountered an error. Cancelling the main task and
             subsequently cancelling all other long running tasks."""

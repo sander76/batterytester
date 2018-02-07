@@ -16,6 +16,7 @@ test = LedgateReferenceTest(
 
 @asyncio.coroutine
 def fake(*args, **kwargs):
+    yield from asyncio.sleep(3)
     print("function called")
 
 

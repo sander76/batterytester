@@ -9,10 +9,13 @@ from typing import Union, Sequence
 
 from batterytester.core.atom import ReferenceAtom
 from batterytester.core.datahandlers import BaseDataHandler
+from batterytester.core.helpers.message_data import Data, FatalData, \
+    TestFinished, TestData, AtomStatus, AtomResult
 from batterytester.core.helpers.constants import KEY_VALUE, KEY_TEST_NAME, \
     KEY_TEST_LOOPS, KEY_ATOM_STATUS, \
     ATOM_STATUS_EXECUTED, KEY_ERROR, \
-    ATOM_STATUS_EXECUTING, ATTR_RESULT, REASON, KEY_ATOM_NAME, ATTR_TIMESTAMP
+    ATOM_STATUS_EXECUTING, ATTR_RESULT, REASON, KEY_ATOM_NAME, ATTR_TIMESTAMP, \
+    ATOM_STATUS_COLLECTING
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.helpers import get_current_time, \
     get_time_string, FatalTestFailException, get_current_timestamp, \
@@ -74,10 +77,9 @@ class BaseTest:
         self._active_index = None
         self._active_loop = None
 
-    def _start_test_data(self):
-        return {
-            ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()}
-        }
+    @property
+    def active_atom(self) -> ReferenceAtom:
+        return self._active_atom
 
     def start_test(self):
         """Starts the actual test."""
@@ -98,15 +100,15 @@ class BaseTest:
         """
         raise NotImplemented("No sequence of atoms to test.")
 
-    def _test_warmup_data(self):
-        """Returns an ordered dict containing test data to be used
-        for reporting and feedback"""
-
-        return OrderedDict({
-            KEY_TEST_NAME: {KEY_VALUE: self.test_name},
-            ATTR_TIMESTAMP: {KEY_VALUE: get_time_string(self.started)},
-            KEY_TEST_LOOPS: {KEY_VALUE: self._loopcount}
-        })
+    # def _test_warmup_data(self):
+    #     """Returns an ordered dict containing test data to be used
+    #     for reporting and feedback"""
+    #
+    #     return OrderedDict({
+    #         KEY_TEST_NAME: {KEY_VALUE: self.test_name},
+    #         ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
+    #         KEY_TEST_LOOPS: {KEY_VALUE: self._loopcount}
+    #     })
 
     @asyncio.coroutine
     def test_warmup(self):
@@ -116,14 +118,8 @@ class BaseTest:
         """
 
         LOGGER.debug("Test warmup")
-        # todo: remove this.
-        self.started = get_current_time()
-        self.bus.notify(subj.TEST_WARMUP, self._test_warmup_data())
-
-        # self.bus.message_bus.send_data_cached(self.get_test_data(),
-        #                                       CACHE_TEST_DATA)
-        # todo: this should move to a subscribed method.
-        # self._report.write_intro(self.test_name)
+        self.bus.notify(subj.TEST_WARMUP,
+                        TestData(self.test_name, self._loopcount))
 
     def _loop_warmup_data(self):
         return {}
@@ -148,29 +144,25 @@ class BaseTest:
             )
         self._test_sequence = _seq
 
-    def _atom_start_data(self):
-        return {
-            ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
-            KEY_ATOM_STATUS: {KEY_VALUE: ATOM_STATUS_EXECUTING}
-        }
+    # def _atom_start_data(self):
+    #     return {
+    #         ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
+    #         KEY_ATOM_STATUS: {KEY_VALUE: ATOM_STATUS_EXECUTING}
+    #     }
 
     def _perform_test_data(self):
-        return {
-            ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
-            KEY_ATOM_STATUS: {KEY_VALUE: ATOM_STATUS_EXECUTING},
-            KEY_ATOM_NAME: {KEY_VALUE: self._active_atom.name}
-        }
+        return AtomStatus(ATOM_STATUS_EXECUTING)
 
     @asyncio.coroutine
     def perform_test(self):
         """The test to be performed"""
-        self.bus.notify(subj.ATOM_EXECUTING, self._perform_test_data())
+        self.bus.notify(subj.ATOM_STATUS, self._perform_test_data())
 
         yield from self._active_atom.execute()
 
         self.bus.notify(
-            subj.ATOM_STATUS,
-            {KEY_ATOM_STATUS: {KEY_VALUE: ATOM_STATUS_EXECUTED}})
+            subj.ATOM_STATUS, AtomStatus(ATOM_STATUS_COLLECTING))
+
         # sleeping the defined duration to gather sensor
         # data which is coming in as a result of the execution
         # command
@@ -180,7 +172,6 @@ class BaseTest:
     def async_test(self):
         # _current_loop = 0
         # idx = 0
-        self.bus.notify(subj.TEST_START, self._start_test_data())
         try:
             yield from self.test_warmup()
 
@@ -192,8 +183,8 @@ class BaseTest:
                 for idx, atom in enumerate(self._test_sequence):
                     try:
                         self._active_atom = atom
-                        self.bus.notify(subj.ATOM_START,
-                                        self._atom_start_data())
+                        # self.bus.notify(subj.ATOM_START,
+                        #                 self._atom_start_data())
 
                         yield from self.atom_warmup()
                         yield from self.perform_test()
@@ -204,19 +195,19 @@ class BaseTest:
 
                 self.bus.notify(subj.LOOP_FINISHED, get_current_timestamp())
 
-            self.bus.notify(
-                subj.TEST_FINISHED,
-                {ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()}})
+            # self.bus.notify(
+            #     subj.TEST_FINISHED,
+            #     {ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()}})
         except FatalTestFailException as err:
             LOGGER.debug("FATAL ERROR: {}".format(err))
-            self.bus.notify(subj.TEST_FATAL, {KEY_ERROR: {KEY_VALUE: err}})
+            self.bus.notify(subj.TEST_FATAL, FatalData(err))
             raise
         except CancelledError:
             LOGGER.debug("stopping loop test")
         except Exception as e:
             LOGGER.exception(e)
         finally:
-            pass
+            self.bus.notify(subj.TEST_FINISHED, TestFinished())
 
     def _atom_warmup_data(self):
         return self._active_atom.get_atom_data()
@@ -274,21 +265,8 @@ class BaseReferenceTest(BaseTest):
             # Actual testing mode. reference data
             # and testing data can be compared.
             _success = self._active_atom.reference_compare()
-            self.bus.notify(subj.ATOM_RESULT,
-                            {ATTR_RESULT: {KEY_VALUE: _success},
-                             REASON: {KEY_VALUE: "Reference testing failed."}})
-            #
-            # _atom_status = {KEY_ATOM_STATUS: {KEY_VALUE: 'undefined'}}
-            # if _success:
-            #     _atom_status[KEY_ATOM_STATUS][KEY_VALUE] = RESULT_PASS
-            # else:
-            #     _atom_status[KEY_ATOM_STATUS][KEY_VALUE] = RESULT_FAIL
-            # # todo: make this a subscription
-            # #            self.bus.message_bus.send_atom_data(_atom_status)
-            # if not _success:
-            #     self.summary['failures'].append(
-            #         (self._active_loop, self.active_atom.idx))
-
-    @property
-    def active_atom(self) -> ReferenceAtom:
-        return self._active_atom
+            _data = AtomResult(_success)
+            # _data = {ATTR_RESULT: {KEY_VALUE: _success}}
+            if not _success:
+                _data.reason = Data("Reference testing failed.")
+            self.bus.notify(subj.ATOM_RESULT, _data)

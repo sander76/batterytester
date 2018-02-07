@@ -24,15 +24,15 @@ class LedgateReferenceTest(BaseReferenceTest):
         led_gate_sensor = LedGateSensor(bus, serial_port, baud_rate)
 
         # create data handlers.
-        _database = Influx(bus, influx_host, influx_database, test_name)
+        #_database = Influx(bus, influx_host, influx_database, test_name)
         _report = Report(test_name)
 
         super().__init__(
             bus,
             test_name,
             loop_count,
-            data_handlers=[_database, _report],
-            #data_handlers=_report,
+            #data_handlers=[_database, _report],
+            data_handlers=_report,
             learning_mode=False,
             sensor=led_gate_sensor
 
@@ -43,8 +43,6 @@ class LedgateReferenceTest(BaseReferenceTest):
         """Sensor data to be added to the active atom."""
         if self.active_atom:
             self.active_atom.sensor_data.append(sensor_data)
-        # if self.database:
-        #     self.database.add_to_database(sensor_data, self.active_atom)
 
     def get_sequence(self):
         raise NotImplementedError

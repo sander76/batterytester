@@ -8,6 +8,7 @@ from collections import OrderedDict, namedtuple
 from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
     PvApiResponseStatusError
 
+from batterytester.core.helpers.message_data import Data, AtomData
 from batterytester.core.helpers.constants import ATTR_RESULT, \
     KEY_VALUE, KEY_ATOM_NAME, KEY_ATOM_DURATION, \
     RESULT_UNKNOWN, KEY_ATOM_LOOP, KEY_ATOM_INDEX, KEY_ATOM_STATUS, \
@@ -49,19 +50,19 @@ class RefGetter:
         return _val
 
 
-AtomData = namedtuple(
-    'AtomData',
-    [
-        'atom_name',
-        'atom_loop',
-        'atom_index',
-        'atom_duration',
-        'atom_status'
-    ])
-
-Value = namedtuple(
-    "Value",['v']
-)
+# AtomData = namedtuple(
+#     'AtomData',
+#     [
+#         'atom_name',
+#         'atom_loop',
+#         'atom_index',
+#         'atom_duration',
+#         'atom_status'
+#     ])
+#
+# Value = namedtuple(
+#     "Value",['v']
+# )
 
 class Atom:
     """Basic test atom.
@@ -100,19 +101,26 @@ class Atom:
         self._loop = current_loop
 
     def get_atom_data(self):
+        return AtomData(
+            self.name,
+            self._idx,
+            self._loop,
+            self._duration
+        )
         # at = AtomData(
         #     atom_name=Value(self._name),
         #     atom_loop=Value(self._loop),
         #     atom_index=Value(self._idx),
         #     atom_duration=Value(self.duration)
         # )
-        return OrderedDict({
-            KEY_ATOM_NAME: {KEY_VALUE: self._name},
-            KEY_ATOM_LOOP: {KEY_VALUE: self._loop},
-            KEY_ATOM_INDEX: {KEY_VALUE: self._idx},
-            KEY_ATOM_DURATION: {KEY_VALUE: self.duration},
-            KEY_ATOM_STATUS: {KEY_VALUE: RESULT_UNKNOWN},
-        })
+
+        # return OrderedDict({
+        #     KEY_ATOM_NAME: {KEY_VALUE: self._name},
+        #     KEY_ATOM_LOOP: {KEY_VALUE: self._loop},
+        #     KEY_ATOM_INDEX: {KEY_VALUE: self._idx},
+        #     KEY_ATOM_DURATION: {KEY_VALUE: self.duration}
+        #     #KEY_ATOM_STATUS: {KEY_VALUE: RESULT_UNKNOWN},
+        # })
 
     # def _report_command_result(self, result):
     #     self.report.H3('TEST_COMMAND')
@@ -188,5 +196,5 @@ class ReferenceAtom(Atom):
 
     def get_atom_data(self):
         _data = super().get_atom_data()
-        _data[KEY_REFERENCE_DATA] = {KEY_VALUE: self.reference_data}
+        _data.reference_data = Data(self.reference_data)
         return _data
