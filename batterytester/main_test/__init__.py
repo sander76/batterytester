@@ -1,34 +1,32 @@
 import asyncio
 import os
 import logging
+import batterytester.core.helpers.message_subjects as subj
 
 from asyncio import CancelledError
 from collections import OrderedDict
 from typing import Union, Sequence
 
 from batterytester.core.atom import ReferenceAtom
+from batterytester.core.datahandlers import BaseDataHandler
+from batterytester.core.helpers.message_data import Data, FatalData, \
+    TestFinished, TestData, AtomStatus, AtomResult
 from batterytester.core.helpers.constants import KEY_VALUE, KEY_TEST_NAME, \
-    KEY_TEST_START_TIME, KEY_TEST_LOOPS
-from batterytester.core.bus import TelegramBus, Bus
+    KEY_TEST_LOOPS, KEY_ATOM_STATUS, \
+    ATOM_STATUS_EXECUTED, KEY_ERROR, \
+    ATOM_STATUS_EXECUTING, ATTR_RESULT, REASON, KEY_ATOM_NAME, ATTR_TIMESTAMP, \
+    ATOM_STATUS_COLLECTING
+from batterytester.core.bus import Bus
 from batterytester.core.helpers.helpers import get_current_time, \
-    check_output_location, get_current_time_string, \
-    get_time_string, NonFatalTestFailException, FatalTestFailException
-from batterytester.core.helpers.messaging import CACHE_ATOM_DATA, \
-    CACHE_TEST_DATA
+    get_time_string, FatalTestFailException, get_current_timestamp, \
+    NonFatalTestFailException
 from batterytester.core.sensor import Sensor
 
 from batterytester.core.database import DataBase
 
-from batterytester.core.helpers.report import Report
+from batterytester.core.datahandlers.report import Report
 
 LOGGER = logging.getLogger(__name__)
-
-
-def get_bus(telegram_token=None, telegram_chat_id=None, test_name=None):
-    if telegram_token and telegram_chat_id:
-        return TelegramBus(telegram_token, telegram_chat_id, test_name)
-    else:
-        return Bus()
 
 
 class BaseTest:
@@ -38,33 +36,25 @@ class BaseTest:
             test_name: str,
             loop_count: int,
             sensor: Union[Sensor, Sequence[Sensor], None] = None,
-            database: DataBase = None,
-            report: Report = None,
-            add_time_stamp_to_report=True,
-            test_location: str = None,
-            telegram_token=None,
-            telegram_chat_id=None):
+            data_handlers: Union[
+                BaseDataHandler, Sequence[BaseDataHandler], None] = None):
         """
 
         :param test_name: The name of the test.
         :param loop_count: The amount of loops to run
         :param sensor: A Sensor or a list of sensors (iterable)
-        :param database: If a database is used.
         :param report: A specific report type. Otherwise a default is created.
         :param add_time_stamp_to_report:
         :param test_location: By default test_name is used as folder withing the folder this code is run in. test_
             location re-specifies the base folder.
-        :param telegram_token: for notifications.
-        :param telegram_chat_id: for notifications.
         """
 
-        # todo: create multiple message queues where you can subscribe to.
-        # The report can plugin to that. The telegram messenger, database etc.
         self.bus = bus
         self.test_name = test_name
 
         if isinstance(sensor, Sensor):
             self.sensor = (sensor,)
+            # todo: manage if sensor is None
         else:
             self.sensor = sensor
         if self.sensor:
@@ -72,77 +62,36 @@ class BaseTest:
             for _sensor in self.sensor:
                 # Add one sensor_data_queue to all sensors.
                 _sensor.sensor_data_queue = self.sensor_data_queue
+        if data_handlers:
+            if isinstance(data_handlers, BaseDataHandler):
+                self.bus.register_data_handler(data_handlers)
+            else:
+                for _handler in data_handlers:
+                    self.bus.register_data_handler(_handler)
 
-        self.database = database
         self.bus.add_async_task(self._messager())
         self.bus.main_test_task = asyncio.ensure_future(self.async_test())
-        self.test_location = test_name
-        if test_location:
-            self.test_location = os.path.join(test_location,
-                                              self.test_location)
-        if add_time_stamp_to_report:
-            self.test_location = (
-                    get_current_time_string()
-                    + '_'
-                    + self.test_location)
-        if report:
-            self._report = report
-        else:
-            self._report = Report(self.test_location)
+
         self._loopcount = loop_count
         self._active_atom = None
         self._active_index = None
         self._active_loop = None
 
-    def start_test(self, add_time_stamp_to_report=True):
+    @property
+    def active_atom(self) -> ReferenceAtom:
+        return self._active_atom
+
+    def start_test(self):
         """Starts the actual test."""
-        if check_output_location(self.test_location):
-            self._report.create_summary_file()
-            self.bus._start_test()
-
-    def get_test_data(self):
-        """Returns an ordered dict containing test data to be used
-        for reporting and feedback"""
-
-        return OrderedDict({
-            KEY_TEST_NAME: {KEY_VALUE: self.test_name},
-            KEY_TEST_START_TIME: {KEY_VALUE: get_time_string(self.started)},
-            KEY_TEST_LOOPS: {KEY_VALUE: self._loopcount}
-        })
+        LOGGER.debug("Starting the test.")
+        self.bus._start_test()
 
     def handle_sensor_data(self, sensor_data: dict):
         """Handle sensor data by sending it to the active atom or store
         it in a database.
         Cannot be a blocking io call. Needs to return immediately
         """
-
-        self.bus.message_bus.send_data(sensor_data)
-        # todo: check whether this is implemented correctly at other locations.
-
-    def _loop_init(self):
-        """Loads the actual test atoms and configures them according to the
-        sequence they are in.
-        """
-
-        _seq = self.get_sequence()
-        # todo: checkout this and see whether it can change.
-        _stored_atom_results = {}
-        for _idx, _atom in enumerate(_seq):
-            _atom.prepare_test_atom(
-                self.test_location,
-                _idx,
-                self._active_loop,
-                self._report,
-                stored_atom_results=_stored_atom_results
-            )
-        self._test_sequence = _seq
-
-    @asyncio.coroutine
-    def _test_init(self):
-        self.started = get_current_time()
-        self.bus.message_bus.send_data_cached(self.get_test_data(),
-                                              CACHE_TEST_DATA)
-        self._report.write_intro(self.test_name)
+        self.bus.notify(subj.SENSOR_DATA, sensor_data)
 
     def get_sequence(self):
         """Gets called to retrieve a list of test atoms to be performed.
@@ -151,6 +100,16 @@ class BaseTest:
         """
         raise NotImplemented("No sequence of atoms to test.")
 
+    # def _test_warmup_data(self):
+    #     """Returns an ordered dict containing test data to be used
+    #     for reporting and feedback"""
+    #
+    #     return OrderedDict({
+    #         KEY_TEST_NAME: {KEY_VALUE: self.test_name},
+    #         ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
+    #         KEY_TEST_LOOPS: {KEY_VALUE: self._loopcount}
+    #     })
+
     @asyncio.coroutine
     def test_warmup(self):
         """
@@ -158,7 +117,12 @@ class BaseTest:
         is started. Must raise an TestFailException when an error occurs.
         """
 
-        pass
+        LOGGER.debug("Test warmup")
+        self.bus.notify(subj.TEST_WARMUP,
+                        TestData(self.test_name, self._loopcount))
+
+    def _loop_warmup_data(self):
+        return {}
 
     @asyncio.coroutine
     def loop_warmup(self):
@@ -166,73 +130,92 @@ class BaseTest:
         actions performed before a new loop with a fresh sequence test
         is started. Must raise an TestFailException when an error occurs.
         """
+        LOGGER.debug('Warming up loop.')
+        self.bus.notify(subj.LOOP_WARMUP, self._loop_warmup_data())
 
-        pass
+        _seq = self.get_sequence()
+        # todo: checkout this and see whether it can change.
+        _stored_atom_results = {}
+        for _idx, _atom in enumerate(_seq):
+            _atom.prepare_test_atom(
+                _idx,
+                self._active_loop,
+                stored_atom_results=_stored_atom_results
+            )
+        self._test_sequence = _seq
+
+    # def _atom_start_data(self):
+    #     return {
+    #         ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
+    #         KEY_ATOM_STATUS: {KEY_VALUE: ATOM_STATUS_EXECUTING}
+    #     }
+
+    def _perform_test_data(self):
+        return AtomStatus(ATOM_STATUS_EXECUTING)
 
     @asyncio.coroutine
     def perform_test(self):
         """The test to be performed"""
+        self.bus.notify(subj.ATOM_STATUS, self._perform_test_data())
+
         yield from self._active_atom.execute()
+
+        self.bus.notify(
+            subj.ATOM_STATUS, AtomStatus(ATOM_STATUS_COLLECTING))
+
         # sleeping the defined duration to gather sensor
         # data which is coming in as a result of the execution
         # command
         yield from asyncio.sleep(self._active_atom.duration)
 
     @asyncio.coroutine
-    def atom_warmup(self):
-        """method to be performed before doing an atom execution."""
-        pass
-
-    def _flush_report(self):
-        self._report.report_timing(self.started, get_current_time())
-        self._report.write_summary_to_file()
-
-    @asyncio.coroutine
     def async_test(self):
-        _current_loop = 0
-        idx = 0
+        # _current_loop = 0
+        # idx = 0
         try:
-            yield from self.bus.notifier.notify('Starting the test')
-            yield from self._test_init()
             yield from self.test_warmup()
 
-            #while self.bus.running:
             for _current_loop in range(self._loopcount):
                 self._active_loop = _current_loop
-                self._loop_init()
-
                 # performing actions on test subject to get into the proper
                 # starting state.
                 yield from self.loop_warmup()
                 for idx, atom in enumerate(self._test_sequence):
-                    self._active_atom = atom
-                    # self._active_index = idx
-                    yield from self._atom_init()
-                    yield from self.atom_warmup()
-                    yield from self.perform_test()
-                self._report.write_summary_to_file()
-        #todo: how to handle NonFatalTestFailException?
+                    try:
+                        self._active_atom = atom
+                        # self.bus.notify(subj.ATOM_START,
+                        #                 self._atom_start_data())
+
+                        yield from self.atom_warmup()
+                        yield from self.perform_test()
+                    except NonFatalTestFailException as err:
+                        self.bus.notify(subj.ATOM_RESULT,
+                                        {ATTR_RESULT: {KEY_VALUE: False},
+                                         REASON: {KEY_VALUE: err}})
+
+                self.bus.notify(subj.LOOP_FINISHED, get_current_timestamp())
+
+            # self.bus.notify(
+            #     subj.TEST_FINISHED,
+            #     {ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()}})
         except FatalTestFailException as err:
-            self._report.final_test_result(False, err)
-            yield from self.bus.notifier.notify_fail(_current_loop, idx, err)
-            #self.bus.stop_test('')
+            LOGGER.debug("FATAL ERROR: {}".format(err))
+            self.bus.notify(subj.TEST_FATAL, FatalData(err))
             raise
         except CancelledError:
             LOGGER.debug("stopping loop test")
         except Exception as e:
             LOGGER.exception(e)
         finally:
-            # write any remaining information to file.
-            self._flush_report()
-            yield from self.bus.notifier.notify(
-                "*{}*: Stopping test".format(
-                    self.test_name))
+            self.bus.notify(subj.TEST_FINISHED, TestFinished())
+
+    def _atom_warmup_data(self):
+        return self._active_atom.get_atom_data()
 
     @asyncio.coroutine
-    def _atom_init(self):
-        """Method to be performed at the start of each new test-atom"""
-        self.bus.message_bus.send_data_cached(
-            self._active_atom.get_atom_data(), CACHE_ATOM_DATA)
+    def atom_warmup(self):
+        """method to be performed before doing an atom execution."""
+        self.bus.notify(subj.ATOM_WARMUP, self._atom_warmup_data())
 
     @asyncio.coroutine
     def _messager(self):
@@ -248,10 +231,12 @@ class BaseTest:
                     sensor_data = yield from self.sensor_data_queue.get()
                     self.handle_sensor_data(sensor_data)
                 LOGGER.debug("stopping message loop.")
-            except CancelledError as e:
+            except CancelledError as err:
                 return
             except Exception as err:
                 LOGGER.exception(err)
+                raise FatalTestFailException(
+                    "Something wrong with the sensor queue")
 
 
 class BaseReferenceTest(BaseTest):
@@ -261,38 +246,27 @@ class BaseReferenceTest(BaseTest):
                  loop_count: int,
                  learning_mode,
                  sensor: Union[Sensor, Sequence[Sensor], None] = None,
-                 database: DataBase = None,
-                 report: Report = None,
-                 add_time_stamp_to_report=True,
-                 test_location: str = None,
-                 telegram_token=None,
-                 telegram_chat_id=None):
+                 data_handlers: Union[
+                     BaseDataHandler, Sequence[BaseDataHandler], None] = None):
         super().__init__(
             bus,
             test_name,
             loop_count,
             sensor=sensor,
-            database=database,
-            report=report,
-            add_time_stamp_to_report=add_time_stamp_to_report,
-            test_location=test_location,
-            telegram_token=telegram_token,
-            telegram_chat_id=telegram_chat_id)
+            data_handlers=data_handlers
+        )
         self._learning_mode = learning_mode
-        self.summary = {'total_tests': 0, 'failures': []}
 
     @asyncio.coroutine
     def perform_test(self):
+        LOGGER.debug("Performing test")
         yield from super().perform_test()
         if not self._learning_mode:
             # Actual testing mode. reference data
             # and testing data can be compared.
-            self.summary['total_tests'] += 1
             _success = self._active_atom.reference_compare()
+            _data = AtomResult(_success)
+            # _data = {ATTR_RESULT: {KEY_VALUE: _success}}
             if not _success:
-                self.summary['failures'].append(
-                    (self._active_loop, self.active_atom.idx))
-
-    @property
-    def active_atom(self) -> ReferenceAtom:
-        return self._active_atom
+                _data.reason = Data("Reference testing failed.")
+            self.bus.notify(subj.ATOM_RESULT, _data)

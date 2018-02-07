@@ -10,9 +10,9 @@ class DataBase:
         self.bus = bus
 
     @asyncio.coroutine
-    def _add_to_database(self,datapoint,atom: Union[None,Atom]):
+    def _add_to_database(self, datapoint, atom: Union[None, Atom]):
         pass
 
     def add_to_database(self, datapoint, atom: Union[None, Atom]):
         """Adds the datapoints to the database"""
-        self.bus.add_async_task(self._add_to_database(datapoint,atom))
+        self.bus.add_async_task(self._add_to_database(datapoint, atom))

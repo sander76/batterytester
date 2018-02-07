@@ -1,4 +1,5 @@
 import asyncio
+import batterytester.core.helpers.message_subjects as subj
 from asyncio import CancelledError
 
 import aiohttp
@@ -7,9 +8,11 @@ import logging
 from async_timeout import timeout
 from threading import Thread
 
+from batterytester.core.helpers.message_data import FatalData
+from batterytester.core.helpers.constants import KEY_ERROR, KEY_VALUE
 from batterytester.core.helpers.helpers import FatalTestFailException
-from batterytester.core.helpers.messaging import Messaging
-from batterytester.core.helpers.notifier import BaseNotifier, TelegramNotifier
+from batterytester.core.datahandlers.messaging import Messaging
+from batterytester.core.helpers.notifier import TelegramNotifier
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,13 +28,40 @@ class Bus:
         self.loop = asyncio.get_event_loop()
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.exit_message = None
-        self.notifier = BaseNotifier()
-        self.message_bus = Messaging(self.loop)
+        # self.notifier = BaseNotifier()
+        # self.message_bus = Messaging(self.loop)
+
+        self._data_handlers = []
+        self.subscriptions = {}
+        self.register_data_handler(Messaging(self.loop))
         # Initialize the message bus
+
+        # self._register_subscriptions()
+
+    def register_data_handler(self, data_handler):
+        """Registers a data handler"""
+
+        self._data_handlers.append(data_handler)
+        for _subscription in data_handler.get_subscriptions():
+            _subj = _subscription[0]
+            _handler = _subscription[1]
+            if _subj in self.subscriptions:
+                self.subscriptions[_subj].append(_handler)
+            else:
+                self.subscriptions[_subj] = [_handler]
+
+    def notify(self, subject, data=None):
+        """Notifies the data handlers for incoming data."""
         try:
-            self.loop.run_until_complete(self.message_bus.start())
-        except Exception as err:
-            LOGGER.error(err)
+            for _subscriber in self.subscriptions[subject]:
+                # todo: Creating a shallow copy now to prevent the handler from modifying the original data.
+                #_data = dict(data)
+                _subscriber(subject, data)
+        except KeyError:
+            LOGGER.debug('No subscribers to subject {}.'.format(subject))
+
+    def subscribe(self, subject, method):
+        self.subscriptions[subject] = method
 
     def task_finished_callback(self, future):
         try:
@@ -40,6 +70,7 @@ class Bus:
         except Exception as err:
             # todo: During cancellation this task can be run multiple times. This needs to be prevented.
             LOGGER.error(err)
+            self.notify(subj.TEST_FATAL, FatalData(err))
             """An exception is raised. Meaning one of the long running 
             tasks has encountered an error. Cancelling the main task and
             subsequently cancelling all other long running tasks."""
@@ -96,9 +127,10 @@ class Bus:
             except TimeoutError:
                 LOGGER.error("problem finishing task: %s", _task)
             except Exception as err:
-                LOGGER.error(err)
-
-        await self.message_bus.stop_message_bus()
+                LOGGER.error(
+                    "problem during execution of closing task: {}".format(err))
+        for _handlers in self._data_handlers:
+            await _handlers.stop_data_handler()
         await self.session.close()
 
         # todo: throttle this as it may run forever if a task cannot be closed.
@@ -108,41 +140,10 @@ class Bus:
             for _task in self.tasks:
                 if _task.done() or _task.cancelled():
                     pass
-                    #all_finished = all_finished and True
+                    # all_finished = all_finished and True
                 else:
                     _task.cancel()
                     all_finished = False
             await asyncio.sleep(1)
         pass
-        # if self.running:
-        #     self.running = False
-        #     task = self.loop.create_task(self._stop_test())
-        #     task.add_done_callback(self.stop_loop)
 
-    # @asyncio.coroutine
-    # def _stop_test(self):
-    #     def _all_running_tasks():
-    #         return [task for task in asyncio.Task.all_tasks(self.loop) if
-    #                 not (task.done() or task.cancelled())]
-    #
-    #     self.main_test_task.cancel()
-    #
-    #     yield from self.message_bus.stop_message_bus()
-    #     yield from self.session.close()
-    #     _all_tasks = _all_running_tasks()
-    #     while _all_tasks:
-    #         for _task in _all_tasks:
-    #             _task.cancel()
-    #         yield from asyncio.sleep(1)
-    #         _all_tasks = _all_running_tasks()
-    #
-    #     # todo: manage the threaded tasks too.
-    #     # self.threaded_tasks =
-    #     #     [task for task in self.threaded_tasks if task.is_alive()]
-
-
-class TelegramBus(Bus):
-    def __init__(self, telegram_token, chat_id, test_name):
-        super().__init__()
-        self.notifier = TelegramNotifier(self.loop, telegram_token, chat_id,
-                                         test_name=test_name)

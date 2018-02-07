@@ -1,3 +1,5 @@
+from enum import Enum
+
 ATTR_MAIN_TEST = 'main_test'
 ATTR_PLATFORM = 'platform'
 ATTR_ARGS = 'args'
@@ -11,6 +13,7 @@ ATTR_CURRENT_LOOP = 'current_loop'
 RESULT_PASS = 'pass'
 RESULT_FAIL = 'fail'
 RESULT_UNKNOWN = 'unknown'
+REASON = 'reason'
 ATTR_RESULT = 'result'
 
 ATTR_VALUES = 'v'
@@ -24,4 +27,11 @@ KEY_ATOM_DURATION = 'atom_dur'
 KEY_ATOM_STATUS = 'stat'
 KEY_TEST_NAME = 'test_name'
 KEY_TEST_LOOPS = 'loops'
-KEY_TEST_START_TIME = 'start_time'
+# KEY_START_TIME = 'start_time'
+# KEY_STOP_TIME='stop_time'
+KEY_REFERENCE_DATA = 'reference_data'
+KEY_ERROR = 'error'
+
+ATOM_STATUS_EXECUTED = 'COMMAND EXECUTED'
+ATOM_STATUS_EXECUTING = 'Executing command'
+ATOM_STATUS_COLLECTING = 'Collecting sensor data'

@@ -19,7 +19,8 @@
 
     .sensor_prop {
         display: inline-block;
-        min-width: 110px;
+        min-width: 130px;
+        vertical-align: top;
     }
 
     .sensor_val {
@@ -36,11 +37,14 @@
     <button id="connect">Connect</button>
     <h2>TEST INFO</h2>
     <div id="test_data"></div>
+
     <h2>ATOM INFO</h2>
     <div id="atom_data"></div>
     <h2>SENSOR DATA</h2>
-    <div id="sensor_data">
-    </div>
+    <div id="sensor_data"></div>
+    <h2>summary</h2>
+    <div id="summary"></div>
+
 
     <script>
         // connect button
@@ -50,14 +54,12 @@
         let connection_status = document.getElementById("status");
         // ip address input
         let ip_input = document.getElementById("ipaddr");
-        // keeps track of the key_value containers.
-        var atom_data = {};
-        var sensor_data = {};
-        var test_data = {}
-        // key-value containers are put in here.
-        var sensor_div = document.getElementById("sensor_data");
-        var test_div = document.getElementById("test_data");
-        var atom_div = document.getElementById("atom_data");
+
+
+        var sensor_info = new StatusElement(document.getElementById("sensor_data"));
+        var test_info = new StatusElement(document.getElementById("test_data"));
+        var atom_info = new StatusElement(document.getElementById("atom_data"));
+        var atom_summary = new StatusElement(document.getElementById("summary"));
 
         function make_url() {
             let url = "ws://" + ip_input.value + ":8567/ws"
@@ -84,90 +86,118 @@
 
         }
 
+        function clear_data() {
+            test_info.clear();
+            atom_info.clear();
+            
+            sensor_info.clear();
+        }
+
         function init() {
             ws.send('atom') // Get cached atom data.
             ws.send('test') // Get cached sensor data.
         }
 
         function connect(e) {
+            if (ws) {
+                ws.close()
+            }
+            clear_data();
             connect.innerHTML = "connecting"
             open_socket(make_url());
         }
 
+        function StatusElement(parent_div) {
+            this.data_container = {};
+            this.parent_div = parent_div;
+        }
 
-        function PropertyElement() {
+        function plain_interpreter(value){
+            return value['v']
+        }
+        function json_interpreter(value){
+            return JSON.stringify(value['v'], undefined, 4);
+        }
+
+        StatusElement.prototype.clear = function () {
+            this.parent_div.innerHTML = '';
+        }
+        StatusElement.prototype.parse = function (data) {
+            for (const [key, value] of Object.entries(data)) {
+                var el = this.data_container[key];
+                
+                if (el == undefined) {
+                    var interpreter = plain_interpreter
+                    var value_container="div";
+                    if (key === "reference_data" || key === "failed_ids"){
+                        interpreter=json_interpreter;
+                        value_container="pre";
+                    }
+                    el = new PropertyElement(key,interpreter,value_container);
+                    this.data_container[key] = el;
+                    this.parent_div.appendChild(el.container);
+
+                }
+                el.update(value);
+                console.log(key, value);
+            }
+        }
+
+        function PropertyElement(key,interpreter,value_container) {
             // A property value container.
             this.prop = document.createElement("div");
+            this.prop.innerHTML=key;
             this.prop.className = "sensor_prop";
-            this.val = document.createElement("div");
+            this.val = document.createElement(value_container);
             this.val.className = "sensor_val";
             this.container = document.createElement("div");
             this.container.className = "sensor_container";
             this.container.appendChild(this.prop);
             this.container.appendChild(this.val);
+            this.interpreter=interpreter;
 
         }
-        PropertyElement.prototype.update = function (key, value) {
-            this.prop.innerHTML = key;
-            this.val.innerHTML = value;
+        PropertyElement.prototype.update = function (value) {
+            this.val.innerHTML=this.interpreter(value)
+            // if (key === "reference_data" || key === "failed_ids") {
+            //     var pre = document.createElement('pre');
+            //     pre.innerHTML = JSON.stringify(value['v'], undefined, 4);
+            //     this.val.appendChild(pre);
+            // } else {
+            //     this.val.innerHTML = value['v'];
+            // }
+            // this.prop.innerHTML = key;
         }
 
-        function AtomElement() {
-            PropertyElement.call(this);
-        }
-        AtomElement.prototype = Object.create(PropertyElement.prototype);
-        AtomElement.prototype.constructor = PropertyElement;
-        AtomElement.prototype.update = function (key, value) {
-            this.prop.innerHTML = key;
-            this.val.innerHTML = value['v'];
-        }
-
-        function TestElement() {
-            PropertyElement.call(this);
-        }
-        TestElement.prototype = Object.create(PropertyElement.prototype);
-        TestElement.prototype.constructor = PropertyElement;
-        TestElement.prototype.update = function (key, value) {
-            this.prop.innerHTML = key;
-            this.val.innerHTML = value['v']
-        }
-
-
-        function parse_data(data, data_container, data_div, property_element) {
-            for (const [key, value] of Object.entries(data)) {
-                var el = data_container[key];
-                if (el == undefined) {
-                    var el = new property_element();
-                    data_container[key] = el;
-                    data_div.appendChild(el.container);
-
-                }
-                el.update(key, value);
-                console.log(key, value);
-            }
-        }
 
         function parse_sensor(data) {
-            let tp = data["type"];
-            if (tp === undefined) {
+            let subj = data["subj"];
+            delete data.subj;
+            if (subj === "sensor_data") {
                 //Sensor data.
-                parse_data(data, sensor_data, sensor_div, PropertyElement)
-            } else if (tp === "atom_data") {
+                sensor_info.parse(data);
+            } else if (subj === "atom_warmup") {
                 //Atom data.
-                parse_data(data, atom_data, atom_div, AtomElement)
-            } else if (tp === "test_data") {
+                atom_info.parse(data);
+            } else if (subj === "test_warmup") {
                 //Test data.
-                parse_data(data, test_data, test_div, TestElement)
+                test_info.parse(data);
+            } else if (subj === "atom_status") {
+                atom_info.parse(data);
+            } else if (subj === "atom_result") {
+                atom_summary.parse(data)
+            } else if (subj==="test_finished"){
+                test_info.parse(data);
             }
 
 
         }
         var params = new URLSearchParams(window.location.search)
         let _server = params.get("server");
-        if (_server){
-            ip_input.value=_server;
+        if (_server) {
+            ip_input.value = _server;
         }
-        
+
         //open_socket();
     </script>
 </body>

@@ -1,5 +1,8 @@
+import logging
+
 from batterytester.core.atom import ReferenceAtom
-from batterytester.core.helpers.constants import ATTR_VALUES
+
+LOGGER = logging.getLogger(__name__)
 
 
 class BooleanReferenceAtom(ReferenceAtom):
@@ -18,6 +21,7 @@ class BooleanReferenceAtom(ReferenceAtom):
         self.reference_data = reference
 
     def _process_sensor_data(self):
+        super()._process_sensor_data()
         _result = {}
         if self.sensor_data:
             for _data in self.sensor_data:
@@ -26,5 +30,7 @@ class BooleanReferenceAtom(ReferenceAtom):
             return _result
 
     def reference_compare(self) -> bool:
+
         _result = self._process_sensor_data()
+        LOGGER.debug("Sensor data: {}".format(_result))
         return self.reference_data == _result

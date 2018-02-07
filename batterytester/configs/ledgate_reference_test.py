@@ -7,14 +7,16 @@ from batterytester.main_test.ledgate_reference_test import LedgateReferenceTest
 
 test = LedgateReferenceTest(
     test_name='ledgate_test',
-    loop_count=10,
-    #serial_port='ttyACM0',
+    loop_count=3,
+    # serial_port='ttyACM0',
     serial_port='COM4',
     baud_rate=9600
 )
 
+
 @asyncio.coroutine
 def fake(*args, **kwargs):
+    yield from asyncio.sleep(3)
     print("function called")
 
 
@@ -24,13 +26,13 @@ def get_sequence(*args):
             name='open shade',
             command=fake,
             duration=30,
-            reference={'b': False, 'a': True, 'c': True}
+            reference={'4': False}
         ),
         BooleanReferenceAtom(
             'close shade',
             command=fake,
             duration=30,
-            reference={'b': True, 'a': False, 'c': True}
+            reference={'4': True}
         )
     )
     return _val
