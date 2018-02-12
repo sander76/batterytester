@@ -18,7 +18,7 @@ class LedgateReferenceTest(BaseReferenceTest):
                  telegram_token=None,
                  telegram_chat_id=None,
                  ):
-        bus = Bus()
+        bus = Bus(self.async_test)
 
         # create the sensors.
         led_gate_sensor = LedGateSensor(bus, serial_port, baud_rate)

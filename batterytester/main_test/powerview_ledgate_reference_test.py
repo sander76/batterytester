@@ -2,6 +2,7 @@ import asyncio
 
 from aiopvapi.helpers.aiorequest import PvApiConnectionError
 
+from batterytester.core.bus import Bus
 from batterytester.core.datahandlers.influx import Influx
 from batterytester.core.helpers.helpers import FatalTestFailException
 
@@ -23,9 +24,12 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
                  telegram_token=None,
                  telegram_chat_id=None,
                  ):
-        bus = get_bus(telegram_token, telegram_chat_id, test_name)
+        bus = Bus(self.async_test)
+
+        # sensors
         led_gate_sensor = LedGateSensor(bus, serial_port, baud_rate)
 
+        # datahandlers
         _database = Influx(bus, influx_host, influx_database, test_name)
 
         super().__init__(
@@ -34,8 +38,7 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
             loop_count,
             learning_mode=False,
             data_handlers=_database,
-            sensor=led_gate_sensor,
-            test_location=test_location,
+            sensor=led_gate_sensor
         )
         self.powerview = PowerView(hub_ip, self.bus.loop, self.bus.session)
 

@@ -89,13 +89,13 @@
         function clear_data() {
             test_info.clear();
             atom_info.clear();
-            
+            atom_summary.clear();
             sensor_info.clear();
         }
 
         function init() {
-            ws.send('atom') // Get cached atom data.
-            ws.send('test') // Get cached sensor data.
+            ws.send(JSON.stringify({"type":"atom"})) // Get cached atom data.
+            ws.send(JSON.stringify({"type":"test"})) // Get cached sensor data.
         }
 
         function connect(e) {
@@ -173,6 +173,7 @@
         function parse_sensor(data) {
             let subj = data["subj"];
             delete data.subj;
+            delete data.cache;
             if (subj === "sensor_data") {
                 //Sensor data.
                 sensor_info.parse(data);

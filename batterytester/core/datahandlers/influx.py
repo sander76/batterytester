@@ -67,6 +67,7 @@ class Influx(BaseDataHandler):
         :param measurement: The current test being run. normally the name of the test.
         :param datalength:
         """
+        super().__init__()
         self.bus = bus
         self.host = host
         self.data = []

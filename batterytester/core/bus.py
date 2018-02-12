@@ -18,11 +18,12 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Bus:
-    def __init__(self):
+    def __init__(self, main_test):
         self.tasks = []
         self.closing_task = []
         self.threaded_tasks = []
-        self.main_test_task = None
+        # self.main_test_task = None
+        self.main_test = asyncio.ensure_future(self.start_main_test(main_test))
         self.callbacks = []
         self.running = True
         self.loop = asyncio.get_event_loop()
@@ -33,7 +34,8 @@ class Bus:
 
         self._data_handlers = []
         self.subscriptions = {}
-        self.register_data_handler(Messaging(self.loop))
+        self.messaging = Messaging(self)
+
         # Initialize the message bus
 
         # self._register_subscriptions()
@@ -54,8 +56,6 @@ class Bus:
         """Notifies the data handlers for incoming data."""
         try:
             for _subscriber in self.subscriptions[subject]:
-                # todo: Creating a shallow copy now to prevent the handler from modifying the original data.
-                #_data = dict(data)
                 _subscriber(subject, data)
         except KeyError:
             LOGGER.debug('No subscribers to subject {}.'.format(subject))
@@ -74,7 +74,7 @@ class Bus:
             """An exception is raised. Meaning one of the long running 
             tasks has encountered an error. Cancelling the main task and
             subsequently cancelling all other long running tasks."""
-            self.main_test_task.cancel()
+            self.main_test.cancel()
 
     def add_async_task(self, coro):
         """Add an async task. The callback will be used to check
@@ -94,15 +94,26 @@ class Bus:
     def add_callback(self, callback):
         self.callbacks.append(callback)
 
+    async def start_main_test(self, main_task):
+        try:
+            await self.messaging.ws_connect()
+            self.register_data_handler(self.messaging)
+        except Exception:
+            return
+        else:
+            self.add_async_task(self.messaging.ws_loop())
+            await main_task()
+
     def _start_test(self):
         # start the ws message bus.
         # todo: add keyboard interruption handling
+
         for callback in self.callbacks:
             callback()
         for task in self.threaded_tasks:
             task.start()
         try:
-            self.loop.run_until_complete(self.main_test_task)
+            self.loop.run_until_complete(self.main_test)
         except CancelledError:
             LOGGER.error("Main test loop cancelled.")
         except FatalTestFailException as err:
@@ -146,4 +157,3 @@ class Bus:
                     all_finished = False
             await asyncio.sleep(1)
         pass
-

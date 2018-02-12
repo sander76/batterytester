@@ -35,3 +35,9 @@ KEY_ERROR = 'error'
 ATOM_STATUS_EXECUTED = 'COMMAND EXECUTED'
 ATOM_STATUS_EXECUTING = 'Executing command'
 ATOM_STATUS_COLLECTING = 'Collecting sensor data'
+
+## WEBSSOCKET DATA #######################################
+KEY_SUBJECT = 'subj'
+KEY_CACHE = 'cache'
+KEY_TYPE = 'type'
+KEY_DATA = 'data'

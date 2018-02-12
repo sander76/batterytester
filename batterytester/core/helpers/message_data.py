@@ -17,6 +17,7 @@ class Data:
 class Message:
     def __init__(self):
         self.subj = ''
+        self.cache = False
 
 
 @singledispatch

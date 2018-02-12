@@ -70,7 +70,8 @@ class BaseTest:
                     self.bus.register_data_handler(_handler)
 
         self.bus.add_async_task(self._messager())
-        self.bus.main_test_task = asyncio.ensure_future(self.async_test())
+        # self.bus.main_test_task = asyncio.ensure_future(self.async_test())
+        self.bus.main_test_task = self.async_test
 
         self._loopcount = loop_count
         self._active_atom = None

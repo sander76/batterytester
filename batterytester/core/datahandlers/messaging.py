@@ -4,17 +4,23 @@ import json
 import aiohttp
 import logging
 
+import asyncio
+
 import batterytester.core.helpers.message_subjects as subj
 
 from aiohttp import web
 
 from batterytester.core.datahandlers import BaseDataHandler
+from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.helpers.message_data import to_serializable, FatalData, \
-    TestFinished, TestData, AtomData, AtomStatus, AtomResult, TestSummary
+    TestFinished, TestData, AtomData, AtomStatus, AtomResult, TestSummary, \
+    Message
 from batterytester.core.helpers.constants import KEY_ATOM_LOOP, KEY_VALUE, \
-    KEY_ATOM_INDEX, ATTR_RESULT, KEY_ATOM_NAME, REASON
+    KEY_ATOM_INDEX, ATTR_RESULT, KEY_ATOM_NAME, REASON, KEY_SUBJECT, KEY_CACHE, \
+    KEY_TYPE, KEY_DATA
+from batterytester.core.helpers.message_subjects import TEST_FATAL
 
-ATTR_MESSAGE_BUS_ADDRESS = '0.0.0.0'
+ATTR_MESSAGE_BUS_ADDRESS = '127.0.0.1'
 ATTR_MESSAGE_BUS_PORT = 8567
 
 URL_CLOSE = 'close'
@@ -31,25 +37,14 @@ KEY_FAIL = 'failed'
 ATTR_FAILED_IDS = 'failed_ids'
 
 
-# todo: move the websocket server to a separate process and connect to it with a client connection.
-
 class Messaging(BaseDataHandler):
-    def __init__(self, loop):
+    def __init__(self, bus):
         super().__init__()
-        self.sensor_sockets = []
-        self.report_sockets = []
-        self.loop = loop
-        self.app = web.Application()
-        self.app.router.add_get('/ws', self.sensor_handler)
-        self.handler = None
-        self.server = None
-        self._report = None
-        self.test_cache = {}
+        self._bus = bus
+        self.ws_connection = None
+        self.session = None
         self.test_summary = TestSummary()
-        try:
-            self.loop.run_until_complete(self.start())
-        except Exception as err:
-            LOGGER.error(err)
+        # self._bus.add_async_task(self.ws_connect())
 
     def get_subscriptions(self):
         return (
@@ -65,13 +60,13 @@ class Messaging(BaseDataHandler):
     def _atom_warmup(self, subject, data: AtomData):
         super()._atom_warmup(subject, data)
         data.subj = subject
-        self.test_cache[subject] = data
+        data.cache = True
         self._send_to_ws(data)
 
     def test_warmup(self, subject, data: TestData):
         LOGGER.debug("warmup test: {} data: {}".format(subject, data))
         data.subj = subject
-        self.test_cache[subject] = data
+        data.cache = True
         self._send_to_ws(data)
 
     def test_fatal(self, subject, data: FatalData):
@@ -94,70 +89,52 @@ class Messaging(BaseDataHandler):
                 data.reason.value)
 
         self.test_data(subject, dict(vars(self.test_summary)))
-        self.test_summary.subj = subject
+        # self.test_summary.subj = subject
         self._send_to_ws(self.test_summary)
 
     def test_data(self, subject, data, *args, **kwargs):
         data[subj.SUBJ] = subject
         self._send_to_ws(data)
 
-    # def test_data_cached(self, subject, data):
-    #     data[subj.SUBJ] = subject
-    #     self.test_cache[subject] = data
-    #     self._send_to_ws(data)
-
     def atom_status(self, subject, data: AtomStatus):
         data.subj = subject
-        self.test_cache[subject] = data
+        # self.test_cache[subject] = data
+        data.cache = True
         self._send_to_ws(data)
 
-    async def sensor_handler(self, request):
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
-
-        self.sensor_sockets.append(ws)
-        try:
-            async for msg in ws:
-                if msg.type == aiohttp.WSMsgType.TEXT:
-                    if msg.data == URL_CLOSE:
-                        await ws.close()
-                    elif msg.data == URL_ATOM:
-                        self.return_cached_data(
-                            ws, subj.ATOM_WARMUP)
-                        self.return_cached_data(
-                            ws, subj.ATOM_STATUS
-                        )
-                    elif msg.data == URL_TEST:
-                        self.return_cached_data(
-                            ws, subj.TEST_WARMUP)
-
-                elif msg.type in (aiohttp.WSMsgType.CLOSE,
-                                  aiohttp.WSMsgType.CLOSING,
-                                  aiohttp.WSMsgType.CLOSED):
-                    await ws.close()
-        finally:
-            self.sensor_sockets.remove(ws)
-        return ws
-
-    def return_cached_data(self, ws_client, cache_key):
-        cached_data = self.test_cache.get(cache_key)
-        if cached_data:
-            _js = json.dumps(cached_data, default=to_serializable)
-            ws_client.send_str(_js)
-
-    def _send_to_ws(self, data: dict):
+    def _send_to_ws(self, data: Message):
         _js = json.dumps(data, default=to_serializable)
-        for _ws in self.sensor_sockets:
-            _ws.send_str(_js)
+        self.ws_connection.send_str(_js)
 
-    async def start(self):
-        self.handler = self.app.make_handler()
-        self.server = await self.loop.create_server(
-            self.handler, ATTR_MESSAGE_BUS_ADDRESS, ATTR_MESSAGE_BUS_PORT)
+    async def ws_connect(self):
+        try:
+            self.ws_connection = await asyncio.wait_for(
+                self._bus.session.ws_connect(
+                    'http://{}:{}/ws/tester'.format(ATTR_MESSAGE_BUS_ADDRESS,
+                                                    ATTR_MESSAGE_BUS_PORT)),
+                timeout=10)
+        except asyncio.TimeoutError:
+            raise FatalTestFailException(
+                "Error connecting to websocket server")
+        except Exception as err:
+            LOGGER.error(err)
+            raise
 
-    async def stop_data_handler(self):
-        self.server.close()
-        await self.server.wait_closed()
-        await self.app.shutdown()
-        await self.handler.shutdown(60.0)
-        await self.app.cleanup()
+    def parser(self, data):
+        LOGGER.info(data)
+
+    async def ws_loop(self):
+        try:
+            async for msg in self.ws_connection:
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    if msg.data == 'close cmd':
+                        await self.ws_connection.close()
+                        break
+                    else:
+                        await self.parser(msg.data)
+                elif msg.type == aiohttp.WSMsgType.CLOSED:
+                    break
+                elif msg.type == aiohttp.WSMsgType.ERROR:
+                    break
+        except asyncio.CancelledError:
+            LOGGER.info("closing websocket listener")
