@@ -6,11 +6,13 @@ from time import time
 from typing import Sequence, Generator
 
 from batterytester.core.bus import Bus
-from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_VALUE
+from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_VALUE, \
+    KEY_SUBJECT
 
 # def get_time_stamp():
 #     return int(time() * 1000)
 from batterytester.core.helpers.helpers import get_current_timestamp
+from batterytester.core.helpers.message_subjects import SENSOR_DATA
 
 
 class IncomingParser:
@@ -66,6 +68,7 @@ class IncomingParserChunked(IncomingParser):
             if _chunk != b'':
                 val = self._interpret(_chunk)
                 val[ATTR_TIMESTAMP] = {KEY_VALUE: get_current_timestamp()}
+                val[KEY_SUBJECT] = SENSOR_DATA
                 yield val
 
     def process(self, raw_incoming) -> Sequence[dict]:

@@ -88,12 +88,11 @@ class Messaging(BaseDataHandler):
                 self._atom_name,
                 data.reason.value)
 
-        self.test_data(subject, dict(vars(self.test_summary)))
+        #self.test_data(subject, dict(vars(self.test_summary)))
         # self.test_summary.subj = subject
         self._send_to_ws(self.test_summary)
 
     def test_data(self, subject, data, *args, **kwargs):
-        data[subj.SUBJ] = subject
         self._send_to_ws(data)
 
     def atom_status(self, subject, data: AtomStatus):

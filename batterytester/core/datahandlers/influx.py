@@ -9,8 +9,9 @@ from aiohttp.client_exceptions import ClientError
 from batterytester.core.bus import Bus
 from batterytester.core.datahandlers import BaseDataHandler
 from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_ATOM_LOOP, \
-    KEY_VALUE, KEY_ATOM_INDEX, KEY_ATOM_NAME
+    KEY_VALUE, KEY_ATOM_INDEX, KEY_ATOM_NAME, KEY_SUBJECT
 from batterytester.core.helpers.helpers import FatalTestFailException
+from batterytester.core.helpers.message_data import AtomData
 
 LENGTH = 1
 
@@ -25,7 +26,7 @@ def line_protocol_fields(measurement: dict):
     """
     return ','.join("{}={}".format(key, value[KEY_VALUE]) for key, value in
                     measurement.items() if
-                    key != ATTR_TIMESTAMP)
+                    key != ATTR_TIMESTAMP and key != KEY_SUBJECT)
 
 
 def line_protocol_tags(tags: dict):
@@ -48,9 +49,20 @@ def get_time_stamp(data):
     val = data.get(ATTR_TIMESTAMP)
     if val:
         val = val.get(KEY_VALUE)
-        return int(val * 1000000000) # to nanoseconds.
+        return to_nano_seconds(val)  # to nanoseconds.
     else:
         raise FatalTestFailException("Data has no timestamp")
+
+
+def to_nano_seconds(timestamp):
+    """Milliseconds to nanoseconds"""
+
+    try:
+        val = int(timestamp * 1000000000)
+        return val
+    except Exception:
+        raise FatalTestFailException(
+            "Unable to convert milliseconds to nanoseconds.")
 
 
 # todo: write the buffer to the database when the test ends.
@@ -86,32 +98,41 @@ class Influx(BaseDataHandler):
         return (
             (subj.ATOM_WARMUP, self._store_tag_data),
             (subj.SENSOR_DATA, self._add_to_database),
-            (subj.ATOM_EXECUTING, self._add_to_database)
         )
 
-    def _store_tag_data(self, subject, data):
+    def _store_tag_data(self, subject, data: AtomData):
         LOGGER.debug("storing tag data")
-        self._tags['loop'] = data[KEY_ATOM_LOOP][KEY_VALUE]
-        self._tags['idx'] = data[KEY_ATOM_INDEX][KEY_VALUE]
+        self._tags['loop'] = data.loop.value  # data[KEY_ATOM_LOOP][KEY_VALUE]
+        self._tags['idx'] = data.idx.value  # data[KEY_ATOM_INDEX][KEY_VALUE]
+
+        _fields = line_protocol_fields({'value': {KEY_VALUE: 1}})
+        _tags = {
+            'name': slugify(data.atom_name.value),
+            'loop': data.loop.value,
+            'idx': data.idx.value
+        }
+        _tags = line_protocol_tags(_tags)
+        self.data.append(self._create_measurement(
+            _fields, _tags, to_nano_seconds(data.started.value)))
 
     def _add_to_database(self, subject, data):
-        LOGGER.debug("Adding to database buffer")
+        # LOGGER.debug("Adding to database buffer")
         _time_stamp = get_time_stamp(data)
-        if subject == subj.SENSOR_DATA:
-            _fields = line_protocol_fields(data)
-            _tags = line_protocol_tags(
-                dict(self._tags))  # Shallow copy of the current tags.
-            self.data.append(
-                self._create_measurement(_fields, _tags, _time_stamp))
-        elif subject == subj.ATOM_EXECUTING:
-            _fields = line_protocol_fields({'value': {KEY_VALUE: 1}})
-
-            _tags = dict(self._tags)
-            _tags['name'] = slugify(data[KEY_ATOM_NAME][KEY_VALUE])
-            _tags = line_protocol_tags(_tags)
-
-            self.data.append(
-                self._create_measurement(_fields, _tags, _time_stamp))
+        # if subject == subj.SENSOR_DATA:
+        _fields = line_protocol_fields(data)
+        _tags = line_protocol_tags(
+            dict(self._tags))  # Shallow copy of the current tags.
+        self.data.append(
+            self._create_measurement(_fields, _tags, _time_stamp))
+        # elif subject == subj.ATOM_WARMUP or subject == subj.ATOM_STATUS:
+        #     _fields = line_protocol_fields({'value': {KEY_VALUE: 1}})
+        #
+        #     _tags = dict(self._tags)
+        #     _tags['name'] = slugify(data.atom_name.value)
+        #     _tags = line_protocol_tags(_tags)
+        #
+        #     self.data.append(
+        #         self._create_measurement(_fields, _tags, _time_stamp))
 
     def _create_measurement(self, fields: str, tags: str, time_stamp):
         """Transform data according to line format protocol.

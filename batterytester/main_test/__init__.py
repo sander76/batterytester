@@ -119,8 +119,6 @@ class BaseTest:
         """
 
         LOGGER.debug("Test warmup")
-        self.bus.notify(subj.TEST_WARMUP,
-                        TestData(self.test_name, self._loopcount))
 
     def _loop_warmup_data(self):
         return {}
@@ -174,6 +172,8 @@ class BaseTest:
         # _current_loop = 0
         # idx = 0
         try:
+            self.bus.notify(subj.TEST_WARMUP,
+                            TestData(self.test_name, self._loopcount))
             yield from self.test_warmup()
 
             for _current_loop in range(self._loopcount):
@@ -187,7 +187,10 @@ class BaseTest:
                         # self.bus.notify(subj.ATOM_START,
                         #                 self._atom_start_data())
 
+                        self.bus.notify(subj.ATOM_WARMUP,
+                                        self._atom_warmup_data())
                         yield from self.atom_warmup()
+
                         yield from self.perform_test()
                     except NonFatalTestFailException as err:
                         self.bus.notify(subj.ATOM_RESULT,
@@ -216,7 +219,7 @@ class BaseTest:
     @asyncio.coroutine
     def atom_warmup(self):
         """method to be performed before doing an atom execution."""
-        self.bus.notify(subj.ATOM_WARMUP, self._atom_warmup_data())
+        pass
 
     @asyncio.coroutine
     def _messager(self):

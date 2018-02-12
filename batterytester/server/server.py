@@ -104,11 +104,11 @@ class Server:
 
     def _tester_disconnect(self):
         _data = self.test_cache.get(subj.TEST_WARMUP)
-        _data['status'] = Data('tester disconnected')
-        self._send_to_ws(_data, json.dumps(_data))
+        if _data:
+            _data['status'] = Data('tester disconnected')
+            self._send_to_ws(_data, json.dumps(_data,default=to_serializable))
 
     def _send_to_ws(self, data, raw):
-        # _js = json.dumps(_data, default=to_serializable)
         for _ws in self.sensor_sockets:
             _ws.send_str(raw)
 
@@ -136,7 +136,6 @@ class Server:
         await self.app.cleanup()
 
 
-LOGGER = logging.getLogger('__name__')
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     loop = asyncio.get_event_loop()
