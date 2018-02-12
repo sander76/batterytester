@@ -8,7 +8,7 @@ from batterytester.core.helpers.helpers import FatalTestFailException
 
 from batterytester.core.helpers.powerview_utils import PowerView
 from batterytester.core.sensor.led_gate_sensor import LedGateSensor
-from batterytester.main_test import BaseReferenceTest, get_bus
+from batterytester.main_test import BaseReferenceTest
 
 
 class PowerViewLedgateReferenceTest(BaseReferenceTest):
