@@ -57,7 +57,6 @@ class Server:
                     _data = json.loads(msg.data)
                     self._parse_incoming(_data, msg.data)
                 else:
-
                     await ws.close()
         except Exception as err:
             LOGGER.error(err)
@@ -106,6 +105,7 @@ class Server:
             self.test_cache[data[KEY_SUBJECT]] = data
 
     def _tester_disconnect(self):
+
         _data = self.test_cache.get(subj.TEST_WARMUP)
         if _data:
             _data['status'] = Data('tester disconnected')

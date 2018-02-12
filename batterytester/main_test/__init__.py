@@ -213,6 +213,7 @@ class BaseTest:
         except Exception as e:
             LOGGER.exception(e)
         finally:
+            LOGGER.debug("Test finished notify")
             self.bus.notify(subj.TEST_FINISHED, TestFinished())
 
     def _atom_warmup_data(self):

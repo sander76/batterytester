@@ -58,6 +58,9 @@ class Messaging(BaseDataHandler):
             (subj.SENSOR_DATA, self.test_data)
         )
 
+    async def stop_data_handler(self):
+        await self.ws_connection.close()
+
     def _atom_warmup(self, subject, data: AtomData):
         super()._atom_warmup(subject, data)
         data.subj = subject

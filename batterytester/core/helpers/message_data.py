@@ -52,7 +52,7 @@ class BaseTestData(Message):
 class TestFinished(BaseTestData):
     def __init__(self):
         super().__init__()
-        self.status = "finished"
+        self.status = Data("finished")
         self.time_finished = Data(get_current_timestamp())
 
 
