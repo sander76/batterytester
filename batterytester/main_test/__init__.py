@@ -70,7 +70,6 @@ class BaseTest:
                     self.bus.register_data_handler(_handler)
 
         self.bus.add_async_task(self._messager())
-        # self.bus.main_test_task = asyncio.ensure_future(self.async_test())
         self.bus.main_test_task = self.async_test
 
         self._loopcount = loop_count
@@ -85,7 +84,10 @@ class BaseTest:
     def start_test(self):
         """Starts the actual test."""
         LOGGER.debug("Starting the test.")
-        self.bus._start_test()
+        try:
+            self.bus._start_test()
+        except KeyboardInterrupt:
+            self.bus.main_test.cancel()
 
     def handle_sensor_data(self, sensor_data: dict):
         """Handle sensor data by sending it to the active atom or store

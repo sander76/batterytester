@@ -79,6 +79,7 @@ class Messaging(BaseDataHandler):
 
     def atom_result(self, subject, data: AtomResult):
         """Sends out a summary of the current running test result."""
+        data.cache = True
         if data.passed.value:
             self.test_summary.atom_passed()
         else:
@@ -88,7 +89,7 @@ class Messaging(BaseDataHandler):
                 self._atom_name,
                 data.reason.value)
 
-        #self.test_data(subject, dict(vars(self.test_summary)))
+        # self.test_data(subject, dict(vars(self.test_summary)))
         # self.test_summary.subj = subject
         self._send_to_ws(self.test_summary)
 
@@ -97,7 +98,6 @@ class Messaging(BaseDataHandler):
 
     def atom_status(self, subject, data: AtomStatus):
         data.subj = subject
-        # self.test_cache[subject] = data
         data.cache = True
         self._send_to_ws(data)
 

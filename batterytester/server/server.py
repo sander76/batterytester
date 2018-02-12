@@ -41,7 +41,7 @@ class Server:
         self.handler = None
         self.server = None
         self.test_cache = {}
-        self.test_summary = TestSummary()
+        # self.test_summary = TestSummary()
         try:
             self.loop.run_until_complete(self.start())
         except Exception as err:
@@ -86,6 +86,9 @@ class Server:
                     elif _type == URL_TEST:
                         self.return_cached_data(
                             ws, subj.TEST_WARMUP)
+                        self.return_cached_data(
+                            ws, subj.ATOM_RESULT
+                        )
 
                 elif msg.type in (aiohttp.WSMsgType.CLOSE,
                                   aiohttp.WSMsgType.CLOSING,
@@ -106,7 +109,7 @@ class Server:
         _data = self.test_cache.get(subj.TEST_WARMUP)
         if _data:
             _data['status'] = Data('tester disconnected')
-            self._send_to_ws(_data, json.dumps(_data,default=to_serializable))
+            self._send_to_ws(_data, json.dumps(_data, default=to_serializable))
 
     def _send_to_ws(self, data, raw):
         for _ws in self.sensor_sockets:
