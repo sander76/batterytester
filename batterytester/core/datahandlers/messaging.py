@@ -44,6 +44,7 @@ class Messaging(BaseDataHandler):
         self.ws_connection = None
         self.session = None
         self.test_summary = TestSummary()
+        self.test_summary.cache = True
         # self._bus.add_async_task(self.ws_connect())
 
     def get_subscriptions(self):
@@ -93,7 +94,7 @@ class Messaging(BaseDataHandler):
         # self.test_summary.subj = subject
         self._send_to_ws(self.test_summary)
 
-    def test_data(self, subject, data, *args, **kwargs):
+    def test_data(self, subject, data):
         self._send_to_ws(data)
 
     def atom_status(self, subject, data: AtomStatus):

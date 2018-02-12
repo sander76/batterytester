@@ -5,7 +5,8 @@ from batterytester.core.helpers.constants import KEY_ATOM_INDEX, \
 from batterytester.core.helpers.helpers import get_current_timestamp
 
 # todo: all properties should go in a list when serializing to manage the order of appearance.
-from batterytester.core.helpers.message_subjects import ATOM_RESULT
+from batterytester.core.helpers.message_subjects import ATOM_RESULT, \
+    RESULT_SUMMARY
 
 
 class Data:
@@ -15,9 +16,8 @@ class Data:
 
 
 class Message:
-    def __init__(self):
-        self.subj = ''
-        self.cache = False
+    subj = ''
+    cache = False
 
 
 @singledispatch
@@ -93,8 +93,7 @@ class AtomResult(Message):
 
 class TestSummary(Message):
     def __init__(self):
-        super().__init__()
-        self.subj = ATOM_RESULT
+        self.subj = RESULT_SUMMARY
         self.passed = Data(0)
         self.failed = Data(0)
         self.failed_ids = Data([])

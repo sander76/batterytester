@@ -87,7 +87,7 @@ class Server:
                         self.return_cached_data(
                             ws, subj.TEST_WARMUP)
                         self.return_cached_data(
-                            ws, subj.ATOM_RESULT
+                            ws, subj.RESULT_SUMMARY
                         )
 
                 elif msg.type in (aiohttp.WSMsgType.CLOSE,
