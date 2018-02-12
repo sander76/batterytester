@@ -60,7 +60,7 @@ class Server:
 
                     await ws.close()
         except Exception as err:
-            LOGGER.debug("tester disconnected")
+            LOGGER.error(err)
             self._tester_disconnect()
 
         return ws

@@ -95,7 +95,8 @@
 
         function init() {
             ws.send(JSON.stringify({"type":"atom"})) // Get cached atom data.
-            ws.send(JSON.stringify({"type":"test"})) // Get cached sensor data.
+            ws.send(JSON.stringify({"type":"test"})) // Get cached test data.
+
         }
 
         function connect(e) {
@@ -120,12 +121,16 @@
         }
 
         StatusElement.prototype.clear = function () {
+            this.data_container={};
             this.parent_div.innerHTML = '';
         }
         StatusElement.prototype.parse = function (data) {
+
             for (const [key, value] of Object.entries(data)) {
+                // Check if there already exists a PropertyElement.
                 var el = this.data_container[key];
                 
+                // If PropertyElement does not exist. Create it.
                 if (el == undefined) {
                     var interpreter = plain_interpreter
                     var value_container="div";
@@ -139,7 +144,7 @@
 
                 }
                 el.update(value);
-                console.log(key, value);
+                //console.log(key, value);
             }
         }
 
@@ -176,18 +181,24 @@
             delete data.cache;
             if (subj === "sensor_data") {
                 //Sensor data.
+                console.log("incoming sensor data",data);
                 sensor_info.parse(data);
             } else if (subj === "atom_warmup") {
+                console.log("atom warmup data",data);
                 //Atom data.
                 atom_info.parse(data);
             } else if (subj === "test_warmup") {
+                console.log("test_warmup",data);
                 //Test data.
                 test_info.parse(data);
             } else if (subj === "atom_status") {
+                console.log("atom_status",data);
                 atom_info.parse(data);
             } else if (subj === "atom_result") {
+                console.log("atom_result",data);
                 atom_summary.parse(data)
             } else if (subj==="test_finished"){
+                console.log("test_finished",data);
                 test_info.parse(data);
             }
 
