@@ -119,6 +119,14 @@
         function json_interpreter(value){
             return JSON.stringify(value['v'], undefined, 4);
         }
+        function time_interpreter(value){
+            if (value.v ==="unknown"){
+                return value.v;
+            }
+            
+            var date = new Date(value.v*1000);
+            return date.toISOString();
+        }
 
         StatusElement.prototype.clear = function () {
             this.data_container={};
@@ -137,6 +145,10 @@
                     if (key === "reference_data" || key === "failed_ids"){
                         interpreter=json_interpreter;
                         value_container="pre";
+                    }
+                    else if (key==="started" || key ==="time_finished" || key==="status_updated"||key==="t")
+                    {
+                        interpreter=time_interpreter;
                     }
                     el = new PropertyElement(key,interpreter,value_container);
                     this.data_container[key] = el;
@@ -188,6 +200,7 @@
                 //Atom data.
                 atom_info.parse(data);
             } else if (subj === "test_warmup") {
+                this.clear_data();
                 console.log("test_warmup",data);
                 //Test data.
                 test_info.parse(data);
