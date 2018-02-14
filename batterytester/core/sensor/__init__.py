@@ -18,7 +18,6 @@ class Sensor:
         self._bus = bus
         self._connector = connector
         self._sensor_data_parser = sensor_data_parser
-        # self.sensor_data_queue = asyncio.Queue(loop=self._bus.loop)
         self.sensor_data_queue = None
         self._bus.add_async_task(self._parser())
 

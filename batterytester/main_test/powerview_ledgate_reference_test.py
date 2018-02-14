@@ -29,8 +29,11 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
         # sensors
         led_gate_sensor = LedGateSensor(bus, serial_port, baud_rate)
 
-        # datahandlers
+        # data handlers
         _database = Influx(bus, influx_host, influx_database, test_name)
+
+        # hub connection.
+        self.powerview = PowerView(hub_ip, self.bus.loop, self.bus.session)
 
         super().__init__(
             bus,
@@ -40,7 +43,7 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
             data_handlers=_database,
             sensor=led_gate_sensor
         )
-        self.powerview = PowerView(hub_ip, self.bus.loop, self.bus.session)
+
 
     @asyncio.coroutine
     def test_warmup(self):

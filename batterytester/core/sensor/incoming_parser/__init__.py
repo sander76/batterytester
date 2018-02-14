@@ -24,31 +24,6 @@ class IncomingParser:
         """Entry point for processing raw incoming sensor data."""
         raise NotImplemented
 
-    # def _extract(self, measurement: list):
-    #     """
-    #     Consumes the raw incoming data and cuts it into consumable,
-    #     interpretable chunks.
-    #
-    #     :param measurement:
-    #     :return:
-    #     """
-    #     try:
-    #         # Look for the first separator from the start of the incoming data
-    #         # Raises value error if no separator is found.
-    #         _idx = self.incoming_data.index(self.separator)
-    #         # Put this part to the measurement list
-    #         measurement.append(
-    #             Measurement(self.incoming_data[:_idx], get_time_stamp()))
-    #         # Cut away that part from the incoming data byte array.
-    #         self.incoming_data = self.incoming_data[_idx + 1:]
-    #         # Further consume the incoming data by calling this method again.
-    #         self._extract(measurement)
-    #     except ValueError:
-    #         # No more separator found. Any data left in the raw incoming list
-    #         # interpreted when new data has come in. For now returning and
-    #         # preparing for further interpretation.
-    #         return
-
 
 class IncomingParserChunked(IncomingParser):
     """Incoming data parser where data is coming in as a stream."""
@@ -66,15 +41,18 @@ class IncomingParserChunked(IncomingParser):
         self.incoming_data = bytearray(_split[-1])
         for _chunk in (_split[i] for i in range(len(_split) - 1)):
             if _chunk != b'':
-                val = self._interpret(_chunk)
-                val[ATTR_TIMESTAMP] = {KEY_VALUE: get_current_timestamp()}
-                val[KEY_SUBJECT] = SENSOR_DATA
-                yield val
+                # val = self._interpret(_chunk)
+                # val[ATTR_TIMESTAMP] = {KEY_VALUE: get_current_timestamp()}
+                # val[KEY_SUBJECT] = SENSOR_DATA
+                yield _chunk
 
     def process(self, raw_incoming) -> Sequence[dict]:
         """Entry point for processing raw incoming sensor data.
         Gets called by long running task _parser inside the serial sensor
-        class."""
+        class.
+
+        Returns a dictionary with measurement values, timestamp and
+        'sensor_data' as subject/identifier."""
 
         # Add new raw to current raw data.
         self.incoming_data.extend(raw_incoming)
@@ -86,7 +64,7 @@ class IncomingParserChunked(IncomingParser):
         # self._extract(measurement)
 
         for _measurement in self._extract():
-            yield _measurement
+            yield self._interpret(_measurement)
             # yield self._interpret(_measurement)
         # #     val = self._interpret(_measurement)
         #     if val is not None:

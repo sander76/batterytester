@@ -53,7 +53,6 @@ class ThreadedSerialSensorConnector(AsyncSensorConnector):
                 if self.s.is_open:
                     self.s.close()
 
-                # todo: Add closing of serial port in case of a problem.
                 LOGGER.error("error reading from serial port")
                 raise FatalTestFailException("Problem reading serial port.")
 

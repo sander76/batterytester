@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import Mock
 
 from batterytester.core.bus import Bus
-from batterytester.core.helpers.helpers import TestFailException
+
 from batterytester.core.sensor.incoming_parser.sequence_data_parser import \
     SequenceDataParser, create_sensor_data_container
 
@@ -17,12 +17,10 @@ class TestInterpretMethod(unittest.TestCase):
         self.parser._test_sequence(4)
         self.parser._test_sequence(5)
         self.parser._test_sequence(0)
-        self.assertEqual(self.parser._seq,5)
+        self.assertEqual(self.parser._seq, 5)
         self.parser._test_sequence(1)
         with self.assertRaises(TestFailException):
             self.parser._test_sequence(3)
-
-
 
     def test_sequence_order1(self):
         self.parser._test_sequence(3)
@@ -42,4 +40,3 @@ class TestInterpretMethod(unittest.TestCase):
         _input = b'1a2;235'
         _result = self.parser._interpret(_input)
         self.assertIsNone(_result)
-

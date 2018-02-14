@@ -38,28 +38,5 @@ test = PvLedGateReferenceTest(
     hub_ip='172.22.3.23'
 )
 
-# def get_sequence(*args):
-#     self = args[0]
-#     _val = (
-#         BooleanReferenceAtom(
-#             name='open shade',
-#             command=self.powerview.open_shade,
-#             arguments={'shade_id': 9416},
-#             duration=30,
-#             reference={'7': False}
-#         ),
-#         BooleanReferenceAtom(
-#             'close shade',
-#             command=self.powerview.close_shade,
-#             arguments={'shade_id': 9416},
-#             duration=30,
-#             reference={'7': True}
-#         )
-#     )
-#     return _val
-
-
-# test.get_sequence = get_sequence
-
 if __name__ == "__main__":
     test.start_test()

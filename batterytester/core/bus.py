@@ -9,10 +9,8 @@ from async_timeout import timeout
 from threading import Thread
 
 from batterytester.core.helpers.message_data import FatalData
-from batterytester.core.helpers.constants import KEY_ERROR, KEY_VALUE
 from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.datahandlers.messaging import Messaging
-from batterytester.core.helpers.notifier import TelegramNotifier
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +32,7 @@ class Bus:
 
         self._data_handlers = []
         self.subscriptions = {}
+        #todo: Don't automatically include this.
         self.messaging = Messaging(self)
 
         # Initialize the message bus

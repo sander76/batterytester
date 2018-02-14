@@ -3,19 +3,12 @@
 import asyncio
 import logging
 import os
-from collections import OrderedDict, namedtuple
 
 from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
     PvApiResponseStatusError
 
 from batterytester.core.helpers.message_data import Data, AtomData
-from batterytester.core.helpers.constants import ATTR_RESULT, \
-    KEY_VALUE, KEY_ATOM_NAME, KEY_ATOM_DURATION, \
-    RESULT_UNKNOWN, KEY_ATOM_LOOP, KEY_ATOM_INDEX, KEY_ATOM_STATUS, \
-    KEY_REFERENCE_DATA
 from batterytester.core.helpers.helpers import NonFatalTestFailException
-
-from batterytester.core.datahandlers.report import Report
 
 SENSOR_FILE_FORMAT = 'loop_{}-idx_{}.json'
 LOGGING = logging.getLogger(__name__)
@@ -49,20 +42,6 @@ class RefGetter:
         _val = getattr(_ref, self._attribute)
         return _val
 
-
-# AtomData = namedtuple(
-#     'AtomData',
-#     [
-#         'atom_name',
-#         'atom_loop',
-#         'atom_index',
-#         'atom_duration',
-#         'atom_status'
-#     ])
-#
-# Value = namedtuple(
-#     "Value",['v']
-# )
 
 class Atom:
     """Basic test atom.
@@ -107,38 +86,9 @@ class Atom:
             self._loop,
             self._duration
         )
-        # at = AtomData(
-        #     atom_name=Value(self._name),
-        #     atom_loop=Value(self._loop),
-        #     atom_index=Value(self._idx),
-        #     atom_duration=Value(self.duration)
-        # )
-
-        # return OrderedDict({
-        #     KEY_ATOM_NAME: {KEY_VALUE: self._name},
-        #     KEY_ATOM_LOOP: {KEY_VALUE: self._loop},
-        #     KEY_ATOM_INDEX: {KEY_VALUE: self._idx},
-        #     KEY_ATOM_DURATION: {KEY_VALUE: self.duration}
-        #     #KEY_ATOM_STATUS: {KEY_VALUE: RESULT_UNKNOWN},
-        # })
-
-    # def _report_command_result(self, result):
-    #     self.report.H3('TEST_COMMAND')
-    #     self.report.create_property('command', self.name)
-    #     self.report.create_property(ATTR_RESULT, 'success')
-
-    # def report_start_test(self, **kwargs):
-    #     current_loop = kwargs.get(ATTR_CURRENT_LOOP)
-    #
-    #     self.report.atom_start_header()
-    #     self.report.H3('TEST DATA')
-    #     self.report.create_property('loop', current_loop)
-    #     self.report.create_property('index', self._idx)
-    #     self.report.create_property('duration', self.duration)
 
     @asyncio.coroutine
     def execute(self):
-        # todo: store the execution of the command also in the database.
         """Executes the defined command."""
         _result = None
         try:
@@ -190,8 +140,6 @@ class ReferenceAtom(Atom):
 
     def reference_compare(self) -> bool:
         """Compare sensor data with reference data"""
-        # todo: move this to a subscription notification.
-        # self.report.H3('REFERENCE TEST')
         return False
 
     def get_atom_data(self):
