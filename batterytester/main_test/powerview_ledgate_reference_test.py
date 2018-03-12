@@ -1,9 +1,9 @@
 from aiopvapi.helpers.aiorequest import PvApiConnectionError
+from aiopvapi.helpers.powerview_util import PowerViewUtil
 
 from batterytester.core.bus import Bus
 from batterytester.core.datahandlers.influx import Influx
 from batterytester.core.helpers.helpers import FatalTestFailException
-from batterytester.core.helpers.powerview_utils import PowerView
 from batterytester.core.sensor.led_gate_sensor import LedGateSensor
 from batterytester.main_test import BaseReferenceTest
 
@@ -30,7 +30,7 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
         _database = Influx(bus, influx_host, influx_database, test_name)
 
         # hub connection.
-        self.powerview = PowerView(hub_ip, self.bus.loop, self.bus.session)
+        self.powerview = PowerViewUtil(hub_ip, self.bus.loop, self.bus.session)
 
         super().__init__(
             bus,
