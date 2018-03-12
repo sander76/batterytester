@@ -28,7 +28,6 @@ class AsyncSensorConnector(SensorConnector):
         self.bus.add_async_task(self.async_listen_for_data())
         self.bus.add_closing_task(self.close_method())
 
-
     async def close_method(self):
         pass
 
@@ -45,7 +44,7 @@ class AsyncSensorConnector(SensorConnector):
                     random.choice(
                         string.ascii_lowercase)
                     for _ in range(10))
-                yield from self.raw_sensor_data_queue.put(gen)
+                await self.raw_sensor_data_queue.put(gen)
                 asyncio.sleep(5)
         except CancelledError:
             return

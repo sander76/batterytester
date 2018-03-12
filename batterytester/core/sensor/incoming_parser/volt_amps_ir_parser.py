@@ -17,7 +17,6 @@ class VoltAmpsIrParser(IncomingParser):
         self.current_retry = 0
         self.incoming_data = bytearray()  # all incoming data.
 
-
     def process(self, raw_incoming):
         """Entry point for processing raw incoming sensor data."""
 
@@ -48,7 +47,8 @@ class VoltAmpsIrParser(IncomingParser):
     #         _idx = self.incoming_data.index(self.separator)
     #         measurement.append(self.incoming_data[:_idx])
     #         self.incoming_data = self.incoming_data[_idx + 1:]
-    #         # further consume the raw incoming data by calling this method again.
+    #         # further consume the raw incoming data by calling
+    #           this method again.
     #         self._extract(measurement)
     #     except ValueError:
     #         # No more separator found. Any data left in the raw incoming list

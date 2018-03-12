@@ -1,6 +1,6 @@
 import json
-import os
 import logging.config
+import os
 
 
 def setup_logging(default_path='logging.json', default_level=logging.INFO,

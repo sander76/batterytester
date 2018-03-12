@@ -1,6 +1,7 @@
 # """An example incoming sensor data source.
 #
-# Randomly generates data every 5 seconds and puts it into the sensor_data_queue.
+# Randomly generates data every 5 seconds and puts it
+# into the sensor_data_queue.
 # """
 #
 # import asyncio
@@ -19,8 +20,7 @@
 #     def __init__(self, sensor_data_parser, bus: Bus):
 #         AsyncSensorConnector.__init__(self, sensor_data_parser,bus)
 #
-#     @asyncio.coroutine
-#     def async_listen_for_data(self):
+#     async #     def async_listen_for_data(self):
 #         """Method to generate random data and pushing it to the
 #         process_incoming method."""
 #         try:
@@ -30,6 +30,6 @@
 #                         string.ascii_lowercase)
 #                     for _ in range(10))
 #                 self.bus.add_async_task(self.process_incoming(gen))
-#                 yield from asyncio.sleep(0.1)
+#                 await asyncio.sleep(0.1)
 #         except CancelledError:
 #             return

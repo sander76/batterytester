@@ -1,5 +1,4 @@
 import asyncio
-
 import logging
 from asyncio.futures import CancelledError
 
@@ -20,11 +19,10 @@ class ExampleTest(BaseTest):
         pass
         # _LOGGER.debug("handling incoming sensor data: %s" % sensor_data)
 
-    @asyncio.coroutine
-    def async_test(self):
+    async def async_test(self):
         try:
             while self.bus.running:
                 _LOGGER.debug("Doing some async testing.")
-                yield from asyncio.sleep(10)
+                await asyncio.sleep(10)
         except CancelledError:
             _LOGGER.debug("stopping loop test")

@@ -1,17 +1,16 @@
 """Websocket server for inter process communication"""
 
-import json
-import aiohttp
-import logging
 import asyncio
-import batterytester.core.helpers.message_subjects as subj
+import json
+import logging
 
+import aiohttp
 from aiohttp import web, WSCloseCode
 
-from batterytester.core.helpers.constants import KEY_SUBJECT, KEY_CACHE, \
-    KEY_ATOM_STATUS
+import batterytester.core.helpers.message_subjects as subj
+from batterytester.core.helpers.constants import KEY_SUBJECT, KEY_CACHE
 from batterytester.core.helpers.message_data import to_serializable, \
-    TestSummary, Message, Data
+    Data
 
 ATTR_MESSAGE_BUS_ADDRESS = '0.0.0.0'
 ATTR_MESSAGE_BUS_PORT = 8567
@@ -31,12 +30,13 @@ ATTR_FAILED_IDS = 'failed_ids'
 
 
 class Server:
-    def __init__(self, loop):
+    def __init__(self, loop_):
         self.sensor_sockets = []
-        self.loop = loop
+        self.loop = loop_
         self.app = web.Application()
         self.app.router.add_get('/ws', self.sensor_handler)
         self.app.router.add_get('/ws/tester', self.test_handler)
+        self.app.router.add_static('/static/', path='static', name='static')
 
         self.handler = None
         self.server = None

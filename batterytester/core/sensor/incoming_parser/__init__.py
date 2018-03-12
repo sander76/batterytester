@@ -2,17 +2,13 @@
 Incoming parser receives incoming sensor data and cleans it.
 """
 
-from time import time
 from typing import Sequence, Generator
 
 from batterytester.core.bus import Bus
-from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_VALUE, \
-    KEY_SUBJECT
+
 
 # def get_time_stamp():
 #     return int(time() * 1000)
-from batterytester.core.helpers.helpers import get_current_timestamp
-from batterytester.core.helpers.message_subjects import SENSOR_DATA
 
 
 class IncomingParser:

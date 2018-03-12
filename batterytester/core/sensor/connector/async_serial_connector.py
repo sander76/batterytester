@@ -1,9 +1,10 @@
 import asyncio
 import logging
-
 from asyncio.futures import CancelledError
+
 from serial import Serial
 from serial.serialutil import SerialException
+
 from batterytester.core.bus import Bus
 from batterytester.core.sensor.connector import AsyncSensorConnector
 
@@ -27,8 +28,7 @@ class AsyncSerialConnector(AsyncSensorConnector):
         )
         self.read_delay = read_delay
 
-    @asyncio.coroutine
-    def async_listen_for_data(self, *args):
+    async def async_listen_for_data(self, *args):
         """Long running task inside a separate thread.
 
         Listens for incoming raw data and puts it into the
@@ -38,8 +38,8 @@ class AsyncSerialConnector(AsyncSensorConnector):
             while True:
                 # Non blocking read.
                 _data = self.s.read(self.s.in_waiting)
-                yield from self.raw_sensor_data_queue.put(_data)
-                yield from asyncio.sleep(self.read_delay)
+                await self.raw_sensor_data_queue.put(_data)
+                await asyncio.sleep(self.read_delay)
         except SerialException as err:
             lgr.exception(err)
             self.s.close()

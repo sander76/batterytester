@@ -1,10 +1,10 @@
-
 import logging
-
 from concurrent.futures import ThreadPoolExecutor
+
 from serial import Serial, SerialException
+
 from batterytester.core.helpers.helpers import FatalTestFailException
-from batterytester.core.sensor.connector import  AsyncSensorConnector
+from batterytester.core.sensor.connector import AsyncSensorConnector
 
 LOGGER = logging.getLogger(__name__)
 
@@ -61,4 +61,3 @@ class ThreadedSerialSensorConnector(AsyncSensorConnector):
             res = await self.bus.loop.run_in_executor(
                 executor, self._listen_for_data)
             return res
-

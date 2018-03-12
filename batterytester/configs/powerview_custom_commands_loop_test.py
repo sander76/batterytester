@@ -1,6 +1,12 @@
-from batterytester.main_test.powerview_custom_commands_reference_test import \
-    PowerViewCustomCommandsReferenceTest
 from batterytester.core.atom import Atom
+from batterytester.main_test.powerview_loop_test import PowerViewLoopTest
+
+
+class PowerViewOpenCloseTest(PowerViewLoopTest):
+    def get_sequence(self):
+        pass
+
+
 
 test = PowerViewCustomCommandsReferenceTest(
     test_name='custom test',
@@ -37,7 +43,6 @@ def get_sequence(self: PowerViewCustomCommandsReferenceTest):
         )
     )
     return _val
-
 
 
 test.custom_sequence = get_sequence

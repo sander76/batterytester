@@ -1,15 +1,16 @@
 import asyncio
 import logging
-import async_timeout
-import batterytester.core.helpers.message_subjects as subj
-
 from asyncio import CancelledError
-from slugify import slugify
+
+import async_timeout
 from aiohttp.client_exceptions import ClientError
+from slugify import slugify
+
+import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.bus import Bus
 from batterytester.core.datahandlers import BaseDataHandler
-from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_ATOM_LOOP, \
-    KEY_VALUE, KEY_ATOM_INDEX, KEY_ATOM_NAME, KEY_SUBJECT
+from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_VALUE, \
+    KEY_SUBJECT
 from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.helpers.message_data import AtomData
 
@@ -76,7 +77,8 @@ class Influx(BaseDataHandler):
         :param bus:
         :param host:
         :param database: The database to write data to.
-        :param measurement: The current test being run. normally the name of the test.
+        :param measurement: The current test being run.
+            normally the name of the test.
         :param datalength:
         """
         super().__init__()
@@ -152,8 +154,7 @@ class Influx(BaseDataHandler):
             self.measurement, tags, fields, time_stamp)
         return ln
 
-    @asyncio.coroutine
-    def _check_and_send_to_database(self):
+    async def _check_and_send_to_database(self):
         """Checks the length of the data list and
         if long enough sends it to the database."""
 
@@ -161,9 +162,9 @@ class Influx(BaseDataHandler):
             while self.bus.running:
                 if len(self.data) > self.data_length:
                     LOGGER.debug("buffer limit exceeded. Flushing data")
-                    yield from self._flush()
+                    await self._flush()
                 else:
-                    yield from asyncio.sleep(5)
+                    await asyncio.sleep(5)
         except CancelledError:
             LOGGER.info("Test cancelled. Closing database.")
 
@@ -178,25 +179,23 @@ class Influx(BaseDataHandler):
             _data += '\n'
             return _data
 
-    @asyncio.coroutine
-    def _flush(self):
+    async def _flush(self):
         _data = self.prepare_data()
         # clear the list so asyncio can start populating
         # it while processing the next yields.
 
         self.data = []
         if _data:
-            yield from self._send(_data)
+            await self._send(_data)
 
-    @asyncio.coroutine
-    def _send(self, data):
+    async def _send(self, data):
         resp = None
         try:
             LOGGER.debug("Flushing")
             with async_timeout.timeout(5, loop=self.bus.loop):
                 LOGGER.debug("Writing data to database")
-                resp = yield from self.bus.session.post(self.url,
-                                                        data=data)
+                resp = await self.bus.session.post(self.url,
+                                                   data=data)
             if resp.status not in [204, 200]:
                 raise FatalTestFailException(
                     "Wrong influx response code {}".format(resp.status))
@@ -205,4 +204,4 @@ class Influx(BaseDataHandler):
             raise FatalTestFailException("Error sending data to database")
         finally:
             if resp is not None:
-                yield from resp.release()
+                await resp.release()

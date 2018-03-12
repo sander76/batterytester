@@ -1,5 +1,3 @@
-import asyncio
-
 import logging
 
 from batterytester.core.bus import Bus
@@ -10,7 +8,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class ExampleDatabase(DataBase):
     def __init__(self, text_db_file, bus: Bus):
-        DataBase.__init__(self,bus)
+        DataBase.__init__(self, bus)
         self.buffer = []
         self.buffer_size = 100
         if text_db_file:
@@ -20,10 +18,7 @@ class ExampleDatabase(DataBase):
         else:
             raise Exception("No file location for database defined.")
 
-
-
-    @asyncio.coroutine
-    def add_to_database(self, datapoints):
+    async def add_to_database(self, datapoints):
         self.buffer.extend(datapoints)
         if self.check_buffer():
             _LOGGER.debug("writing data to database")

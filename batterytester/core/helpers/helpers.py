@@ -1,8 +1,6 @@
-import os
-
-import logging
-
 import datetime
+import logging
+import os
 from time import time
 
 LOOP_TIME_OUT = 2

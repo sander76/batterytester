@@ -1,16 +1,15 @@
 import asyncio
-import batterytester.core.helpers.message_subjects as subj
-from asyncio import CancelledError
-
-import aiohttp
 import logging
-
-from async_timeout import timeout
+from asyncio import CancelledError
 from threading import Thread
 
-from batterytester.core.helpers.message_data import FatalData
-from batterytester.core.helpers.helpers import FatalTestFailException
+import aiohttp
+from async_timeout import timeout
+
+import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.datahandlers.messaging import Messaging
+from batterytester.core.helpers.helpers import FatalTestFailException
+from batterytester.core.helpers.message_data import FatalData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ class Bus:
 
         self._data_handlers = []
         self.subscriptions = {}
-        #todo: Don't automatically include this.
+        # todo: Don't automatically include this.
         self.messaging = Messaging(self)
 
         # Initialize the message bus

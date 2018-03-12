@@ -12,9 +12,9 @@ def bus():
     return bus
 
 
-@asyncio.coroutine
-def get_value(connection):
-    val = yield from connection.raw_sensor_data_queue.get()
+
+async def get_value(connection):
+    val = await connection.raw_sensor_data_queue.get()
     return val
 
 

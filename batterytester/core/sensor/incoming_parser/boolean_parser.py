@@ -1,11 +1,12 @@
 """Parser which evaluates to true or false."""
 import logging
 
-from batterytester.core.helpers.helpers import get_current_timestamp
-from batterytester.core.helpers.message_subjects import SENSOR_DATA
-from batterytester.core.sensor.incoming_parser import IncomingParserChunked
 from batterytester.core.helpers.constants import KEY_VALUE, ATTR_TIMESTAMP, \
     KEY_SUBJECT
+from batterytester.core.helpers.helpers import get_current_timestamp, \
+    FatalTestFailException
+from batterytester.core.helpers.message_subjects import SENSOR_DATA
+from batterytester.core.sensor.incoming_parser import IncomingParserChunked
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,5 +36,5 @@ class BooleanParser(IncomingParserChunked):
 
             return _val
         except Exception as err:
-            LOGGER.warning('Incorrect measurement format: %s', chunk)
-            return None
+            LOGGER.error('Incorrect measurement format: %s', chunk)
+            raise FatalTestFailException

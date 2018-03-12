@@ -1,5 +1,3 @@
-from enum import Enum
-
 ATTR_MAIN_TEST = 'main_test'
 ATTR_PLATFORM = 'platform'
 ATTR_ARGS = 'args'
@@ -36,7 +34,7 @@ ATOM_STATUS_EXECUTED = 'COMMAND EXECUTED'
 ATOM_STATUS_EXECUTING = 'Executing command'
 ATOM_STATUS_COLLECTING = 'Collecting sensor data'
 
-## WEBSSOCKET DATA #######################################
+# WEBSSOCKET DATA #######################################
 KEY_SUBJECT = 'subj'
 KEY_CACHE = 'cache'
 KEY_TYPE = 'type'

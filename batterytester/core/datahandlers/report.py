@@ -1,20 +1,15 @@
-import os
-
 import logging
+import os
+from datetime import datetime
 
 import batterytester.core.helpers.message_subjects as subj
-import asyncio
-
 from batterytester.core.datahandlers import BaseDataHandler
-from batterytester.core.helpers.message_data import FatalData, TestFinished, \
-    TestData, AtomData, AtomResult, TestSummary
-from batterytester.core.helpers.constants import KEY_TEST_NAME, KEY_VALUE, \
-    KEY_TEST_LOOPS, KEY_ATOM_NAME, KEY_ATOM_LOOP, \
-    KEY_ATOM_INDEX, KEY_ERROR, ATTR_RESULT, RESULT_FAIL, \
-    RESULT_PASS, REASON, ATTR_TIMESTAMP
+from batterytester.core.helpers.constants import RESULT_FAIL, \
+    RESULT_PASS
 from batterytester.core.helpers.helpers import FatalTestFailException, \
     get_current_time_string, get_time_string
-from datetime import datetime
+from batterytester.core.helpers.message_data import FatalData, TestFinished, \
+    TestData, AtomData, AtomResult, TestSummary
 
 SUMMARY_FILE_FORMAT = '{}.md'
 
@@ -88,17 +83,17 @@ class MarkDownReport(BaseDataHandler):
         with open(self._filename, 'w') as fl:
             fl.write('TEST SUMMARY FILE.\n\n')
 
-    def H1(self, content):
+    def header1(self, content):
         self._check_block()
         self._report_data.append(_header(content, 1))
         self._empty_line()
 
-    def H2(self, content):
+    def header2(self, content):
         self._check_block()
         self._report_data.append(_header(content, 2))
         self._empty_line()
 
-    def H3(self, content):
+    def header3(self, content):
         self._check_block()
         self._report_data.append(_header(content, 3))
         self._empty_line()
@@ -131,8 +126,7 @@ class Report(MarkDownReport):
 
         )
 
-    @asyncio.coroutine
-    def stop_data_handler(self):
+    async def stop_data_handler(self):
         self._create_summary()
         self._flush()
 
@@ -140,7 +134,7 @@ class Report(MarkDownReport):
         """Create a file and write headers"""
         LOGGER.debug("test_warmup called")
         self._create_summary_file()
-        self.H1("TEST : {}".format(self.test_name))
+        self.header1("TEST : {}".format(self.test_name))
         self.start_time = datetime.fromtimestamp(
             data.started.value)
         self.create_property("START", get_time_string(self.start_time))
@@ -153,13 +147,13 @@ class Report(MarkDownReport):
 
     def _test_fatal(self, subject, data: FatalData):
         LOGGER.debug("test fatal called")
-        self.H1("FATAL ERROR")
+        self.header1("FATAL ERROR")
         self.create_property("REASON", data.reason.value)
 
     def _atom_warmup(self, subject, data: AtomData):
         super()._atom_warmup(subject, data)
         LOGGER.debug("atom_warmup called")
-        self.H2('TEST ATOM')
+        self.header2('TEST ATOM')
         self.create_property(
             "STARTED", datetime.fromtimestamp(data.started.value))
         self.create_property('ATOMNAME', self._atom_name)
@@ -187,7 +181,7 @@ class Report(MarkDownReport):
             #      'reason': data[REASON][KEY_VALUE]})
 
     def _create_summary(self):
-        self.H2('SUMMARY')
+        self.header2('SUMMARY')
         self.create_property('passed', self._test_summary.passed.value)
         self.create_property('failed', self._test_summary.failed.value)
         for fails in self._test_summary.failed_ids.value:

@@ -49,7 +49,7 @@ class SequenceDataParser(IncomingParserChunked):
                 self._prev_seq = current
             else:
                 raise TestFailException(
-                    'sequence in sensor data not correct previous: {} current: {}'.format(
+                    'incorrect sensor sequence previous:{} current:{}'.format(
                         self._prev_seq, current))
 
     def _interpret(self, measurement):

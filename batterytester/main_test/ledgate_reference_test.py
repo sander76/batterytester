@@ -1,5 +1,4 @@
 from batterytester.core.bus import Bus
-from batterytester.core.datahandlers.influx import Influx
 from batterytester.core.datahandlers.report import Report
 from batterytester.core.sensor.led_gate_sensor import LedGateSensor
 from batterytester.main_test import BaseReferenceTest

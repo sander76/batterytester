@@ -1,5 +1,4 @@
 import datetime
-
 import logging
 
 from batterytester.core.bus import Bus
@@ -17,6 +16,5 @@ class ExampleDataParser(IncomingParser):
         Raw incoming is a chunk of data that can be decorated and
         forwarded to the database immediately.
         """
-        # _LOGGER.debug("processing raw incoming sensor data %s" % raw_incoming)
         return ["{} at {}".format(raw_incoming,
                                   datetime.datetime.now().isoformat())]

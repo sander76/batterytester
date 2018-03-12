@@ -1,3 +1,4 @@
+from batterytester.core.atom import RefGetter
 from batterytester.core.atom.boolean_reference_atom import BooleanReferenceAtom
 from batterytester.main_test.powerview_ledgate_reference_test import \
     PowerViewLedgateReferenceTest
@@ -12,20 +13,38 @@ class PvLedGateReferenceTest(PowerViewLedgateReferenceTest):
 
     def get_sequence(self):
         _val = (
-            BooleanReferenceAtom(
-                name='open shade',
-                command=self.powerview.open_shade,
-                arguments={'shade_id': 6705},
-                duration=30,
-                reference={'7': {'v': True}, '5': {'v': False}}
-            ),
+
             BooleanReferenceAtom(
                 'close shade',
                 command=self.powerview.close_shade,
                 arguments={'shade_id': 6705},
                 duration=30,
                 reference={'7': {'v': False}, '5': {'v': True}}
+            ),
+
+            BooleanReferenceAtom(
+                'create scene AA',
+                command=self.powerview.create_scene,
+                arguments={'scene_name': "AA", 'room_id': 19363},
+                duration=10,
+                result_key='sceneAA',
+                reference={}
+            ),
+            BooleanReferenceAtom(
+                name='open shade',
+                command=self.powerview.open_shade,
+                arguments={'shade_id': 6705},
+                duration=30,
+                reference={'7': {'v': True}, '5': {'v': False}}
             )
+            # ,
+            # BooleanReferenceAtom(
+            #     'activate scene AA',
+            #     command=self.powerview.activate_scene(
+            #         RefGetter('sceneAA', 'id')),
+            #     duration=30,
+            #     reference={'7': {'v': False}, '5': {'v': True}}
+            # )
         )
         return _val
 

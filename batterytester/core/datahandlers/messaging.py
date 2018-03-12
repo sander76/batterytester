@@ -1,24 +1,17 @@
 """Websocket server for inter process communication"""
 
+import asyncio
 import json
-import aiohttp
 import logging
 
-import asyncio
+import aiohttp
 
 import batterytester.core.helpers.message_subjects as subj
-
-from aiohttp import web
-
 from batterytester.core.datahandlers import BaseDataHandler
 from batterytester.core.helpers.helpers import FatalTestFailException
-from batterytester.core.helpers.message_data import to_serializable, FatalData, \
-    TestFinished, TestData, AtomData, AtomStatus, AtomResult, TestSummary, \
-    Message
-from batterytester.core.helpers.constants import KEY_ATOM_LOOP, KEY_VALUE, \
-    KEY_ATOM_INDEX, ATTR_RESULT, KEY_ATOM_NAME, REASON, KEY_SUBJECT, KEY_CACHE, \
-    KEY_TYPE, KEY_DATA
-from batterytester.core.helpers.message_subjects import TEST_FATAL
+from batterytester.core.helpers.message_data import to_serializable, \
+    FatalData, TestFinished, TestData, AtomData, \
+    AtomStatus, AtomResult, TestSummary, Message
 
 ATTR_MESSAGE_BUS_ADDRESS = '127.0.0.1'
 ATTR_MESSAGE_BUS_PORT = 8567

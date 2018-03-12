@@ -3,16 +3,14 @@ from functools import singledispatch
 from batterytester.core.helpers.constants import KEY_ATOM_INDEX, \
     KEY_ATOM_LOOP, KEY_ATOM_NAME, REASON
 from batterytester.core.helpers.helpers import get_current_timestamp
-
 # todo: all properties should go in a list when serializing to manage the order of appearance.
-from batterytester.core.helpers.message_subjects import ATOM_RESULT, \
-    RESULT_SUMMARY
+from batterytester.core.helpers.message_subjects import RESULT_SUMMARY
 
 
 class Data:
-    def __init__(self, value='unknown', type='str'):
+    def __init__(self, value='unknown', type_='str'):
         self.value = value
-        self.type = type
+        self.type = type_
 
 
 class Message:
@@ -94,6 +92,7 @@ class AtomResult(Message):
 
 class TestSummary(Message):
     def __init__(self):
+        super().__init__()
         self.subj = RESULT_SUMMARY
         self.passed = Data(0)
         self.failed = Data(0)

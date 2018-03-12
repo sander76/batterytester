@@ -1,14 +1,14 @@
 """Individual test being performed"""
 
-import asyncio
 import logging
 import os
+from typing import Union
 
 from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
     PvApiResponseStatusError
 
-from batterytester.core.helpers.message_data import Data, AtomData
 from batterytester.core.helpers.helpers import NonFatalTestFailException
+from batterytester.core.helpers.message_data import Data, AtomData
 
 SENSOR_FILE_FORMAT = 'loop_{}-idx_{}.json'
 LOGGING = logging.getLogger(__name__)
@@ -33,14 +33,19 @@ def find_reference_data(idx, location):
 
 
 class RefGetter:
-    def __init__(self, key, attribute):
+    def __init__(self, key, attribute=None):
         self._key = key
         self._attribute = attribute
 
     def get_ref(self, results):
         _ref = results[self._key]
-        _val = getattr(_ref, self._attribute)
-        return _val
+        if self._attribute is None:
+            return _ref
+        if isinstance(_ref, dict):
+            return _ref[self._attribute]
+        else:
+            _val = getattr(_ref, self._attribute)
+            return _val
 
 
 class Atom:
@@ -48,7 +53,8 @@ class Atom:
 
     Starts test execution and creates a basic report."""
 
-    def __init__(self, name, command, arguments, duration):
+    def __init__(self, name, command, arguments, duration,
+                 result_key: Union[str, None] = None):
         self._name = name
         self._command = command
         self._args = arguments
@@ -56,6 +62,14 @@ class Atom:
         self._idx = None
         self._loop = None
         self._result = ''
+        # used for storing a global property to be used by other
+        # test_atoms.
+        self._result_key = result_key
+
+        # the above result key is stored in the below dict (initialized when
+        # preparing the test atom (prepare_test_atom).
+        # todo: this should be initialized to have a global dict.
+        self._stored_atom_results = None
 
     @property
     def loop(self):
@@ -73,11 +87,10 @@ class Atom:
     def duration(self):
         return self._duration
 
-    def prepare_test_atom(self, idx, current_loop,
-                          **kwargs):
-
+    def prepare_test_atom(self, idx, current_loop, stored_atom_results):
         self._idx = idx
         self._loop = current_loop
+        self._stored_atom_results = stored_atom_results
 
     def get_atom_data(self):
         return AtomData(
@@ -87,16 +100,24 @@ class Atom:
             self._duration
         )
 
-    @asyncio.coroutine
-    def execute(self):
+    def _check_args(self):
+        """Checks method arguments"""
+        for key, value in self._args.items():
+            if isinstance(value, RefGetter):
+                self._args[key] = value.get_ref(self._stored_atom_results)
+
+    async def execute(self):
         """Executes the defined command."""
         _result = None
         try:
             if self._args:
+                self._check_args()
                 # todo: The result should be interpreted whether feedback is correct.
-                _result = yield from self._command(**self._args)
+                _result = await self._command(**self._args)
             else:
-                _result = yield from self._command()
+                _result = await self._command()
+            if self._result_key:
+                self._stored_atom_results[self._result_key] = _result
         except (
                 PvApiConnectionError, PvApiError,
                 PvApiResponseStatusError) as err:
@@ -114,24 +135,11 @@ class ReferenceAtom(Atom):
             self, name, command,
             arguments, duration,
             result_key: str = None):
-        super().__init__(name, command, arguments, duration)
+        super().__init__(name, command, arguments, duration, result_key)
         # sensor data is stored here.
         self.sensor_data = []
         # reference sensor data to be stored here.
         self.reference_data = None
-        # used for storing a global property to be used by other
-        # test_atoms.
-        self._result_key = result_key
-
-        # the above result key is stored in the below dict (initialized when
-        # preparing the test atom (prepare_test_atom).
-        self._stored_atom_results = None
-
-    def prepare_test_atom(
-            self, idx, current_loop, **kwargs):
-        self._stored_atom_results = kwargs.get('stored_atom_results')
-        super().prepare_test_atom(
-            idx, current_loop, **kwargs)
 
     def _process_sensor_data(self):
         """Perform sensor data processing."""

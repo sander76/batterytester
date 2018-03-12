@@ -1,30 +1,19 @@
 import asyncio
-import os
 import logging
-import batterytester.core.helpers.message_subjects as subj
-
 from asyncio import CancelledError
-from collections import OrderedDict
 from typing import Union, Sequence
 
+import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.atom import ReferenceAtom
+from batterytester.core.bus import Bus
 from batterytester.core.datahandlers import BaseDataHandler
+from batterytester.core.helpers.constants import KEY_VALUE, \
+    ATOM_STATUS_EXECUTING, ATTR_RESULT, REASON, ATOM_STATUS_COLLECTING
+from batterytester.core.helpers.helpers import FatalTestFailException, \
+    get_current_timestamp, NonFatalTestFailException
 from batterytester.core.helpers.message_data import Data, FatalData, \
     TestFinished, TestData, AtomStatus, AtomResult
-from batterytester.core.helpers.constants import KEY_VALUE, KEY_TEST_NAME, \
-    KEY_TEST_LOOPS, KEY_ATOM_STATUS, \
-    ATOM_STATUS_EXECUTED, KEY_ERROR, \
-    ATOM_STATUS_EXECUTING, ATTR_RESULT, REASON, KEY_ATOM_NAME, ATTR_TIMESTAMP, \
-    ATOM_STATUS_COLLECTING
-from batterytester.core.bus import Bus
-from batterytester.core.helpers.helpers import get_current_time, \
-    get_time_string, FatalTestFailException, get_current_timestamp, \
-    NonFatalTestFailException
 from batterytester.core.sensor import Sensor
-
-from batterytester.core.database import DataBase
-
-from batterytester.core.datahandlers.report import Report
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +34,8 @@ class BaseTest:
         :param sensor: A Sensor or a list of sensors (iterable)
         :param report: A specific report type. Otherwise a default is created.
         :param add_time_stamp_to_report:
-        :param test_location: By default test_name is used as folder withing the folder this code is run in. test_
+        :param test_location: By default test_name is used as folder withing
+            the folder this code is run in. test_
             location re-specifies the base folder.
         """
 
@@ -59,9 +49,11 @@ class BaseTest:
             self.sensor = sensor
         if self.sensor:
             self.sensor_data_queue = asyncio.Queue(loop=self.bus.loop)
+
             for _sensor in self.sensor:
                 # Add one sensor_data_queue to all sensors.
                 _sensor.sensor_data_queue = self.sensor_data_queue
+            self.bus.add_async_task(self._messager())
         if data_handlers:
             if isinstance(data_handlers, BaseDataHandler):
                 self.bus.register_data_handler(data_handlers)
@@ -69,8 +61,7 @@ class BaseTest:
                 for _handler in data_handlers:
                     self.bus.register_data_handler(_handler)
 
-        self.bus.add_async_task(self._messager())
-        self.bus.main_test_task = self.async_test
+        # self.bus.main_test_task = self.async_test
 
         self._loopcount = loop_count
         self._active_atom = None
@@ -113,8 +104,7 @@ class BaseTest:
     #         KEY_TEST_LOOPS: {KEY_VALUE: self._loopcount}
     #     })
 
-    @asyncio.coroutine
-    def test_warmup(self):
+    async def test_warmup(self):
         """
         actions performed on the test before a new test
         is started. Must raise an TestFailException when an error occurs.
@@ -123,10 +113,10 @@ class BaseTest:
         LOGGER.debug("Test warmup")
 
     def _loop_warmup_data(self):
+        # todo: This should be returning a class like other notification data.
         return {}
 
-    @asyncio.coroutine
-    def loop_warmup(self):
+    async def loop_warmup(self):
         """
         actions performed before a new loop with a fresh sequence test
         is started. Must raise an TestFailException when an error occurs.
@@ -141,25 +131,18 @@ class BaseTest:
             _atom.prepare_test_atom(
                 _idx,
                 self._active_loop,
-                stored_atom_results=_stored_atom_results
+                _stored_atom_results
             )
         self._test_sequence = _seq
-
-    # def _atom_start_data(self):
-    #     return {
-    #         ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
-    #         KEY_ATOM_STATUS: {KEY_VALUE: ATOM_STATUS_EXECUTING}
-    #     }
 
     def _perform_test_data(self):
         return AtomStatus(ATOM_STATUS_EXECUTING)
 
-    @asyncio.coroutine
-    def perform_test(self):
+    async def perform_test(self):
         """The test to be performed"""
         self.bus.notify(subj.ATOM_STATUS, self._perform_test_data())
 
-        yield from self._active_atom.execute()
+        await self._active_atom.execute()
 
         self.bus.notify(
             subj.ATOM_STATUS, AtomStatus(ATOM_STATUS_COLLECTING))
@@ -167,22 +150,21 @@ class BaseTest:
         # sleeping the defined duration to gather sensor
         # data which is coming in as a result of the execution
         # command
-        yield from asyncio.sleep(self._active_atom.duration)
+        await asyncio.sleep(self._active_atom.duration)
 
-    @asyncio.coroutine
-    def async_test(self):
+    async def async_test(self):
         # _current_loop = 0
         # idx = 0
         try:
             self.bus.notify(subj.TEST_WARMUP,
                             TestData(self.test_name, self._loopcount))
-            yield from self.test_warmup()
+            await self.test_warmup()
 
             for _current_loop in range(self._loopcount):
                 self._active_loop = _current_loop
                 # performing actions on test subject to get into the proper
                 # starting state.
-                yield from self.loop_warmup()
+                await self.loop_warmup()
                 for idx, atom in enumerate(self._test_sequence):
                     try:
                         self._active_atom = atom
@@ -191,9 +173,9 @@ class BaseTest:
 
                         self.bus.notify(subj.ATOM_WARMUP,
                                         self._atom_warmup_data())
-                        yield from self.atom_warmup()
+                        await self.atom_warmup()
 
-                        yield from self.perform_test()
+                        await self.perform_test()
                     except NonFatalTestFailException as err:
                         self.bus.notify(subj.ATOM_RESULT,
                                         {ATTR_RESULT: {KEY_VALUE: False},
@@ -219,13 +201,11 @@ class BaseTest:
     def _atom_warmup_data(self):
         return self._active_atom.get_atom_data()
 
-    @asyncio.coroutine
-    def atom_warmup(self):
+    async def atom_warmup(self):
         """method to be performed before doing an atom execution."""
         pass
 
-    @asyncio.coroutine
-    def _messager(self):
+    async def _messager(self):
         """Long running task.
         Gets data from the sensor_data_queue
         Data is passed to handle_sensor_data method for interpretation and
@@ -235,7 +215,7 @@ class BaseTest:
         if self.sensor_data_queue:
             try:
                 while self.bus.running:
-                    sensor_data = yield from self.sensor_data_queue.get()
+                    sensor_data = await self.sensor_data_queue.get()
                     self.handle_sensor_data(sensor_data)
                 LOGGER.debug("stopping message loop.")
             except CancelledError as err:
@@ -264,10 +244,9 @@ class BaseReferenceTest(BaseTest):
         )
         self._learning_mode = learning_mode
 
-    @asyncio.coroutine
-    def perform_test(self):
+    async def perform_test(self):
         LOGGER.debug("Performing test")
-        yield from super().perform_test()
+        await super().perform_test()
         if not self._learning_mode:
             # Actual testing mode. reference data
             # and testing data can be compared.
