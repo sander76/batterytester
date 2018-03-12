@@ -113,13 +113,13 @@ class Server:
 
     def _send_to_ws(self, data, raw):
         for _ws in self.sensor_sockets:
-            _ws.send_str(raw)
+            asyncio.ensure_future(_ws.send_str(raw))
 
     def return_cached_data(self, ws_client, cache_key):
         cached_data = self.test_cache.get(cache_key)
         if cached_data:
             _js = json.dumps(cached_data, default=to_serializable)
-            ws_client.send_str(_js)
+            asyncio.ensure_future(ws_client.send_str(_js))
 
     async def shutdown(self):
         for ws in self.sensor_sockets:

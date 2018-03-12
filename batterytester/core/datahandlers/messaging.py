@@ -100,7 +100,7 @@ class Messaging(BaseDataHandler):
 
     def _send_to_ws(self, data: Message):
         _js = json.dumps(data, default=to_serializable)
-        self._bus.add_async_task(self.ws_connection.send_str(_js))
+        asyncio.ensure_future(self.ws_connection.send_str(_js))
 
     async def ws_connect(self):
         try:

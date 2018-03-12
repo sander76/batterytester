@@ -33,7 +33,7 @@ test = ConfigLedgateReferenceTest(
     test_name='ledgate_test',
     loop_count=3,
     # serial_port='ttyACM0',
-    serial_port='COM4',
+    serial_port='COM6',
     baud_rate=115200
 )
 
