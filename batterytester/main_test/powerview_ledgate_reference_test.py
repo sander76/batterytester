@@ -30,7 +30,7 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
         _database = Influx(bus, influx_host, influx_database, test_name)
 
         # hub connection.
-        self.powerview = PowerViewUtil(hub_ip, self.bus.loop, self.bus.session)
+        self.powerview = PowerViewUtil(hub_ip, bus.loop, bus.session)
 
         super().__init__(
             bus,

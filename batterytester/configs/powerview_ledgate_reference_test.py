@@ -22,14 +22,14 @@ class PvLedGateReferenceTest(PowerViewLedgateReferenceTest):
                 reference={'7': {'v': False}, '5': {'v': True}}
             ),
 
-            BooleanReferenceAtom(
-                'create scene AA',
-                command=self.powerview.create_scene,
-                arguments={'scene_name': "AA", 'room_id': 19363},
-                duration=10,
-                result_key='sceneAA',
-                reference={}
-            ),
+            # BooleanReferenceAtom(
+            #     'create scene AA',
+            #     command=self.powerview.create_scene,
+            #     arguments={'scene_name': "AA", 'room_id': 19363},
+            #     duration=10,
+            #     result_key='sceneAA',
+            #     reference={}
+            # ),
             BooleanReferenceAtom(
                 name='open shade',
                 command=self.powerview.open_shade,
