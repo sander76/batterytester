@@ -48,12 +48,7 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
         except PvApiConnectionError:
             raise FatalTestFailException("Failed to warmup the test.")
 
-    def handle_sensor_data(self, sensor_data):
-        super().handle_sensor_data(sensor_data)
-        """Sensor data to be added to the active atom."""
-        if self.active_atom:
-            self.active_atom.sensor_data.append(sensor_data)
-        # self.database.add_to_database(sensor_data, self.active_atom)
+
 
     def get_sequence(self):
         raise NotImplementedError

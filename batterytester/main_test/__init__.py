@@ -12,7 +12,7 @@ from batterytester.core.helpers.constants import KEY_VALUE, \
 from batterytester.core.helpers.helpers import FatalTestFailException, \
     get_current_timestamp, NonFatalTestFailException
 from batterytester.core.helpers.message_data import Data, FatalData, \
-    TestFinished, TestData, AtomStatus, AtomResult
+    TestFinished, TestData, AtomStatus, AtomResult, LoopData
 from batterytester.core.sensor import Sensor
 
 LOGGER = logging.getLogger(__name__)
@@ -112,9 +112,9 @@ class BaseTest:
 
         LOGGER.debug("Test warmup")
 
-    def _loop_warmup_data(self):
-        # todo: This should be returning a class like other notification data.
-        return {}
+    # def _loop_warmup_data(self):
+    #     # todo: This should be returning a class like other notification data.
+    #     return LoopData([_atom.get_atom_data() for _atom in self.])
 
     async def loop_warmup(self):
         """
@@ -122,9 +122,11 @@ class BaseTest:
         is started. Must raise an TestFailException when an error occurs.
         """
         LOGGER.debug('Warming up loop.')
-        self.bus.notify(subj.LOOP_WARMUP, self._loop_warmup_data())
 
         _seq = self.get_sequence()
+
+        self.bus.notify(subj.LOOP_WARMUP,
+                        LoopData([_atom.get_atom_data() for _atom in _seq]))
         # todo: checkout this and see whether it can change.
         _stored_atom_results = {}
         for _idx, _atom in enumerate(_seq):
@@ -231,7 +233,7 @@ class BaseReferenceTest(BaseTest):
                  bus,
                  test_name: str,
                  loop_count: int,
-                 learning_mode,
+                 learning_mode: bool = False,
                  sensor: Union[Sensor, Sequence[Sensor], None] = None,
                  data_handlers: Union[
                      BaseDataHandler, Sequence[BaseDataHandler], None] = None):
@@ -256,3 +258,10 @@ class BaseReferenceTest(BaseTest):
             if not _success:
                 _data.reason = Data("Reference testing failed.")
             self.bus.notify(subj.ATOM_RESULT, _data)
+
+    def handle_sensor_data(self, sensor_data):
+        super().handle_sensor_data(sensor_data)
+        """Sensor data to be added to the active atom."""
+        if self.active_atom:
+            self.active_atom.sensor_data.append(sensor_data)
+        # self.database.add_to_database(sensor_data, self.active_atom)

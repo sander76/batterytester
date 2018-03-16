@@ -123,7 +123,6 @@ class Report(MarkDownReport):
 
             (subj.ATOM_WARMUP, self._atom_warmup),
             (subj.ATOM_RESULT, self._atom_result)
-
         )
 
     async def stop_data_handler(self):

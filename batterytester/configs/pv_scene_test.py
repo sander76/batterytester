@@ -3,6 +3,10 @@ import logging
 from batterytester.core.atom import RefGetter, Atom
 from batterytester.main_test.powerview_loop_test import PowerViewLoopTest
 
+SHADE_ID = 6705
+ROOM_ID = 45211
+SCENE_NAME = "AA1"
+
 
 class PvLoopTest(PowerViewLoopTest):
     """Simple test for creating and activating PowerView scenes."""
@@ -10,36 +14,45 @@ class PvLoopTest(PowerViewLoopTest):
     def get_sequence(self):
         _val = (
 
-            # Atom(
-            #     'close shade',
-            #     command=self.powerview.close_shade,
-            #     arguments={'shade_id': 6705},
-            #     duration=30
-            # ),
+            Atom(
+                'close shade',
+                command=self.powerview.close_shade,
+                arguments={'shade_id': SHADE_ID},
+                duration=30
+            ),
             Atom(
                 'create scene AA',
                 command=self.powerview.create_scene,
-                arguments={'scene_name': "AA1", 'room_id': 19369},
+                arguments={'scene_name': SCENE_NAME, 'room_id': ROOM_ID},
                 duration=5,
                 result_key='sceneAA',
             ),
             Atom(
                 'Add shade to scene AA',
                 command=self.powerview.add_shade_to_scene,
-                arguments={'shade_id': 12334,
+                arguments={'shade_id': SHADE_ID,
                            'scene_id': RefGetter('sceneAA', 'id')},
                 duration=5
             ),
+            Atom('open shade',
+                 command=self.powerview.open_shade,
+                 arguments={'shade_id': SHADE_ID},
+                 duration=30),
             Atom(
                 'Activate scene AA',
                 command=self.powerview.activate_scene,
                 arguments={'scene_id': RefGetter('sceneAA', 'id')},
-                duration=30
+                duration=80
             ),
+            Atom('open shade',
+                 command=self.powerview.open_shade,
+                 arguments={'shade_id': SHADE_ID},
+                 duration=30
+                 ),
             Atom(
                 'Delete scene AA',
                 command=self.powerview.delete_scene,
-                arguments={'scene_id':RefGetter('sceneAA','id')},
+                arguments={'scene_id': RefGetter('sceneAA', 'id')},
                 duration=5
             )
         )

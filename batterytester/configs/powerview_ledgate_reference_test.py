@@ -5,7 +5,7 @@ from batterytester.main_test.powerview_ledgate_reference_test import \
 
 
 class PvLedGateReferenceTest(PowerViewLedgateReferenceTest):
-    """Ledgate sensor.
+    """Led gate sensor.
 
     When the sensor is open it will return True.
     if sensor is blocked it will return False.

@@ -20,7 +20,7 @@ class PowerViewLoopTest(BaseTest):
         _report = Report(test_name)
 
         # executors.
-        self.powerview = PowerViewUtil(hub_ip, self.bus.loop, self.bus.session)
+        self.powerview = PowerViewUtil(hub_ip, bus.loop, bus.session)
 
         super().__init__(bus, test_name, loop_count, data_handlers=_report)
 

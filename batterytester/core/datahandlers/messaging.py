@@ -11,7 +11,7 @@ from batterytester.core.datahandlers import BaseDataHandler
 from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.helpers.message_data import to_serializable, \
     FatalData, TestFinished, TestData, AtomData, \
-    AtomStatus, AtomResult, TestSummary, Message
+    AtomStatus, AtomResult, TestSummary, Message, LoopData
 
 ATTR_MESSAGE_BUS_ADDRESS = '127.0.0.1'
 ATTR_MESSAGE_BUS_PORT = 8567
@@ -46,6 +46,7 @@ class Messaging(BaseDataHandler):
             (subj.TEST_FATAL, self.test_fatal),
             (subj.TEST_FINISHED, self.test_finished),
             (subj.ATOM_STATUS, self.atom_status),
+            (subj.LOOP_WARMUP, self.loop_warmup),
             (subj.ATOM_WARMUP, self._atom_warmup),
             (subj.ATOM_RESULT, self.atom_result),
             (subj.SENSOR_DATA, self.test_data)
@@ -53,6 +54,10 @@ class Messaging(BaseDataHandler):
 
     async def stop_data_handler(self):
         await self.ws_connection.close()
+
+    def loop_warmup(self, subject, data: LoopData):
+        data.subj = subject
+        self._send_to_ws(data)
 
     def _atom_warmup(self, subject, data: AtomData):
         super()._atom_warmup(subject, data)

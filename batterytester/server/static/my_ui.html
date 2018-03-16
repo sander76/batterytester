@@ -191,27 +191,23 @@
             let subj = data["subj"];
             delete data.subj;
             delete data.cache;
+            console.log(subj,data)
             if (subj === "sensor_data") {
                 //Sensor data.
-                console.log("incoming sensor data",data);
+
                 sensor_info.parse(data);
             } else if (subj === "atom_warmup") {
-                console.log("atom warmup data",data);
                 //Atom data.
                 atom_info.parse(data);
             } else if (subj === "test_warmup") {
                 this.clear_data();
-                console.log("test_warmup",data);
                 //Test data.
                 test_info.parse(data);
             } else if (subj === "atom_status") {
-                console.log("atom_status",data);
                 atom_info.parse(data);
             } else if (subj === "result_summary") {
-                console.log("result_summary",data);
                 atom_summary.parse(data)
             } else if (subj==="test_finished"){
-                console.log("test_finished",data);
                 test_info.parse(data);
             }
 

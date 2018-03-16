@@ -1,4 +1,5 @@
 from functools import singledispatch
+from typing import List
 
 from batterytester.core.helpers.constants import KEY_ATOM_INDEX, \
     KEY_ATOM_LOOP, KEY_ATOM_NAME, REASON
@@ -74,6 +75,12 @@ class AtomData(Message):
         self.status_updated = Data()
         self.started = Data(get_current_timestamp())
         self.duration = Data(duration)
+
+
+class LoopData(BaseTestData):
+    def __init__(self, atoms: List[AtomData]):
+        super().__init__()
+        self.atoms = atoms
 
 
 class AtomStatus(Message):

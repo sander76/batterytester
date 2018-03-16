@@ -37,11 +37,5 @@ class LedgateReferenceTest(BaseReferenceTest):
 
         )
 
-    def handle_sensor_data(self, sensor_data: dict):
-        super().handle_sensor_data(sensor_data)
-        """Sensor data to be added to the active atom."""
-        if self.active_atom:
-            self.active_atom.sensor_data.append(sensor_data)
-
     def get_sequence(self):
         raise NotImplementedError
