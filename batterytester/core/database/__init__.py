@@ -4,6 +4,7 @@ from typing import Union
 from batterytester.core.atom import Atom
 from batterytester.core.bus import Bus
 
+#todo: this has become obsolete with the move to datahandlers.(?)
 
 class DataBase:
     def __init__(self, bus: Bus):

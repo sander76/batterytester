@@ -96,6 +96,9 @@ class Influx(BaseDataHandler):
         self.bus.add_closing_task(self._flush())
         self._tags = {}
 
+    async def setup(self, test_name, bus):
+        pass
+
     def get_subscriptions(self):
         return (
             (subj.ATOM_WARMUP, self._store_tag_data),

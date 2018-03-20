@@ -7,7 +7,6 @@ import aiohttp
 from async_timeout import timeout
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.core.datahandlers.messaging import Messaging
 from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.helpers.message_data import FatalData
 
@@ -15,12 +14,14 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Bus:
-    def __init__(self, main_test):
+    def __init__(self):
         self.tasks = []
         self.closing_task = []
         self.threaded_tasks = []
+        self.test_runner_task=None
+        # self.main_test = main_test
         # self.main_test_task = None
-        self.main_test = asyncio.ensure_future(self.start_main_test(main_test))
+        # self.main_test = asyncio.ensure_future(self.start_main_test(main_test))
         self.callbacks = []
         self.running = True
         self.loop = asyncio.get_event_loop()
@@ -31,16 +32,16 @@ class Bus:
 
         self._data_handlers = []
         self.subscriptions = {}
-        # todo: Don't automatically include this.
-        self.messaging = Messaging(self)
+        # # todo: Don't automatically include this.
+        # self.messaging = Messaging(self)
 
         # Initialize the message bus
 
         # self._register_subscriptions()
 
-    def register_data_handler(self, data_handler):
+    def register_data_handler(self, data_handler,test_name):
         """Registers a data handler"""
-
+        data_handler.test_name=test_name
         self._data_handlers.append(data_handler)
         for _subscription in data_handler.get_subscriptions():
             _subj = _subscription[0]
@@ -49,6 +50,7 @@ class Bus:
                 self.subscriptions[_subj].append(_handler)
             else:
                 self.subscriptions[_subj] = [_handler]
+        # self.add_async_task(data_handler.initialize())
 
     def notify(self, subject, data=None):
         """Notifies the data handlers for incoming data."""
@@ -66,13 +68,15 @@ class Bus:
             val = future.result()
             print(val)
         except Exception as err:
-            # todo: During cancellation this task can be run multiple times. This needs to be prevented.
+            # todo: During cancellation this task can be run multiple times.
+            # This needs to be prevented.
             LOGGER.error(err)
             self.notify(subj.TEST_FATAL, FatalData(err))
             """An exception is raised. Meaning one of the long running 
             tasks has encountered an error. Cancelling the main task and
             subsequently cancelling all other long running tasks."""
-            self.main_test.cancel()
+            if self.test_runner_task:
+                self.test_runner_task.cancel()
 
     def add_async_task(self, coro):
         """Add an async task. The callback will be used to check
@@ -92,17 +96,13 @@ class Bus:
     def add_callback(self, callback):
         self.callbacks.append(callback)
 
-    async def start_main_test(self, main_task):
-        try:
-            await self.messaging.ws_connect()
-            self.register_data_handler(self.messaging)
-        except Exception:
-            return
-        else:
-            self.add_async_task(self.messaging.ws_loop())
-            await main_task()
+    async def start_main_test(self,test_runner):
+        await asyncio.gather(
+            *(_handler.initialize() for _handler in self._data_handlers))
+        self.test_runner_task = asyncio.ensure_future(test_runner)
+        await self.test_runner_task
 
-    def _start_test(self):
+    def _start_test(self,test_runner):
         # start the ws message bus.
         # todo: add keyboard interruption handling
 
@@ -111,7 +111,7 @@ class Bus:
         for task in self.threaded_tasks:
             task.start()
         try:
-            self.loop.run_until_complete(self.main_test)
+            self.loop.run_until_complete(self.start_main_test(test_runner))
         except CancelledError:
             LOGGER.error("Main test loop cancelled.")
         except FatalTestFailException as err:

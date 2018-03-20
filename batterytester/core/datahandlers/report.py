@@ -1,13 +1,14 @@
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.datahandlers import BaseDataHandler
 from batterytester.core.helpers.constants import RESULT_FAIL, \
     RESULT_PASS
-from batterytester.core.helpers.helpers import FatalTestFailException, \
-    get_current_time_string, get_time_string
+from batterytester.core.helpers.helpers import get_current_time_string, \
+    get_time_string
 from batterytester.core.helpers.message_data import FatalData, TestFinished, \
     TestData, AtomData, AtomResult, TestSummary
 
@@ -42,35 +43,41 @@ def block_quote(content):
     return BLOCKQUOTE_FORMAT.format(content), True
 
 
-def create_output_location(report_sub_folder, report_name, base_path=None):
-    if base_path:
-        if not os.path.exists(base_path):
-            raise FatalTestFailException("output base path does not exist")
-    else:
-        base_path = os.getcwd()
-    _report_folder = os.path.join(base_path, report_sub_folder)
-    os.makedirs(_report_folder)
-    return os.path.join(_report_folder, report_name)
+def check_output_folder(output_path) -> Path:
+    _path = Path(output_path)
+    if not _path.is_absolute():
+        _path = Path.cwd().joinpath(_path)
+    try:
+        _path.mkdir(parents=True)
+    except FileExistsError:
+        LOGGER.debug("Path already exists.")
+    return _path
 
 
-def create_report_file(test_name, report_name='report',
-                       base_path=None):
-    _report_name = SUMMARY_FILE_FORMAT.format(report_name)
-    _report_sub_folder = "{}_{}".format(get_current_time_string(), test_name)
-    return create_output_location(
-        _report_sub_folder, _report_name, base_path=base_path)
+def create_report_file(test_name, report_name, output_path):
+    """Create a report file."""
+    _base_filename = report_name or test_name
+    _filename = '{}_{}.md'.format(_base_filename, get_current_time_string())
+
+    _path = check_output_folder(output_path)
+    return _path.joinpath(_filename)
 
 
 class MarkDownReport(BaseDataHandler):
-    def __init__(self, test_name, report_name='report', output_path=None):
+    def __init__(self, report_name=None, output_path='reports'):
         super().__init__()
-        self._filename = create_report_file(
-            test_name, report_name, output_path)
-        self.test_name = test_name
+        self._filename = None
+        self._report_name = report_name
+        self._output_path = output_path
         self.start_time = None
         self.stop_time = None
         self._test_summary = TestSummary()
         self._report_data = []  # All report lines are stored here.
+
+    async def setup(self, test_name, bus):
+        self._filename = create_report_file(
+            self.test_name, self._report_name, self._output_path
+        )
 
     def _check_block(self):
         if not self._report_data or self._report_data[-1] != '':
@@ -187,97 +194,6 @@ class Report(MarkDownReport):
             for key, value in fails.items():
                 self.create_property(key, value)
             self._empty_line()
-
-    # def H1(self, content):
-    #     self._output(header(content, 1))
-    #     self.EmptyLine()
-
-    # def H2(self, content):
-    #     self._output(header(content, 2))
-    #     self.EmptyLine()
-    #
-    # def H3(self, content):
-    #     self._output(header(content, 3))
-    #     self.EmptyLine()
-
-    # def line(self, char='-'):
-    #     self._output(('', char * TEXT_WIDTH, ''))
-    #
-    # def italic(self, content):
-    #     self._output(italic(content))
-    #
-    # def bold(self, content):
-    #     self._output(bold(content))
-    #
-    # def create_bordered(self, content):
-    #     self.line()
-    #     self.italic(content)
-    #     self.line()
-
-    # def create_dl(self, property_, value):
-    #     self._output(property_)
-    #     self._output(DL_VALUE_FORMAT.format(value))
-
-    # def final_test_result(self, success: bool, reason):
-    #     self.test_result(success)
-    #     self._output(block_quote(reason))
-
-    # def test_result(self, success: bool):
-    #     result = 'PASS'
-    #     if not success:
-    #         result = 'FAIL'
-    #     _content = bold(result)
-    #     _content = header(_content, 2)
-    #     self._output((block_quote(_content), ''))
-
-    # def create_property_table(self, *rows):
-    #     """Creates a table of key value pairs."""
-    #     header = ('property', 'value')
-    #     self.create_table(header, *rows)
-
-    # def create_table(self, header, *rows, col1_width=COL1_WIDTH):
-    #     _colwidths = []
-    #
-    #     def add_col_width(value, idx):
-    #         try:
-    #             _old_val = _colwidths[idx]
-    #             if value > _old_val:
-    #                 _colwidths[idx] = value
-    #         except IndexError:
-    #             if col1_width and idx == 0:
-    #                 value = max(value, COL1_WIDTH)
-    #             value = max(value, MIN_COL_WIDTH)
-    #             _colwidths.append(value)
-    #
-    #     for idx, _col in enumerate(header):
-    #         add_col_width(len(_col), idx)
-    #     for _row in rows:
-    #         for idx, _col in enumerate(_row):
-    #             add_col_width(len(str(_col)), idx)
-    #
-    #     output = []
-    #     output.append(' | '.join(
-    #         (value.ljust(width) for value, width in
-    #          zip(header, _colwidths))))
-    #     output.append(' | '.join('-' * width for width in _colwidths))
-    #
-    #     for _row in rows:
-    #         output.append(
-    #             (' | '.join(
-    #                 (str(value).ljust(width) for value, width in
-    #                  zip(_row, _colwidths))
-    #             )).rstrip()
-    #         )
-    #     # add an empty line to the end.
-    #     output.append('')
-    #     self._output(output)
-
-    # def _output(self, output, block_element=False):
-    #
-    #     if output block_element:
-    #         if not self._report_data[-1] == '':
-    #             self._report_data.append('')
-    #     self._report_data.append(output)
 
     def write_summary_to_file(self):
         if os.path.exists(self._filename):

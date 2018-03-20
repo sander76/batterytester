@@ -1,9 +1,9 @@
 import asyncio
 import logging
 from asyncio import CancelledError
-from typing import Union, Sequence
 
 import batterytester.core.helpers.message_subjects as subj
+from batterytester.core.actors.base_actor import BaseActor
 from batterytester.core.atom import ReferenceAtom
 from batterytester.core.bus import Bus
 from batterytester.core.datahandlers import BaseDataHandler
@@ -20,53 +20,44 @@ LOGGER = logging.getLogger(__name__)
 
 class BaseTest:
     def __init__(
-            self,
-            bus: Bus,
+            self, *,
             test_name: str,
-            loop_count: int,
-            sensor: Union[Sensor, Sequence[Sensor], None] = None,
-            data_handlers: Union[
-                BaseDataHandler, Sequence[BaseDataHandler], None] = None):
-        """
+            loop_count: int):
 
-        :param test_name: The name of the test.
-        :param loop_count: The amount of loops to run
-        :param sensor: A Sensor or a list of sensors (iterable)
-        :param report: A specific report type. Otherwise a default is created.
-        :param add_time_stamp_to_report:
-        :param test_location: By default test_name is used as folder withing
-            the folder this code is run in. test_
-            location re-specifies the base folder.
-        """
-
-        self.bus = bus
+        self.bus = Bus()
         self.test_name = test_name
-
-        if isinstance(sensor, Sensor):
-            self.sensor = (sensor,)
-            # todo: manage if sensor is None
-        else:
-            self.sensor = sensor
-        if self.sensor:
-            self.sensor_data_queue = asyncio.Queue(loop=self.bus.loop)
-
-            for _sensor in self.sensor:
-                # Add one sensor_data_queue to all sensors.
-                _sensor.sensor_data_queue = self.sensor_data_queue
-            self.bus.add_async_task(self._messager())
-        if data_handlers:
-            if isinstance(data_handlers, BaseDataHandler):
-                self.bus.register_data_handler(data_handlers)
-            else:
-                for _handler in data_handlers:
-                    self.bus.register_data_handler(_handler)
-
-        # self.bus.main_test_task = self.async_test
+        self.sensor_data_queue = None
+        self.sensors = []
+        self.actors = {}
 
         self._loopcount = loop_count
         self._active_atom = None
         self._active_index = None
         self._active_loop = None
+
+    def add_sensors(self, *sensors: Sensor):
+        """Add sensors to the test."""
+        if not self.sensor_data_queue:
+            self.sensor_data_queue = asyncio.Queue(loop=self.bus.loop)
+            self.bus.add_async_task((self._messager()))
+        for _sensor in sensors:
+            _sensor.sensor_data_queue = self.sensor_data_queue
+
+            self.sensors.append(_sensor)
+
+    def add_data_handlers(self, *args: BaseDataHandler):
+        """Add data handlers to the test."""
+
+        for _handler in args:
+            self.bus.register_data_handler(_handler, self.test_name)
+
+    def add_actor(self, *actors: BaseActor):
+        """Add actors to the test."""
+        for _actor in actors:
+            self.actors[_actor.actor_type] = _actor
+
+    def add_sequence(self, sequence):
+        self.get_sequence = sequence
 
     @property
     def active_atom(self) -> ReferenceAtom:
@@ -76,7 +67,7 @@ class BaseTest:
         """Starts the actual test."""
         LOGGER.debug("Starting the test.")
         try:
-            self.bus._start_test()
+            self.bus._start_test(self.async_test())
         except KeyboardInterrupt:
             self.bus.main_test.cancel()
 
@@ -87,34 +78,21 @@ class BaseTest:
         """
         self.bus.notify(subj.SENSOR_DATA, sensor_data)
 
-    def get_sequence(self):
+    def get_sequence(self, *args):
         """Gets called to retrieve a list of test atoms to be performed.
 
         :return: A sequence of test atoms. (list, tuple or other iterable.)
         """
         raise NotImplemented("No sequence of atoms to test.")
 
-    # def _test_warmup_data(self):
-    #     """Returns an ordered dict containing test data to be used
-    #     for reporting and feedback"""
-    #
-    #     return OrderedDict({
-    #         KEY_TEST_NAME: {KEY_VALUE: self.test_name},
-    #         ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
-    #         KEY_TEST_LOOPS: {KEY_VALUE: self._loopcount}
-    #     })
-
     async def test_warmup(self):
         """
         actions performed on the test before a new test
         is started. Must raise an TestFailException when an error occurs.
         """
-
+        for _actor in self.actors.values():
+            await _actor.warmup()
         LOGGER.debug("Test warmup")
-
-    # def _loop_warmup_data(self):
-    #     # todo: This should be returning a class like other notification data.
-    #     return LoopData([_atom.get_atom_data() for _atom in self.])
 
     async def loop_warmup(self):
         """
@@ -123,7 +101,7 @@ class BaseTest:
         """
         LOGGER.debug('Warming up loop.')
 
-        _seq = self.get_sequence()
+        _seq = self.get_sequence(self.actors)
 
         self.bus.notify(subj.LOOP_WARMUP,
                         LoopData([_atom.get_atom_data() for _atom in _seq]))
@@ -230,19 +208,12 @@ class BaseTest:
 
 class BaseReferenceTest(BaseTest):
     def __init__(self,
-                 bus,
                  test_name: str,
                  loop_count: int,
-                 learning_mode: bool = False,
-                 sensor: Union[Sensor, Sequence[Sensor], None] = None,
-                 data_handlers: Union[
-                     BaseDataHandler, Sequence[BaseDataHandler], None] = None):
+                 learning_mode: bool = False):
         super().__init__(
-            bus,
             test_name,
-            loop_count,
-            sensor=sensor,
-            data_handlers=data_handlers
+            loop_count
         )
         self._learning_mode = learning_mode
 
@@ -254,7 +225,6 @@ class BaseReferenceTest(BaseTest):
             # and testing data can be compared.
             _success = self._active_atom.reference_compare()
             _data = AtomResult(_success)
-            # _data = {ATTR_RESULT: {KEY_VALUE: _success}}
             if not _success:
                 _data.reason = Data("Reference testing failed.")
             self.bus.notify(subj.ATOM_RESULT, _data)
@@ -264,4 +234,3 @@ class BaseReferenceTest(BaseTest):
         """Sensor data to be added to the active atom."""
         if self.active_atom:
             self.active_atom.sensor_data.append(sensor_data)
-        # self.database.add_to_database(sensor_data, self.active_atom)

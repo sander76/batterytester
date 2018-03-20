@@ -20,6 +20,8 @@ class Sensor:
         self.sensor_data_queue = None
         self._bus.add_async_task(self._parser())
 
+
+
     async def _parser(self):
         """Long running task. Checks the raw data queue, parses it and
         puts data into the sensor_data_queue."""

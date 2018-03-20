@@ -107,7 +107,7 @@ class Messaging(BaseDataHandler):
         _js = json.dumps(data, default=to_serializable)
         asyncio.ensure_future(self.ws_connection.send_str(_js))
 
-    async def ws_connect(self):
+    async def setup(self, test_name, bus):
         try:
             self.ws_connection = await asyncio.wait_for(
                 self._bus.session.ws_connect(
@@ -120,6 +120,7 @@ class Messaging(BaseDataHandler):
         except Exception as err:
             LOGGER.error(err)
             raise
+        self._bus.add_async_task(self.ws_loop())
 
     def parser(self, data):
         LOGGER.info(data)

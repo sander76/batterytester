@@ -3,9 +3,6 @@ import logging
 from batterytester.core.atom import RefGetter, Atom
 from batterytester.main_test.powerview_loop_test import PowerViewLoopTest
 
-SHADE_ID = 6705
-ROOM_ID = 45211
-SCENE_NAME = "AA1"
 
 
 class PvLoopTest(PowerViewLoopTest):
