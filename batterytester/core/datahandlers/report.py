@@ -66,6 +66,11 @@ def create_report_file(test_name, report_name, output_path):
 
 class MarkDownReport(BaseDataHandler):
     def __init__(self, report_name=None, output_path='reports'):
+        """
+
+        :param report_name: Optional name of the report. By default the name of the test is used.
+        :param output_path: Path to store the report file. Can be relative or absolute.
+        """
         super().__init__()
         self._filename = None
         self._report_name = report_name
@@ -80,7 +85,7 @@ class MarkDownReport(BaseDataHandler):
 
     async def setup(self, test_name, bus):
         self._filename = create_report_file(
-            self.test_name, self._report_name, self._output_path
+            test_name, self._report_name, self._output_path
         )
 
     def _check_block(self):

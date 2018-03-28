@@ -136,6 +136,7 @@ class Messaging(BaseDataHandler):
                 #await self.ws_connection.close()
                 raise FatalTestFailException("Stop test signal received.")
 
+
     async def ws_loop(self):
         try:
             async for msg in self.ws_connection:

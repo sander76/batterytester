@@ -3,6 +3,9 @@
 import asyncio
 import json
 import logging
+import sys
+import os
+
 from pathlib import Path
 
 import aiohttp
@@ -75,7 +78,34 @@ class Server:
         return data
 
     async def test_start_handler(self, request):
-        pass
+        data = await request.json()
+
+        p = str(Path(self.config_folder).joinpath(data['test']))
+
+        new_process = asyncio.ensure_future(asyncio.create_subprocess_exec(
+            sys.executable, p,
+            stdout=asyncio.subprocess.PIPE,
+            stdin=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT, loop=self.loop
+        ))
+        new_process.add_done_callback(self.manage_process_callback)
+
+        return web.Response()
+        # todo: handle feedback over websocket.
+
+    def manage_process_callback(self, fut):
+        _process = fut.result()
+        manager = asyncio.ensure_future(self.manage_process(_process))
+        manager.add_done_callback(self.process_result)
+
+    def process_result(self, fut):
+        res = fut.result()
+        print(res)
+
+    async def manage_process(self, fut):
+        log, other = await fut.communicate()
+        code = await fut.wait()
+        return log, other, code
 
     async def test_stop_handler(self, request):
         data = await request.json()
@@ -191,9 +221,14 @@ class Server:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    loop = asyncio.get_event_loop()
+
+    if sys.platform == 'win32':
+        loop = asyncio.ProactorEventLoop()
+        asyncio.set_event_loop(loop)
+    else:
+        loop = asyncio.get_event_loop()
     server = Server(
-        config_folder='C:\\Users\\sander\\Hunter Douglas Europe B.V\\Motorisation Projects Site - Documents\\Test Setup\\test_configs',
+        config_folder='/home/pi/test_configs', #todo: put this in config file or something.
         loop_=loop)
     server.start_server()
     try:

@@ -140,9 +140,7 @@
             xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             
             xhr.send(JSON.stringify({"type":"stop_test"}));
-            // ws.send(JSON.stringify({
-            //     "type": "stop_test"
-            // }));
+            
             xhr.onreadystatechange= function(){
                 if (xhr.readyState == XMLHttpRequest.DONE && xhr.status==200){
                     var msg = JSON.parse(xhr.responseText);
@@ -157,6 +155,20 @@
             //get selected test.
             var selected = all_tests.value;
             alert(selected);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST',base_url +'/test_start',true);
+            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhr.send(JSON.stringify({"test":selected}));
+
+            xhr.onreadystatechange= function(){
+                if (xhr.readyState == XMLHttpRequest.DONE && xhr.status==200){
+                    var msg = JSON.parse(xhr.responseText);
+                    if (!msg.running){
+                        alert('No test running');
+                    }
+                    
+                }
+            }
         }
 
         function query_all_tests(e) {
