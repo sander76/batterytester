@@ -14,23 +14,23 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Bus:
-    def __init__(self):
+    def __init__(self, loop=None):
         self.tasks = []
         self.closing_task = []
         self.threaded_tasks = []
-        self.test_runner_task=None
-        # self.main_test = main_test
-        # self.main_test_task = None
-        # self.main_test = asyncio.ensure_future(self.start_main_test(main_test))
+        self.test_runner_task = None
         self.callbacks = []
         self.running = True
-        self.loop = asyncio.get_event_loop()
+        self.loop = loop or asyncio.get_event_loop()
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.exit_message = None
         # self.notifier = BaseNotifier()
         # self.message_bus = Messaging(self.loop)
 
         self._data_handlers = []
+        self.actors = {}
+        self.sensors = []
+
         self.subscriptions = {}
         # # todo: Don't automatically include this.
         # self.messaging = Messaging(self)
@@ -39,9 +39,9 @@ class Bus:
 
         # self._register_subscriptions()
 
-    def register_data_handler(self, data_handler,test_name):
+    def register_data_handler(self, data_handler, test_name):
         """Registers a data handler"""
-        data_handler.test_name=test_name
+        data_handler.test_name = test_name
         self._data_handlers.append(data_handler)
         for _subscription in data_handler.get_subscriptions():
             _subj = _subscription[0]
@@ -50,7 +50,6 @@ class Bus:
                 self.subscriptions[_subj].append(_handler)
             else:
                 self.subscriptions[_subj] = [_handler]
-        # self.add_async_task(data_handler.initialize())
 
     def notify(self, subject, data=None):
         """Notifies the data handlers for incoming data."""
@@ -96,22 +95,28 @@ class Bus:
     def add_callback(self, callback):
         self.callbacks.append(callback)
 
-    async def start_main_test(self,test_runner):
+    async def start_main_test(self, test_runner, test_name):
         await asyncio.gather(
-            *(_handler.initialize() for _handler in self._data_handlers))
+            *(_handler.setup(test_name, self) for _handler in
+              self._data_handlers))
+        await asyncio.gather(
+            *(_actor.setup(test_name, self) for _actor in self.actors.values())
+        )
+        await asyncio.gather(
+            *(_sensor.setup(test_name, self) for _sensor in self.sensors)
+        )
         self.test_runner_task = asyncio.ensure_future(test_runner)
         await self.test_runner_task
 
-    def _start_test(self,test_runner):
-        # start the ws message bus.
-        # todo: add keyboard interruption handling
+    def _start_test(self, test_runner, test_name):
 
         for callback in self.callbacks:
             callback()
         for task in self.threaded_tasks:
             task.start()
         try:
-            self.loop.run_until_complete(self.start_main_test(test_runner))
+            self.loop.run_until_complete(
+                self.start_main_test(test_runner, test_name))
         except CancelledError:
             LOGGER.error("Main test loop cancelled.")
         except FatalTestFailException as err:
@@ -120,9 +125,10 @@ class Bus:
             LOGGER.info("Test stopped due to keyboard interrupt.")
         finally:
             self.loop.run_until_complete(self.stop_test())
-            # todo: double check whether all tasks finished checking all_tasks like below.
+            # todo: double check whether all tasks finished
+            # checking all_tasks like below.
             # all_tasks = asyncio.Task.all_tasks(self.loop)
-            self.loop.close()
+            # self.loop.close()
 
         return self.exit_message
 

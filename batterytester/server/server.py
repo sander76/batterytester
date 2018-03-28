@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+from pathlib import Path
 
 import aiohttp
 from aiohttp import web, WSCloseCode
@@ -16,8 +17,10 @@ ATTR_MESSAGE_BUS_ADDRESS = '0.0.0.0'
 ATTR_MESSAGE_BUS_PORT = 8567
 
 URL_CLOSE = 'close'
-URL_ATOM = 'atom'  # General info about the current atom.
-URL_TEST = 'test'  # General test information.
+MSG_TYPE_ATOM = 'atom'  # General info about the current atom.
+MSG_TYPE_TEST = 'test'  # General test information.
+MSG_TYPE_STOP_TEST = 'stop_test'
+MSG_TYPE_ALL_TESTS = 'all_tests'
 
 CACHE_ATOM_DATA = 'atom_data'  # Cache key where to store atom data.
 CACHE_TEST_DATA = 'test_data'  # Cache key where to store test info.
@@ -28,43 +31,77 @@ KEY_PASS = 'passed'
 KEY_FAIL = 'failed'
 ATTR_FAILED_IDS = 'failed_ids'
 
+URL_INTERFACE = '/ws'
+URL_TEST = '/ws/tester'
+URL_TEST_STOP = '/test_stop'
+URL_TEST_START = '/test_start'
+
 
 class Server:
-    def __init__(self, loop_):
-        self.sensor_sockets = []
-        self.loop = loop_
+    def __init__(self, config_folder=None, loop_=None):
+        self.sensor_sockets = []  # connected ui clients
+        self.test_ws = None  # Socket connection to the actual running test.
+        self.config_folder = config_folder
+        self.loop = loop_ or asyncio.get_event_loop()
         self.app = web.Application()
-        self.app.router.add_get('/ws', self.sensor_handler)
-        self.app.router.add_get('/ws/tester', self.test_handler)
-        self.app.router.add_static('/static/', path='static', name='static')
-
+        self._add_routes()
         self.handler = None
         self.server = None
         self.test_cache = {}
         # self.test_summary = TestSummary()
+
+    def _add_routes(self):
+        # User interface connects here.
+        self.app.router.add_get(URL_INTERFACE, self.sensor_handler)
+        # tests connect here
+        self.app.router.add_get(URL_TEST, self.test_handler)
+        self.app.router.add_static('/static/', path='static', name='static')
+        self.app.router.add_post(URL_TEST_START, self.test_start_handler)
+        self.app.router.add_post(URL_TEST_STOP, self.test_stop_handler)
+
+    def start_server(self):
+        """Create a web server"""
         try:
             self.loop.run_until_complete(self.start())
         except Exception as err:
             LOGGER.error(err)
 
+    def list_configs(self):
+        data = {"data": [], KEY_SUBJECT: MSG_TYPE_ALL_TESTS}
+        if self.config_folder:
+            p = Path(self.config_folder)
+            data['data'] = [pth.name for pth in
+                            p.glob('*.py')]
+        return data
+
+    async def test_start_handler(self, request):
+        pass
+
+    async def test_stop_handler(self, request):
+        data = await request.json()
+        resp = self.send_to_tester(data)
+        return web.json_response({"running": resp})
+
     async def test_handler(self, request):
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
+        """Handle incoming data from the running test."""
+        self.test_ws = web.WebSocketResponse()
+        await self.test_ws.prepare(request)
         try:
-            async for msg in ws:
+            async for msg in self.test_ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     LOGGER.debug(msg.data)
                     _data = json.loads(msg.data)
                     self._parse_incoming(_data, msg.data)
                 else:
-                    await ws.close()
+                    await self.test_ws.close()
         except Exception as err:
             LOGGER.error(err)
             self._tester_disconnect()
 
-        return ws
+        return self.test_ws
 
     async def sensor_handler(self, request):
+        """Handle connection to the connected user interfaces."""
         ws = web.WebSocketResponse()
         await ws.prepare(request)
 
@@ -72,22 +109,26 @@ class Server:
         try:
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
+
                     _data = json.loads(msg.data)
                     _type = _data['type']
                     if _type == URL_CLOSE:
                         await ws.close()
-                    elif _type == URL_ATOM:
+                    elif _type == MSG_TYPE_ATOM:
                         self.return_cached_data(
                             ws, subj.ATOM_WARMUP)
                         self.return_cached_data(
                             ws, subj.ATOM_STATUS
                         )
-                    elif _type == URL_TEST:
+                    elif _type == MSG_TYPE_TEST:
                         self.return_cached_data(
                             ws, subj.TEST_WARMUP)
                         self.return_cached_data(
                             ws, subj.RESULT_SUMMARY
                         )
+
+                    elif _type == MSG_TYPE_ALL_TESTS:
+                        self._send_json_to_clients(self.list_configs())
 
                 elif msg.type in (aiohttp.WSMsgType.CLOSE,
                                   aiohttp.WSMsgType.CLOSING,
@@ -97,6 +138,12 @@ class Server:
             self.sensor_sockets.remove(ws)
         return ws
 
+    def send_to_tester(self, data: str):
+        if self.test_ws:
+            asyncio.ensure_future(self.test_ws.send_str(data))
+            return True
+        return False
+
     def _parse_incoming(self, data, raw):
         self._send_to_ws(data, raw)
         if data[KEY_SUBJECT] == subj.TEST_WARMUP:
@@ -105,11 +152,14 @@ class Server:
             self.test_cache[data[KEY_SUBJECT]] = data
 
     def _tester_disconnect(self):
-
         _data = self.test_cache.get(subj.TEST_WARMUP)
         if _data:
             _data['status'] = Data('tester disconnected')
             self._send_to_ws(_data, json.dumps(_data, default=to_serializable))
+
+    def _send_json_to_clients(self, js):
+        for _ws in self.sensor_sockets:
+            asyncio.ensure_future(_ws.send_json(js))
 
     def _send_to_ws(self, data, raw):
         for _ws in self.sensor_sockets:
@@ -142,7 +192,10 @@ class Server:
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     loop = asyncio.get_event_loop()
-    server = Server(loop)
+    server = Server(
+        config_folder='C:\\Users\\sander\\Hunter Douglas Europe B.V\\Motorisation Projects Site - Documents\\Test Setup\\test_configs',
+        loop_=loop)
+    server.start_server()
     try:
         loop.run_forever()
     except KeyboardInterrupt:

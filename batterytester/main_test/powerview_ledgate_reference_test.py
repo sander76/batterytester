@@ -48,7 +48,5 @@ class PowerViewLedgateReferenceTest(BaseReferenceTest):
         except PvApiConnectionError:
             raise FatalTestFailException("Failed to warmup the test.")
 
-
-
     def get_sequence(self):
         raise NotImplementedError

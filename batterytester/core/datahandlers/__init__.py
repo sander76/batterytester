@@ -10,15 +10,11 @@ class BaseDataHandler(metaclass=ABCMeta):
         self._current_loop = None
         self.test_name = None
         self._atom_name = None
+        self._bus=None
         self.ready = False
 
-    def _atom_warmup(self, subject, data: AtomData):
-        self._current_idx = data.idx.value
-        self._current_loop = data.loop.value
-        self._atom_name = data.atom_name.value
-
     @abstractmethod
-    async def setup(self, test_name:str, bus:Bus):
+    async def setup(self, test_name: str, bus: Bus):
         """Initialize method.
 
         Executed before starting the actual test.
@@ -26,6 +22,12 @@ class BaseDataHandler(metaclass=ABCMeta):
         start."""
         pass
 
+    def _atom_warmup(self, subject, data: AtomData):
+        self._current_idx = data.idx.value
+        self._current_loop = data.loop.value
+        self._atom_name = data.atom_name.value
+
+    @abstractmethod
     def get_subscriptions(self):
         pass
 

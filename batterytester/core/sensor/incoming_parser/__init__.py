@@ -5,27 +5,49 @@ Incoming parser receives incoming sensor data and cleans it.
 from typing import Sequence, Generator
 
 from batterytester.core.bus import Bus
+from batterytester.core.helpers.constants import KEY_VALUE, ATTR_TIMESTAMP, \
+    KEY_SUBJECT
+from batterytester.core.helpers.helpers import FatalTestFailException, \
+    get_current_timestamp
+from batterytester.core.helpers.message_subjects import SENSOR_DATA
 
 
-# def get_time_stamp():
-#     return int(time() * 1000)
+def get_measurement(sensor_name, value) -> dict:
+    return {sensor_name: {
+        KEY_VALUE: value},
+        ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
+        KEY_SUBJECT: SENSOR_DATA}
 
 
 class IncomingParser:
-    def __init__(self, bus: Bus):
+    def __init__(self, bus: Bus, sensor_prefix=None):
         self.bus = bus
         self.separator = b'\n'
+        self.sensor_prefix = sensor_prefix
+
+    def _interpret(self, measurement) -> dict:
+        """Interprets an incoming measurement and returns the result"""
+        return measurement
 
     def process(self, raw_incoming) -> Sequence[dict]:
         """Entry point for processing raw incoming sensor data."""
-        raise NotImplemented
+        try:
+            yield self._interpret(raw_incoming)
+        except Exception as err:
+            # should not hit, but put here to catch if needed.
+            raise FatalTestFailException(err)
+
+    def decorate_sensor_name(self, sensor_name):
+        if self.sensor_prefix:
+            return '{}_{}'.format(self.sensor_prefix, sensor_name)
+        return sensor_name
 
 
 class IncomingParserChunked(IncomingParser):
     """Incoming data parser where data is coming in as a stream."""
 
-    def __init__(self, bus: Bus):
-        IncomingParser.__init__(self, bus)
+    def __init__(self, bus: Bus, sensor_prefix=None):
+        IncomingParser.__init__(self, bus, sensor_prefix)
         self.incoming_retries = 2
         self.current_retry = 0
         self.incoming_data = bytearray()  # all incoming data.
@@ -37,9 +59,6 @@ class IncomingParserChunked(IncomingParser):
         self.incoming_data = bytearray(_split[-1])
         for _chunk in (_split[i] for i in range(len(_split) - 1)):
             if _chunk != b'':
-                # val = self._interpret(_chunk)
-                # val[ATTR_TIMESTAMP] = {KEY_VALUE: get_current_timestamp()}
-                # val[KEY_SUBJECT] = SENSOR_DATA
                 yield _chunk
 
     def process(self, raw_incoming) -> Sequence[dict]:
@@ -50,23 +69,7 @@ class IncomingParserChunked(IncomingParser):
         Returns a dictionary with measurement values, timestamp and
         'sensor_data' as subject/identifier."""
 
-        # Add new raw to current raw data.
         self.incoming_data.extend(raw_incoming)
-        # # Raw measurement chunks go here:
-        # measurement = []
-        # Interpreted chunks go here:
-        # clean_data = []
-        # Extract raw chunks from the raw data stream
-        # self._extract(measurement)
 
         for _measurement in self._extract():
             yield self._interpret(_measurement)
-            # yield self._interpret(_measurement)
-        # #     val = self._interpret(_measurement)
-        #     if val is not None:
-        #         clean_data.append(val)
-        # return clean_data
-
-    def _interpret(self, measurement) -> dict:
-        """Interprets an incoming measurement and returns the result"""
-        return measurement

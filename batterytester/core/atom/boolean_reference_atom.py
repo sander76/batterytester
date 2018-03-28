@@ -16,10 +16,9 @@ class BooleanReferenceAtom(ReferenceAtom):
             arguments=None,
             result_key: str = None):
         super().__init__(
-            name, command, arguments,
-            duration, result_key
-        )
-        self.reference_data = reference
+            name=name, command=command,
+            duration=duration, reference=reference,
+            arguments=arguments, result_key=result_key)
 
     def _process_sensor_data(self):
         super()._process_sensor_data()
@@ -28,7 +27,7 @@ class BooleanReferenceAtom(ReferenceAtom):
             for _data in self.sensor_data:
                 for key, value in _data.items():
                     if not key == ATTR_TIMESTAMP and not key == KEY_SUBJECT:
-                        # do not take timestamps into comparisson.
+                        # do not take timestamps into comparison.
                         _result[key] = value
             return _result
 

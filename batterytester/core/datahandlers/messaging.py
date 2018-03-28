@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+from json import JSONDecodeError
 
 import aiohttp
 
@@ -12,13 +13,14 @@ from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.helpers.message_data import to_serializable, \
     FatalData, TestFinished, TestData, AtomData, \
     AtomStatus, AtomResult, TestSummary, Message, LoopData
+from batterytester.server.server import URL_TEST, MSG_TYPE_STOP_TEST
 
 ATTR_MESSAGE_BUS_ADDRESS = '127.0.0.1'
 ATTR_MESSAGE_BUS_PORT = 8567
 
 URL_CLOSE = 'close'
 URL_ATOM = 'atom'  # General info about the current atom.
-URL_TEST = 'test'  # General test information.
+# URL_TEST = 'test'  # General test information.
 
 CACHE_ATOM_DATA = 'atom_data'  # Cache key where to store atom data.
 CACHE_TEST_DATA = 'test_data'  # Cache key where to store test info.
@@ -31,9 +33,8 @@ ATTR_FAILED_IDS = 'failed_ids'
 
 
 class Messaging(BaseDataHandler):
-    def __init__(self, bus):
+    def __init__(self):
         super().__init__()
-        self._bus = bus
         self.ws_connection = None
         self.session = None
         self.test_summary = TestSummary()
@@ -108,11 +109,13 @@ class Messaging(BaseDataHandler):
         asyncio.ensure_future(self.ws_connection.send_str(_js))
 
     async def setup(self, test_name, bus):
+        self._bus = bus
         try:
             self.ws_connection = await asyncio.wait_for(
                 self._bus.session.ws_connect(
-                    'http://{}:{}/ws/tester'.format(ATTR_MESSAGE_BUS_ADDRESS,
-                                                    ATTR_MESSAGE_BUS_PORT)),
+                    'http://{}:{}{}'.format(ATTR_MESSAGE_BUS_ADDRESS,
+                                            ATTR_MESSAGE_BUS_PORT,
+                                            URL_TEST)),
                 timeout=10)
         except asyncio.TimeoutError:
             raise FatalTestFailException(
@@ -122,21 +125,26 @@ class Messaging(BaseDataHandler):
             raise
         self._bus.add_async_task(self.ws_loop())
 
-    def parser(self, data):
-        LOGGER.info(data)
+    async def parser(self, msg):
+        try:
+            _data = json.loads(msg.data)
+            _type = _data['type']
+        except JSONDecodeError as err:
+            LOGGER.error(err)
+        else:
+            if _type == MSG_TYPE_STOP_TEST:
+                #await self.ws_connection.close()
+                raise FatalTestFailException("Stop test signal received.")
 
     async def ws_loop(self):
         try:
             async for msg in self.ws_connection:
                 if msg.type == aiohttp.WSMsgType.TEXT:
-                    if msg.data == 'close cmd':
-                        await self.ws_connection.close()
-                        break
-                    else:
-                        await self.parser(msg.data)
+                    await self.parser(msg)
                 elif msg.type == aiohttp.WSMsgType.CLOSED:
                     break
                 elif msg.type == aiohttp.WSMsgType.ERROR:
                     break
+
         except asyncio.CancelledError:
             LOGGER.info("closing websocket listener")

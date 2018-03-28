@@ -4,60 +4,28 @@ Incoming parser receives incoming sensor data and cleans it.
 
 import logging
 
-from batterytester.core.bus import Bus
+from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.sensor import IncomingParser
+from batterytester.core.sensor.incoming_parser import get_measurement
 
 lgr = logging.getLogger(__name__)
 
 
 class VoltAmpsIrParser(IncomingParser):
-    def __init__(self, bus: Bus):
-        IncomingParser.__init__(self, bus)
-        self.incoming_retries = 2
-        self.current_retry = 0
-        self.incoming_data = bytearray()  # all incoming data.
+    """Volts amps parser
 
-    def process(self, raw_incoming):
-        """Entry point for processing raw incoming sensor data."""
+    Incoming data is in form of b'v;<Volts>;<Amps>'
+    """
 
-        # Add new raw to current raw data.
-        self.incoming_data.extend(raw_incoming)
-        # Raw measument chunks go here:
-        measurement = []
-        # Interpreted chunks go here:
-        clean_data = []
-        # Extract raw chunks from the raw data stream
-        self._extract(measurement)
+    sensor_name = 'VI'
 
-        for _measurement in measurement:
-            val = self._interpret(_measurement)
-            if val is not None:
-                clean_data.append(val)
-        return clean_data
-
-    # def _extract(self, measurement: list):
-    #     """
-    #     Consumes the raw incoming data and cuts it into consumable,
-    #     interpretable chunks.
-    #
-    #     :param measurement:
-    #     :return:
-    #     """
-    #     try:
-    #         _idx = self.incoming_data.index(self.separator)
-    #         measurement.append(self.incoming_data[:_idx])
-    #         self.incoming_data = self.incoming_data[_idx + 1:]
-    #         # further consume the raw incoming data by calling
-    #           this method again.
-    #         self._extract(measurement)
-    #     except ValueError:
-    #         # No more separator found. Any data left in the raw incoming list
-    #         # interpreted when new data has come in. For now returning and
-    #         # preparing for further interpretation.
-    #         return
+    def __init__(self, bus, sensor_prefix=None):
+        super().__init__(bus, sensor_prefix)
+        self.sensor_name = self.decorate_sensor_name(
+            VoltAmpsIrParser.sensor_name)
 
     def _interpret(self, measurement):
-        """Must return key value pairs."""
+        """Interpret incoming data."""
         _line = measurement.split(b';')
         try:
             data = {}
@@ -71,8 +39,14 @@ class VoltAmpsIrParser(IncomingParser):
                 # data is the ir sensor.
                 _ir = int(_line[1])
                 data['ir'] = _ir
-            return data
+            else:
+                raise FatalTestFailException(
+                    "Problem parsing Volts/Amps data {}".format(measurement))
+
+            return get_measurement(self.sensor_name, data)
+
         except IndexError:
             lgr.info("incoming serial data is not correct: {}"
                      .format(measurement))
-            return None
+            raise FatalTestFailException(
+                "Incoming serial data is not correct.")

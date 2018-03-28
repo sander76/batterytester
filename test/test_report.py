@@ -33,6 +33,5 @@ def test_check_output_folder_existing_folder(test_path):
 
 def test_check_output_folder_full_path(test_path):
     _full = str(Path.cwd().joinpath(TEST_FOLDER))
-    #_full = "c:/Users/sander/dropbox/data/aptana/batterytester/test/testfolder"
     path = check_output_folder(_full)
     assert test_path == path

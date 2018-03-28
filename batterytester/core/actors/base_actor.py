@@ -4,6 +4,7 @@ from batterytester.core.bus import Bus
 
 ACTOR_TYPE_BASE = 'base_actor'
 ACTOR_TYPE_POWER_VIEW = 'powerview_actor'
+ACTOR_TYPE_EXAMPLE = 'example_actor'
 
 
 class BaseActor(metaclass=ABCMeta):

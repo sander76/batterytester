@@ -74,6 +74,9 @@ class MarkDownReport(BaseDataHandler):
         self._test_summary = TestSummary()
         self._report_data = []  # All report lines are stored here.
 
+    def get_subscriptions(self):
+        pass
+
     async def setup(self, test_name, bus):
         self._filename = create_report_file(
             self.test_name, self._report_name, self._output_path

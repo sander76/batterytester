@@ -1,14 +1,13 @@
-from distutils.core import setup
-
-from setuptools import find_packages
+from setuptools import setup, find_packages
 
 setup(
     name='batterytester',
     version='1.2.8',
-    packages=find_packages(),
+    packages=find_packages(exclude='test'),
     url='',
     license='',
     author='Sander Teunissen',
     author_email='s.teunissen@gmail.com',
-    description=''
+    description='',
+    install_requires=['pyserial', 'aiopvapi', 'aiohttp']
 )

@@ -46,5 +46,8 @@ def test_stop_test_on_serial_error(monkeypatch, bus):
     con.s.read.side_effect = SerialException
     con.s.in_waiting = 1
 
-    bus._start_test()
+    async def fake_test():
+        pass
+
+    bus._start_test(fake_test(),'fake_test')
     assert True

@@ -1,6 +1,7 @@
 import pytest
 
 from batterytester.core.helpers.constants import KEY_SUBJECT, ATTR_TIMESTAMP
+from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.sensor.incoming_parser.boolean_parser import \
     BooleanParser
 
@@ -21,5 +22,14 @@ def test_interpret(fake_binary_parser):
 
 
 def test_false_interpret(fake_binary_parser):
-    val = fake_binary_parser._interpret(b'abvf')
-    assert val is None
+    with pytest.raises(FatalTestFailException):
+        fake_binary_parser._interpret(b'abvf')
+
+
+def test_sensor_name():
+    parser = BooleanParser(None, 'test_sensor')
+    val = parser._interpret(b'abcd:1')
+    assert 'test_sensor_abcd' in val
+    val = parser._interpret(b'def:0')
+    assert 'test_sensor_def' in val
+    assert val['test_sensor_def']=={'v':False}

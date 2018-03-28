@@ -1,20 +1,16 @@
 import asyncio
 import logging
-from asyncio import CancelledError
 
 import async_timeout
 from aiohttp.client_exceptions import ClientError
 from slugify import slugify
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.core.bus import Bus
 from batterytester.core.datahandlers import BaseDataHandler
 from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_VALUE, \
     KEY_SUBJECT
 from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.helpers.message_data import AtomData
-
-LENGTH = 1
 
 LOGGER = logging.getLogger(__name__)
 
@@ -61,43 +57,41 @@ def to_nano_seconds(timestamp):
     try:
         val = int(timestamp * 1000000000)
         return val
-    except Exception:
+    except Exception as err:
+        LOGGER.error(err)
         raise FatalTestFailException(
             "Unable to convert milliseconds to nanoseconds.")
 
 
-# todo: write the buffer to the database when the test ends.
 # todo: write tests.
 
 class Influx(BaseDataHandler):
     def __init__(
-            self, bus: Bus, host=None, database='menc',
-            measurement=None, datalength=LENGTH):
+            self, host=None, database='menc', buffer_size=5):
         """
-        :param bus:
-        :param host:
+        :param host: ip address of the influx database
         :param database: The database to write data to.
         :param measurement: The current test being run.
             normally the name of the test.
         :param datalength:
         """
         super().__init__()
-        self.bus = bus
         self.host = host
         self.data = []
-        # self.url = 'http://{}:8086/write?db={}&precision=ms'.format(
-        #     host, database)
+        self.bus = None
         self.url = 'http://{}:8086/write?db={}'.format(
             host, database)
-        self.measurement = measurement  # actually the name of the test.
-        self.data_length = datalength
-        self.bus.add_async_task(
-            self._check_and_send_to_database())
-        self.bus.add_closing_task(self._flush())
+        self.measurement = None  # actually the name of the test.
+        self.buffer_size = buffer_size
         self._tags = {}
 
     async def setup(self, test_name, bus):
-        pass
+        self.bus = bus
+        self.measurement = test_name
+        # self.bus.add_async_task(
+        #     self._check_and_send_to_database()
+        # )
+        self.bus.add_closing_task(self._flush())
 
     def get_subscriptions(self):
         return (
@@ -119,25 +113,19 @@ class Influx(BaseDataHandler):
         _tags = line_protocol_tags(_tags)
         self.data.append(self._create_measurement(
             _fields, _tags, to_nano_seconds(data.started.value)))
+        self.check_buffer()
 
     def _add_to_database(self, subject, data):
         # LOGGER.debug("Adding to database buffer")
         _time_stamp = get_time_stamp(data)
-        # if subject == subj.SENSOR_DATA:
         _fields = line_protocol_fields(data)
+        # making a shallow copy to keep the test loop and index intact.
+        #todo: don't make a copy. Just immediately make it a lineprotocol.
         _tags = line_protocol_tags(
             dict(self._tags))  # Shallow copy of the current tags.
         self.data.append(
             self._create_measurement(_fields, _tags, _time_stamp))
-        # elif subject == subj.ATOM_WARMUP or subject == subj.ATOM_STATUS:
-        #     _fields = line_protocol_fields({'value': {KEY_VALUE: 1}})
-        #
-        #     _tags = dict(self._tags)
-        #     _tags['name'] = slugify(data.atom_name.value)
-        #     _tags = line_protocol_tags(_tags)
-        #
-        #     self.data.append(
-        #         self._create_measurement(_fields, _tags, _time_stamp))
+        self.check_buffer()
 
     def _create_measurement(self, fields: str, tags: str, time_stamp):
         """Transform data according to line format protocol.
@@ -157,39 +145,40 @@ class Influx(BaseDataHandler):
             self.measurement, tags, fields, time_stamp)
         return ln
 
-    async def _check_and_send_to_database(self):
-        """Checks the length of the data list and
-        if long enough sends it to the database."""
+    def check_buffer(self):
+        if len(self.data) > self.buffer_size:
+            self._flush()
 
-        try:
-            while self.bus.running:
-                if len(self.data) > self.data_length:
-                    LOGGER.debug("buffer limit exceeded. Flushing data")
-                    await self._flush()
-                else:
-                    await asyncio.sleep(5)
-        except CancelledError:
-            LOGGER.info("Test cancelled. Closing database.")
+    # async def _check_and_send_to_database(self):
+    #     """Checks the length of the data list and
+    #     if long enough sends it to the database."""
+    #
+    #     try:
+    #         while self.bus.running:
+    #             if len(self.data) > self.data_length:
+    #                 LOGGER.debug("buffer limit exceeded. Flushing data")
+    #                 await self._flush()
+    #             else:
+    #                 await asyncio.sleep(5)
+    #     except CancelledError:
+    #         LOGGER.info("Test cancelled. Closing database.")
+    #
+    #     return
 
-        # Flush remaining data before loop is closed.
-        # _data = self.prepare_data()
-        # self.bus.add_closing_task(self._send(_data))
-        return
-
-    def prepare_data(self):
+    def _prepare_data(self):
         if self.data:
             _data = '\n'.join(self.data)
             _data += '\n'
             return _data
+        return None
 
-    async def _flush(self):
-        _data = self.prepare_data()
-        # clear the list so asyncio can start populating
-        # it while processing the next yields.
+    def _flush(self):
+        """Prepare data and write it to the database"""
+        _data = self._prepare_data()
 
-        self.data = []
         if _data:
-            await self._send(_data)
+            self.data = []
+            self.bus.add_async_task(self._send(_data))
 
     async def _send(self, data):
         resp = None

@@ -22,18 +22,18 @@ class BaseTest:
     def __init__(
             self, *,
             test_name: str,
-            loop_count: int):
+            loop_count: int,
+            learning_mode: bool = False):
 
         self.bus = Bus()
         self.test_name = test_name
         self.sensor_data_queue = None
-        self.sensors = []
-        self.actors = {}
-
+        self._test_sequence = None
         self._loopcount = loop_count
         self._active_atom = None
         self._active_index = None
         self._active_loop = None
+        self._learning_mode = learning_mode
 
     def add_sensors(self, *sensors: Sensor):
         """Add sensors to the test."""
@@ -41,9 +41,11 @@ class BaseTest:
             self.sensor_data_queue = asyncio.Queue(loop=self.bus.loop)
             self.bus.add_async_task((self._messager()))
         for _sensor in sensors:
+            # todo: move the sensor_data_queue to the bus.
+            # todo: initialize the sensor data queue in the setup method
             _sensor.sensor_data_queue = self.sensor_data_queue
 
-            self.sensors.append(_sensor)
+            self.bus.sensors.append(_sensor)
 
     def add_data_handlers(self, *args: BaseDataHandler):
         """Add data handlers to the test."""
@@ -54,7 +56,7 @@ class BaseTest:
     def add_actor(self, *actors: BaseActor):
         """Add actors to the test."""
         for _actor in actors:
-            self.actors[_actor.actor_type] = _actor
+            self.bus.actors[_actor.actor_type] = _actor
 
     def add_sequence(self, sequence):
         self.get_sequence = sequence
@@ -67,9 +69,9 @@ class BaseTest:
         """Starts the actual test."""
         LOGGER.debug("Starting the test.")
         try:
-            self.bus._start_test(self.async_test())
+            self.bus._start_test(self.async_test(), self.test_name)
         except KeyboardInterrupt:
-            self.bus.main_test.cancel()
+            self.bus.test_runner_task.cancel()
 
     def handle_sensor_data(self, sensor_data: dict):
         """Handle sensor data by sending it to the active atom or store
@@ -77,6 +79,9 @@ class BaseTest:
         Cannot be a blocking io call. Needs to return immediately
         """
         self.bus.notify(subj.SENSOR_DATA, sensor_data)
+
+        if self.active_atom:
+            self.active_atom.sensor_data.append(sensor_data)
 
     def get_sequence(self, *args):
         """Gets called to retrieve a list of test atoms to be performed.
@@ -90,7 +95,7 @@ class BaseTest:
         actions performed on the test before a new test
         is started. Must raise an TestFailException when an error occurs.
         """
-        for _actor in self.actors.values():
+        for _actor in self.bus.actors.values():
             await _actor.warmup()
         LOGGER.debug("Test warmup")
 
@@ -101,7 +106,7 @@ class BaseTest:
         """
         LOGGER.debug('Warming up loop.')
 
-        _seq = self.get_sequence(self.actors)
+        _seq = self.get_sequence(self.bus.actors)
 
         self.bus.notify(subj.LOOP_WARMUP,
                         LoopData([_atom.get_atom_data() for _atom in _seq]))
@@ -132,9 +137,17 @@ class BaseTest:
         # command
         await asyncio.sleep(self._active_atom.duration)
 
+        if not self._learning_mode and isinstance(self._active_atom,
+                                                  ReferenceAtom):
+            # Actual testing mode. reference data
+            # and testing data can be compared.
+            _success = self._active_atom.reference_compare()
+            _data = AtomResult(_success)
+            if not _success:
+                _data.reason = Data("Reference testing failed.")
+            self.bus.notify(subj.ATOM_RESULT, _data)
+
     async def async_test(self):
-        # _current_loop = 0
-        # idx = 0
         try:
             self.bus.notify(subj.TEST_WARMUP,
                             TestData(self.test_name, self._loopcount))
@@ -148,9 +161,6 @@ class BaseTest:
                 for idx, atom in enumerate(self._test_sequence):
                     try:
                         self._active_atom = atom
-                        # self.bus.notify(subj.ATOM_START,
-                        #                 self._atom_start_data())
-
                         self.bus.notify(subj.ATOM_WARMUP,
                                         self._atom_warmup_data())
                         await self.atom_warmup()
@@ -205,32 +215,3 @@ class BaseTest:
                 raise FatalTestFailException(
                     "Something wrong with the sensor queue")
 
-
-class BaseReferenceTest(BaseTest):
-    def __init__(self,
-                 test_name: str,
-                 loop_count: int,
-                 learning_mode: bool = False):
-        super().__init__(
-            test_name,
-            loop_count
-        )
-        self._learning_mode = learning_mode
-
-    async def perform_test(self):
-        LOGGER.debug("Performing test")
-        await super().perform_test()
-        if not self._learning_mode:
-            # Actual testing mode. reference data
-            # and testing data can be compared.
-            _success = self._active_atom.reference_compare()
-            _data = AtomResult(_success)
-            if not _success:
-                _data.reason = Data("Reference testing failed.")
-            self.bus.notify(subj.ATOM_RESULT, _data)
-
-    def handle_sensor_data(self, sensor_data):
-        super().handle_sensor_data(sensor_data)
-        """Sensor data to be added to the active atom."""
-        if self.active_atom:
-            self.active_atom.sensor_data.append(sensor_data)

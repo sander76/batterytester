@@ -48,12 +48,14 @@ class RefGetter:
             return _val
 
 
+# todo: make any atom mixable.
+
 class Atom:
     """Basic test atom.
 
     Starts test execution and creates a basic report."""
 
-    def __init__(self, name, command, arguments, duration,
+    def __init__(self, *, name, command, duration, arguments=None,
                  result_key: Union[str, None] = None):
         self._name = name
         self._command = command
@@ -62,13 +64,14 @@ class Atom:
         self._idx = None
         self._loop = None
         self._result = ''
+        self.sensor_data = []
+
         # used for storing a global property to be used by other
         # test_atoms.
         self._result_key = result_key
 
         # the above result key is stored in the below dict (initialized when
         # preparing the test atom (prepare_test_atom).
-        # todo: this should be initialized to have a global dict.
         self._stored_atom_results = None
 
     @property
@@ -132,14 +135,15 @@ class ReferenceAtom(Atom):
     """
 
     def __init__(
-            self, name, command,
-            arguments, duration,
+            self, *, name, command,
+            duration, reference, arguments=None,
             result_key: str = None):
-        super().__init__(name, command, arguments, duration, result_key)
+        super().__init__(
+            name=name, command=command, arguments=arguments, duration=duration,
+            result_key=result_key)
         # sensor data is stored here.
-        self.sensor_data = []
         # reference sensor data to be stored here.
-        self.reference_data = None
+        self.reference_data = reference
 
     def _process_sensor_data(self):
         """Perform sensor data processing."""
