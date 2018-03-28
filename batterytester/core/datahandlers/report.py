@@ -60,7 +60,8 @@ def create_report_file(test_name, report_name, output_path):
     _filename = '{}_{}.md'.format(_base_filename, get_current_time_string())
 
     _path = check_output_folder(output_path)
-    return _path.joinpath(_filename)
+    # converting the Path object to string for Python 3.5 compatibility.
+    return str(_path.joinpath(_filename))
 
 
 class MarkDownReport(BaseDataHandler):
@@ -92,8 +93,7 @@ class MarkDownReport(BaseDataHandler):
     def _create_summary_file(self):
         """Create a report file"""
 
-        # converting the Path object to string for Python 3.5 compatibility.
-        with open(str(self._filename), 'w') as fl:
+        with open(self._filename, 'w') as fl:
             fl.write('TEST SUMMARY FILE.\n\n')
 
     def header1(self, content):
