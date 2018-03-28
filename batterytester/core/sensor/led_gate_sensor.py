@@ -21,4 +21,4 @@ class LedGateSensor(Sensor):
         self._connector = ThreadedSerialSensorConnector(
             bus, self.serialport, self.serialspeed)
         self._sensor_data_parser = BooleanParser(bus)
-        super().setup(test_name, bus)
+        await super().setup(test_name, bus)
