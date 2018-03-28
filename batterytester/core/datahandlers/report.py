@@ -90,7 +90,10 @@ class MarkDownReport(BaseDataHandler):
         self._report_data.append('')
 
     def _create_summary_file(self):
-        with open(self._filename, 'w') as fl:
+        """Create a report file"""
+
+        # converting the Path object to string for Python 3.5 compatibility.
+        with open(str(self._filename), 'w') as fl:
             fl.write('TEST SUMMARY FILE.\n\n')
 
     def header1(self, content):
