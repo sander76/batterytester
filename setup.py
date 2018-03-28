@@ -9,5 +9,5 @@ setup(
     author='Sander Teunissen',
     author_email='s.teunissen@gmail.com',
     description='',
-    install_requires=['pyserial', 'aiopvapi', 'aiohttp']
+    install_requires=['pyserial', 'aiopvapi', 'aiohttp', 'python-slugify']
 )
