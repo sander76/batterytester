@@ -4,10 +4,13 @@
 <head>
     <meta charset="utf-8">
     <title>Tester dashboard</title>
+    <link rel="stylesheet" href="spectre.min.css.gz">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/base-min.css"> -->
 </head>
 <style>
-    html {
-        font-family: Arial, Helvetica, sans-serif
+    .column {
+        padding: .4rem;
     }
 
     .sensor_container {
@@ -28,279 +31,179 @@
 </style>
 
 <body>
-    <div>
-        <span>ip address</span>
-        <input id='ipaddr' type="text">
-        <div id="status">not connected.</div>
+    <div class="container grid-lg">
+        <div class="columns">
+            <div class="column col-12">
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <h5>
+                                Connection status
+                            </h5>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="columns">
+                            <div class="column col-6">
+                                <button type="button" class="btn" id="connect">Connect</button>
+                            </div>
+                            <div class="column col-6">
+                                <div id="status">not connected.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h5>Test control</h5>
+                        <div class="columns">
+                                <div class="column col-md-12 col-6">
+                                        <select id='all_tests_list' class="form-select"></select>
+                                    </div>
+                                    <div class="column col-md-12 col-6">
+                                        <button type="button" class='btn btn-block' id="all_tests">Refresh</button>
+                                    </div>
+                        </div>
+                        <div class="columns">
+                            
+                            <div class="column col-md-12 col-6">
+                                <button type="button" id="stop_test_button" class='btn btn-block'>Stop test</button>
+                            </div>
+                            <div class="column col-md-12 col-6">
+                                <button type="button" id="start_test_button" class='btn btn-block'>Start test</button>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="form-group">
+
+                    <textarea class="form-input" rows=4 id="process_result"></textarea>
+
+                </div>
+
+                <h2>TEST INFO</h2>
+                <div id="test_info">
+                    <div class="columns">
+                        <div class="column col-6">Test name</div>
+                        <div class="column col-6">
+                            <span class='test_name value'>no name</span>
+                        </div>
+
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">Status</div>
+                        <div class="column col-6 status value">
+                            no status
+                        </div>
+                    </div>
+
+                    <div class="columns">
+                        <div class="column col-6">Total loop count</div>
+                        <div class="column col-6">
+                            <span class="loop_count value">unknown</span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">Started</div>
+                        <div class="column col-6">
+                            <span class="started value">unknown</span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">Stopped</div>
+                        <div class="column col-6">
+                            <span class="time_finished value">unknown</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>ATOM INFO</h2>
+                <div id="atom_info">
+                    <div class="columns">
+                        <div class="column col-6">Name</div>
+                        <div class="column col-6">
+                            <span class="atom_name value">unknown</span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">Index</div>
+                        <div class="column col-6 idx value">unknown
+
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">Loop</div>
+                        <div class="column col-6">
+                            <span class="loop value">unknown</span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">status</div>
+                        <div class="column col-6">
+                            <span class="status value">unknown</span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">reference data</div>
+                        <div class="column col-6">
+                            <span class="reference_data value">unknown</span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">started</div>
+                        <div class="column col-6">
+                            <span class="started value">unknown</span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">Duration</div>
+                        <div class="column col-6">
+                            <span class="duration value">unknown</span>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- <div id="atom_data"></div> -->
+                <h2>SENSOR DATA</h2>
+                <div id="sensor_info">
+
+                </div>
+                <div id="sensor_data"></div>
+                <h2>SUMMARY</h2>
+                <div id="summary_info">
+                    <div class="columns">
+                        <div class="column col-6">Tests failed</div>
+                        <div class="column col-6">
+                            <span class="failed value">unknown</span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">Tests passed</div>
+                        <div class="column col-6">
+                            <span class="passed value">unknown</span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">Failed tests</div>
+                        <div class="column col-6">
+                            <span class="failed_ids value">unknown</span>
+                        </div>
+                    </div>
+
+                </div>
+                <div id="summary"></div>
+
+            </div>
+        </div>
     </div>
-    <select id='all_tests_list'>
+    <script type="text/javascript" src=ui_js.js></script>
 
-    </select>
-    <button id="connect">Connect</button>
-    <button id="stop_test_button">Stop test</button>
-    <button id="start_test_button">Start test</button>
-    <button id="all_tests">All tests</button>
-    <h2>TEST INFO</h2>
-    <div id="test_data"></div>
-
-    <h2>ATOM INFO</h2>
-    <div id="atom_data"></div>
-    <h2>SENSOR DATA</h2>
-    <div id="sensor_data"></div>
-    <h2>summary</h2>
-    <div id="summary"></div>
-
-
-    <script>
-        // connect button
-        let button = document.getElementById("connect");
-        button.onclick = connect;
-        // connection status
-        let connection_status = document.getElementById("status");
-        // ip address input
-        let ip_input = document.getElementById("ipaddr");
-        // stop test button
-        let stop_button = document.getElementById("stop_test_button");
-        stop_button.onclick = stop_test;
-
-        // start test button
-        let start_button = document.getElementById("start_test_button");
-        start_button.onclick = start_test;
-
-        // all tests button
-        let all_test_button = document.getElementById("all_tests");
-        all_test_button.onclick = query_all_tests;
-
-        // all test list
-        let all_tests = document.getElementById("all_tests_list");
-
-        var sensor_info = new StatusElement(document.getElementById("sensor_data"));
-        var test_info = new StatusElement(document.getElementById("test_data"));
-        var atom_info = new StatusElement(document.getElementById("atom_data"));
-        var atom_summary = new StatusElement(document.getElementById("summary"));
-        
-        var http_port = 8567;
-        var base_url;
-        
-        function make_ws_url() {
-            base_url = 'http://' + ip_input.value +":" +http_port;
-            let url = "ws://" + ip_input.value + ":"+http_port +"/ws";
-            console.log(url);
-            return url
-        }
-        var ws;
-
-        function open_socket(url) {
-            ws = new WebSocket(url);
-            ws.onopen = function (event) {
-                console.log('connection opened.')
-                connection_status.innerHTML = "connected.";
-                init();
-            }
-            ws.onclose = function (event) {
-                console.log('connection closed.')
-                connection_status.innerHTML = "closed."
-            }
-            ws.onmessage = function (event) {
-                var _js = JSON.parse(event.data);
-                parse_sensor(_js);
-            }
-
-        }
-
-        function clear_data() {
-            test_info.clear();
-            atom_info.clear();
-            atom_summary.clear();
-            sensor_info.clear();
-        }
-
-        function init() {
-            ws.send(JSON.stringify({
-                "type": "atom"
-            })) // Get cached atom data.
-            ws.send(JSON.stringify({
-                "type": "test"
-            })) // Get cached test data.
-        }
-
-        function connect(e) {
-            if (ws) {
-                ws.close();
-            }
-            clear_data();
-            connect.innerHTML = "connecting";
-            open_socket(make_ws_url());
-
-        }
-
-        function stop_test(e) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST',base_url +'/test_stop',true);
-            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            
-            xhr.send(JSON.stringify({"type":"stop_test"}));
-            
-            xhr.onreadystatechange= function(){
-                if (xhr.readyState == XMLHttpRequest.DONE && xhr.status==200){
-                    var msg = JSON.parse(xhr.responseText);
-                    if (!msg.running){
-                        alert('No test running');
-                    }
-                    
-                }
-            }
-        }
-        function start_test(e){
-            //get selected test.
-            var selected = all_tests.value;
-            alert(selected);
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST',base_url +'/test_start',true);
-            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            xhr.send(JSON.stringify({"test":selected}));
-
-            xhr.onreadystatechange= function(){
-                if (xhr.readyState == XMLHttpRequest.DONE && xhr.status==200){
-                    var msg = JSON.parse(xhr.responseText);
-                    if (!msg.running){
-                        alert('No test running');
-                    }
-                    
-                }
-            }
-        }
-
-        function query_all_tests(e) {
-            ws.send(JSON.stringify({
-                "type": "all_tests"
-            }));
-        }
-
-        function StatusElement(parent_div) {
-            this.data_container = {};
-            this.parent_div = parent_div;
-        }
-
-        function plain_interpreter(value) {
-            return value['v'];
-        }
-
-        function json_interpreter(value) {
-            return JSON.stringify(value['v'], undefined, 4);
-        }
-
-        function time_interpreter(value) {
-            if (value.v === "unknown") {
-                return value.v;
-            }
-
-            var date = new Date(value.v * 1000);
-            return date.toISOString();
-        }
-
-        StatusElement.prototype.clear = function () {
-            this.data_container = {};
-            this.parent_div.innerHTML = '';
-        }
-        StatusElement.prototype.parse = function (data) {
-
-            for (const [key, value] of Object.entries(data)) {
-                // Check if there already exists a PropertyElement.
-                var el = this.data_container[key];
-
-                // If PropertyElement does not exist. Create it.
-                if (el == undefined) {
-                    var interpreter = plain_interpreter
-                    var value_container = "div";
-                    if (key === "reference_data" || key === "failed_ids") {
-                        interpreter = json_interpreter;
-                        value_container = "pre";
-                    } else if (key === "started" || key === "time_finished" || key === "status_updated" || key ===
-                        "t") {
-                        interpreter = time_interpreter;
-                    }
-                    el = new PropertyElement(key, interpreter, value_container);
-                    this.data_container[key] = el;
-                    this.parent_div.appendChild(el.container);
-
-                }
-                el.update(value);
-                //console.log(key, value);
-            }
-        }
-
-        function PropertyElement(key, interpreter, value_container) {
-            // A property value container.
-            this.prop = document.createElement("div");
-            this.prop.innerHTML = key;
-            this.prop.className = "sensor_prop";
-            this.val = document.createElement(value_container);
-            this.val.className = "sensor_val";
-            this.container = document.createElement("div");
-            this.container.className = "sensor_container";
-            this.container.appendChild(this.prop);
-            this.container.appendChild(this.val);
-            this.interpreter = interpreter;
-
-        }
-        PropertyElement.prototype.update = function (value) {
-            this.val.innerHTML = this.interpreter(value)
-            // if (key === "reference_data" || key === "failed_ids") {
-            //     var pre = document.createElement('pre');
-            //     pre.innerHTML = JSON.stringify(value['v'], undefined, 4);
-            //     this.val.appendChild(pre);
-            // } else {
-            //     this.val.innerHTML = value['v'];
-            // }
-            // this.prop.innerHTML = key;
-        }
-        function parse_all_tests(data){
-            all_tests.options.length=0;
-            var tests = data['data'];
-            for(var i=0;i<tests.length;i++){
-                option = document.createElement('option');
-                option.value=option.text = tests[i];
-                all_tests.add(option);
-            }
-        }
-
-        function parse_sensor(data) {
-            let subj = data["subj"];
-            delete data.subj;
-            delete data.cache;
-            console.log(subj, data)
-            if (subj === "sensor_data") {
-                //Sensor data.
-
-                sensor_info.parse(data);
-            } else if (subj === "atom_warmup") {
-                //Atom data.
-                atom_info.parse(data);
-            } else if (subj === "test_warmup") {
-                this.clear_data();
-                //Test data.
-                test_info.parse(data);
-            } else if (subj === "atom_status") {
-                atom_info.parse(data);
-            } else if (subj === "result_summary") {
-                atom_summary.parse(data)
-            } else if (subj === "test_finished") {
-                test_info.parse(data);
-            } else if (subj === "all_tests") {
-                parse_all_tests(data);
-            }
-
-
-        }
-        var params = new URLSearchParams(window.location.search)
-        let _server = params.get("server");
-        if (_server) {
-            ip_input.value = _server;
-        }
-
-        //open_socket();
-    </script>
 </body>
 
 </html>

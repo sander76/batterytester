@@ -1,14 +1,17 @@
 import asyncio
 import logging
+import typing
 from asyncio import CancelledError
 from threading import Thread
 
 import aiohttp
+import sys
 from async_timeout import timeout
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.core.helpers.helpers import FatalTestFailException
-from batterytester.core.helpers.message_data import FatalData
+from batterytester.core.helpers.helpers import FatalTestFailException, \
+    TestSetupException
+from batterytester.core.helpers.message_data import FatalData, TestFinished
 
 LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +68,8 @@ class Bus:
     def task_finished_callback(self, future):
         try:
             val = future.result()
-            print(val)
+            if val:
+                print(val)
         except Exception as err:
             # todo: During cancellation this task can be run multiple times.
             # This needs to be prevented.
@@ -97,8 +101,8 @@ class Bus:
 
     async def start_main_test(self, test_runner, test_name):
         await asyncio.gather(
-            *(_handler.setup(test_name, self) for _handler in
-              self._data_handlers))
+                *(_handler.setup(test_name, self) for _handler in
+                  self._data_handlers))
         await asyncio.gather(
             *(_actor.setup(test_name, self) for _actor in self.actors.values())
         )
@@ -109,7 +113,6 @@ class Bus:
         await self.test_runner_task
 
     def _start_test(self, test_runner, test_name):
-
         for callback in self.callbacks:
             callback()
         for task in self.threaded_tasks:
@@ -117,6 +120,9 @@ class Bus:
         try:
             self.loop.run_until_complete(
                 self.start_main_test(test_runner, test_name))
+        except TestSetupException as err:
+            LOGGER.error(err)
+            #sys.exit(1)
         except CancelledError:
             LOGGER.error("Main test loop cancelled.")
         except FatalTestFailException as err:
@@ -124,6 +130,7 @@ class Bus:
         except KeyboardInterrupt:
             LOGGER.info("Test stopped due to keyboard interrupt.")
         finally:
+
             self.loop.run_until_complete(self.stop_test())
             # todo: double check whether all tasks finished
             # checking all_tasks like below.
@@ -133,8 +140,13 @@ class Bus:
         return self.exit_message
 
     async def stop_test(self, message=None):
+
         LOGGER.info("stopping test")
 
+        if self.test_runner_task:
+            self.test_runner_task.cancel()
+
+        self.notify(subj.TEST_FINISHED, TestFinished())
         for _task in self.closing_task:
             try:
                 async with timeout(10):

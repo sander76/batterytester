@@ -4,8 +4,7 @@ import asyncio
 import json
 import logging
 import sys
-import os
-
+from argparse import ArgumentParser
 from pathlib import Path
 
 import aiohttp
@@ -38,6 +37,9 @@ URL_INTERFACE = '/ws'
 URL_TEST = '/ws/tester'
 URL_TEST_STOP = '/test_stop'
 URL_TEST_START = '/test_start'
+URL_ALL_TESTS = '/all_tests'
+
+DEFAULT_CONFIG_PATH = '/home/pi/test_configs'
 
 
 class Server:
@@ -79,36 +81,39 @@ class Server:
 
     async def test_start_handler(self, request):
         data = await request.json()
-
         p = str(Path(self.config_folder).joinpath(data['test']))
 
-        new_process = asyncio.ensure_future(asyncio.create_subprocess_exec(
-            sys.executable, p,
-            stdout=asyncio.subprocess.PIPE,
-            stdin=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT, loop=self.loop
-        ))
-        new_process.add_done_callback(self.manage_process_callback)
+        asyncio.ensure_future(self.start_test_process(p))
+        # new_process = asyncio.ensure_future(asyncio.create_subprocess_exec(
+        #     sys.executable, p,
+        #     stdout=asyncio.subprocess.PIPE,
+        #     stdin=asyncio.subprocess.PIPE,
+        #     stderr=asyncio.subprocess.STDOUT, loop=self.loop
+        # ))
+        # new_process.add_done_callback(self.manage_process_callback)
 
         return web.Response()
         # todo: handle feedback over websocket.
 
-    def manage_process_callback(self, fut):
-        _process = fut.result()
-        manager = asyncio.ensure_future(self.manage_process(_process))
-        manager.add_done_callback(self.process_result)
+    async def start_test_process(self, p):
 
-    def process_result(self, fut):
-        res = fut.result()
-        print(res)
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable, p,
+            stdout=asyncio.subprocess.PIPE,
+            stdin=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT, loop=self.loop
+        )
+        log, other = await proc.communicate()
+        code = await proc.wait()
+        unicode_log = log.decode('utf-8')
+        self._send_json_to_clients(
 
-    async def manage_process(self, fut):
-        log, other = await fut.communicate()
-        code = await fut.wait()
-        return log, other, code
+            {
+                KEY_SUBJECT: "process_result",
+                "data": {"log": unicode_log, "return_code": code}})
 
     async def test_stop_handler(self, request):
-        data = await request.json()
+        data = await request.text()
         resp = self.send_to_tester(data)
         return web.json_response({"running": resp})
 
@@ -169,17 +174,23 @@ class Server:
         return ws
 
     def send_to_tester(self, data: str):
-        if self.test_ws:
+        if self.test_ws is not None:
             asyncio.ensure_future(self.test_ws.send_str(data))
             return True
         return False
 
     def _parse_incoming(self, data, raw):
         self._send_to_ws(data, raw)
+        if data[KEY_SUBJECT] == subj.TEST_FINISHED:
+            self._update_test_cache(data)
         if data[KEY_SUBJECT] == subj.TEST_WARMUP:
             self.test_cache = {}
         if data.get(KEY_CACHE):
             self.test_cache[data[KEY_SUBJECT]] = data
+
+    def _update_test_cache(self, data):
+        for key, value in data.items():
+            self.test_cache[subj.TEST_WARMUP][key] = value
 
     def _tester_disconnect(self):
         _data = self.test_cache.get(subj.TEST_WARMUP)
@@ -187,7 +198,7 @@ class Server:
             _data['status'] = Data('tester disconnected')
             self._send_to_ws(_data, json.dumps(_data, default=to_serializable))
 
-    def _send_json_to_clients(self, js):
+    def _send_json_to_clients(self, js: dict):
         for _ws in self.sensor_sockets:
             asyncio.ensure_future(_ws.send_json(js))
 
@@ -221,14 +232,19 @@ class Server:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-
+    parser = ArgumentParser()
+    parser.add_argument('--config_path',
+                        help="path where config files are located.",
+                        default=DEFAULT_CONFIG_PATH)
+    args = parser.parse_args()
+    _config_folder = args.config_path
     if sys.platform == 'win32':
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
     else:
         loop = asyncio.get_event_loop()
     server = Server(
-        config_folder='/home/pi/test_configs', #todo: put this in config file or something.
+        config_folder=_config_folder,
         loop_=loop)
     server.start_server()
     try:

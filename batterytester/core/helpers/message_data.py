@@ -7,9 +7,15 @@ from batterytester.core.helpers.helpers import get_current_timestamp
 # todo: all properties should go in a list when serializing to manage the order of appearance.
 from batterytester.core.helpers.message_subjects import RESULT_SUMMARY
 
+TYPE_STR = 'str'
+TYPE_TIME = 'time'
+TYPE_INT = 'int'
+TYPE_TIME_DELTA = 'time_delta'
+TYPE_JSON = 'json'
+
 
 class Data:
-    def __init__(self, value='unknown', type_='str'):
+    def __init__(self, value='unknown', type_=TYPE_STR):
         self.value = value
         self.type = type_
 
@@ -45,7 +51,7 @@ class FatalData(Message):
 class BaseTestData(Message):
     def __init__(self):
         super().__init__()
-        self.time_finished = Data("unknown")
+        self.time_finished = Data("unknown", type_=TYPE_TIME)
         self.status = Data("unknown")
 
 
@@ -53,15 +59,15 @@ class TestFinished(BaseTestData):
     def __init__(self):
         super().__init__()
         self.status = Data("finished")
-        self.time_finished = Data(get_current_timestamp())
+        self.time_finished = Data(get_current_timestamp(), type_=TYPE_TIME)
 
 
 class TestData(BaseTestData):
     def __init__(self, test_name, loop_count):
         super().__init__()
         self.test_name = Data(test_name)
-        self.started = Data(get_current_timestamp())
-        self.loop_count = Data(loop_count)
+        self.started = Data(get_current_timestamp(), type_=TYPE_TIME)
+        self.loop_count = Data(loop_count, type_=TYPE_INT)
         self.status = Data("running")
 
 
@@ -73,8 +79,8 @@ class AtomData(Message):
         self.loop = Data(loop)
         self.status = Data()
         self.status_updated = Data()
-        self.started = Data(get_current_timestamp())
-        self.duration = Data(duration)
+        self.started = Data(get_current_timestamp(), type_=TYPE_TIME)
+        self.duration = Data(duration, type_=TYPE_TIME_DELTA)
 
 
 class LoopData(BaseTestData):
@@ -87,7 +93,7 @@ class AtomStatus(Message):
     def __init__(self, status):
         super().__init__()
         self.status = Data(status)
-        self.status_updated = Data(get_current_timestamp())
+        self.status_updated = Data(get_current_timestamp(), type_=TYPE_TIME)
 
 
 class AtomResult(Message):

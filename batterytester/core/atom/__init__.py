@@ -8,7 +8,7 @@ from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
     PvApiResponseStatusError
 
 from batterytester.core.helpers.helpers import NonFatalTestFailException
-from batterytester.core.helpers.message_data import Data, AtomData
+from batterytester.core.helpers.message_data import Data, AtomData, TYPE_JSON
 
 SENSOR_FILE_FORMAT = 'loop_{}-idx_{}.json'
 LOGGING = logging.getLogger(__name__)
@@ -156,5 +156,5 @@ class ReferenceAtom(Atom):
 
     def get_atom_data(self):
         _data = super().get_atom_data()
-        _data.reference_data = Data(self.reference_data)
+        _data.reference_data = Data(self.reference_data,type_=TYPE_JSON)
         return _data

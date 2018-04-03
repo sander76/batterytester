@@ -6,10 +6,12 @@ import logging
 from json import JSONDecodeError
 
 import aiohttp
+from aiohttp import ClientConnectorError, ClientConnectionError
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.datahandlers import BaseDataHandler
-from batterytester.core.helpers.helpers import FatalTestFailException
+from batterytester.core.helpers.helpers import FatalTestFailException, \
+    TestSetupException
 from batterytester.core.helpers.message_data import to_serializable, \
     FatalData, TestFinished, TestData, AtomData, \
     AtomStatus, AtomResult, TestSummary, Message, LoopData
@@ -54,7 +56,8 @@ class Messaging(BaseDataHandler):
         )
 
     async def stop_data_handler(self):
-        await self.ws_connection.close()
+        if self.ws_connection:
+            await self.ws_connection.close()
 
     def loop_warmup(self, subject, data: LoopData):
         data.subj = subject
@@ -110,19 +113,25 @@ class Messaging(BaseDataHandler):
 
     async def setup(self, test_name, bus):
         self._bus = bus
+        _addr = 'http://{}:{}{}'.format(ATTR_MESSAGE_BUS_ADDRESS,
+                                        ATTR_MESSAGE_BUS_PORT,
+                                        URL_TEST)
         try:
             self.ws_connection = await asyncio.wait_for(
-                self._bus.session.ws_connect(
-                    'http://{}:{}{}'.format(ATTR_MESSAGE_BUS_ADDRESS,
-                                            ATTR_MESSAGE_BUS_PORT,
-                                            URL_TEST)),
+                self._bus.session.ws_connect(_addr),
                 timeout=10)
         except asyncio.TimeoutError:
-            raise FatalTestFailException(
-                "Error connecting to websocket server")
+            raise TestSetupException(
+                "Connection to the server timed out: {}".format(_addr))
+        except ClientConnectionError:
+            raise TestSetupException(
+                "Unable to connect to: {}".format(_addr)
+            )
         except Exception as err:
             LOGGER.error(err)
-            raise
+            raise TestSetupException(
+                "Unknown error occurred: {}".format(_addr)
+            )
         self._bus.add_async_task(self.ws_loop())
 
     async def parser(self, msg):
@@ -133,9 +142,8 @@ class Messaging(BaseDataHandler):
             LOGGER.error(err)
         else:
             if _type == MSG_TYPE_STOP_TEST:
-                #await self.ws_connection.close()
+                # await self.ws_connection.close()
                 raise FatalTestFailException("Stop test signal received.")
-
 
     async def ws_loop(self):
         try:

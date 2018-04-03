@@ -1,8 +1,10 @@
 batterytester.egg-info
 .idea
+.vscode
 env
 venv
 __pycache__
 summary-report.md
 .cache
 build
+reports

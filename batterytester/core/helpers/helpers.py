@@ -35,6 +35,10 @@ class FatalTestFailException(Exception):
     pass
 
 
+class TestSetupException(Exception):
+    pass
+
+
 def check_output_location(test_location):
     if os.path.exists(test_location):
         files = os.listdir(test_location)

@@ -66,7 +66,7 @@ class BaseTest:
         return self._active_atom
 
     def start_test(self):
-        """Starts the actual test."""
+        """Start the actual test."""
         LOGGER.debug("Starting the test.")
         try:
             self.bus._start_test(self.async_test(), self.test_name)
@@ -175,7 +175,8 @@ class BaseTest:
 
             # self.bus.notify(
             #     subj.TEST_FINISHED,
-            #     {ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()}})
+            #     {ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()}})+
+        #todo: move this to the bus where other exceptions are handled too.
         except FatalTestFailException as err:
             LOGGER.debug("FATAL ERROR: {}".format(err))
             self.bus.notify(subj.TEST_FATAL, FatalData(err))
