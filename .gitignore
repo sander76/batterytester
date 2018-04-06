@@ -8,3 +8,5 @@ summary-report.md
 .cache
 build
 reports
+dist
+.pytest_cache

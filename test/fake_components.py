@@ -9,7 +9,7 @@ from batterytester.core.sensor import Sensor
 from batterytester.core.sensor.connector import AsyncSensorConnector
 from batterytester.core.sensor.incoming_parser.volt_amps_ir_parser import \
     VoltAmpsIrParser
-from batterytester.main_test import BaseTest
+from batterytester.main_test.base_test import BaseTest
 
 
 class FakeActor(BaseActor):

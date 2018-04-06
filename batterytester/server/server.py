@@ -54,6 +54,13 @@ class Server:
         self.server = None
         self.test_cache = {}
         # self.test_summary = TestSummary()
+        self.test_process = None
+
+    @property
+    def test_is_running(self):
+        if self.test_process is None:
+            return False
+        return True
 
     def _add_routes(self):
         # User interface connects here.
@@ -83,28 +90,25 @@ class Server:
         data = await request.json()
         p = str(Path(self.config_folder).joinpath(data['test']))
 
-        asyncio.ensure_future(self.start_test_process(p))
-        # new_process = asyncio.ensure_future(asyncio.create_subprocess_exec(
-        #     sys.executable, p,
-        #     stdout=asyncio.subprocess.PIPE,
-        #     stdin=asyncio.subprocess.PIPE,
-        #     stderr=asyncio.subprocess.STDOUT, loop=self.loop
-        # ))
-        # new_process.add_done_callback(self.manage_process_callback)
+        if self.test_is_running:
+            return web.Response(
+                text="There is another test running. Stop that one first.")
+        else:
+            asyncio.ensure_future(self.start_test_process(p))
 
-        return web.Response()
+        return web.Response(text="Test has started.")
         # todo: handle feedback over websocket.
 
     async def start_test_process(self, p):
-
-        proc = await asyncio.create_subprocess_exec(
+        self.test_process = await asyncio.create_subprocess_exec(
             sys.executable, p,
             stdout=asyncio.subprocess.PIPE,
             stdin=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT, loop=self.loop
         )
-        log, other = await proc.communicate()
-        code = await proc.wait()
+        log, other = await self.test_process.communicate()
+        code = await self.test_process.wait()
+        self.test_process = None
         unicode_log = log.decode('utf-8')
         self._send_json_to_clients(
 

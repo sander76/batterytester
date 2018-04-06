@@ -1,11 +1,9 @@
 import asyncio
 import logging
-import typing
 from asyncio import CancelledError
 from threading import Thread
 
 import aiohttp
-import sys
 from async_timeout import timeout
 
 import batterytester.core.helpers.message_subjects as subj
@@ -101,8 +99,8 @@ class Bus:
 
     async def start_main_test(self, test_runner, test_name):
         await asyncio.gather(
-                *(_handler.setup(test_name, self) for _handler in
-                  self._data_handlers))
+            *(_handler.setup(test_name, self) for _handler in
+              self._data_handlers))
         await asyncio.gather(
             *(_actor.setup(test_name, self) for _actor in self.actors.values())
         )
@@ -110,7 +108,12 @@ class Bus:
             *(_sensor.setup(test_name, self) for _sensor in self.sensors)
         )
         self.test_runner_task = asyncio.ensure_future(test_runner)
+
         await self.test_runner_task
+
+        await asyncio.gather(
+            *(_actor.shutdown(self) for _actor in self.actors.values())
+        )
 
     def _start_test(self, test_runner, test_name):
         for callback in self.callbacks:
@@ -122,13 +125,17 @@ class Bus:
                 self.start_main_test(test_runner, test_name))
         except TestSetupException as err:
             LOGGER.error(err)
-            #sys.exit(1)
+            # sys.exit(1)
         except CancelledError:
             LOGGER.error("Main test loop cancelled.")
         except FatalTestFailException as err:
-            LOGGER.error(err)
+            LOGGER.error("FATAL ERROR: {}".format(err))
+            self.notify(subj.TEST_FATAL, FatalData(err))
         except KeyboardInterrupt:
             LOGGER.info("Test stopped due to keyboard interrupt.")
+        except Exception as err:
+            LOGGER.error(err)
+            self.notify(subj.TEST_FATAL, FatalData(err))
         finally:
 
             self.loop.run_until_complete(self.stop_test())

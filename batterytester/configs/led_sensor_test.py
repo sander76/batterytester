@@ -3,7 +3,7 @@ from batterytester.core.actors.power_view_actor import PowerViewActor
 from batterytester.core.atom import Atom
 from batterytester.core.datahandlers.messaging import Messaging
 from batterytester.core.sensor.led_gate_sensor import LedGateSensor
-from batterytester.main_test import BaseTest
+from batterytester.main_test.base_test import BaseTest
 
 test = BaseTest(test_name='base test', loop_count=2)
 

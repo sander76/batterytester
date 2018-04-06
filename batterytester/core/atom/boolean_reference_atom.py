@@ -1,6 +1,6 @@
 import logging
 
-from batterytester.core.atom import ReferenceAtom
+from batterytester.core.atom.reference_atom import ReferenceAtom
 from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_SUBJECT
 
 LOGGER = logging.getLogger(__name__)

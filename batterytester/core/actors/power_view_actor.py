@@ -1,3 +1,8 @@
+"""PowerView actor
+
+Emits API commands to a PowerView HUB.
+"""
+
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.helpers.powerview_util import ResourceNotFoundException
 from aiopvapi.resources.room import Room
@@ -52,7 +57,7 @@ class PowerViewActor(BaseActor):
         return result
 
     async def get_shades(self):
-        """Query the hub for a list and shade instances."""
+        """Query the hub for a list of shade instances."""
         self.shades = await self._shades_entry_point.get_instances()
 
     async def get_scene(self, scene_id, from_cache=True) -> Scene:
@@ -84,7 +89,14 @@ class PowerViewActor(BaseActor):
             'Room not found. Id: {}'.format(room_id))
 
     async def get_shade(self, shade_id, from_cache=True) -> BaseShade:
-        """Get a shade instance based on shade id."""
+        """Get a shade instance based on shade id.
+
+
+        :param shade_id: Shade id
+        :param from_cache: get the id from cache or request it from the hub.
+        :return: Shade instance
+        """
+
         if not from_cache:
             await self.get_shades()
         for _shade in self.shades:

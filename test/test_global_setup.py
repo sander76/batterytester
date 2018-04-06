@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from batterytester.core.atom import Atom, ReferenceAtom
+from batterytester.core.atom.atom import Atom
+from batterytester.core.atom.reference_atom import ReferenceAtom
 from batterytester.server.server import Server
 from test.fake_components import FakeActor, FakeBaseTest, FakeVoltsAmpsSensor
 
