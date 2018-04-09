@@ -17,7 +17,10 @@ def to_protocol(command, *args):
 
 
 class RelayActor(BaseActor):
+    """Relay actor connected to a serial port."""
+
     actor_type = ACTOR_TYPE_RELAY_ACTOR
+    """Identifier for this actor."""
 
     def __init__(self, serial_port, serial_speed=115200):
         self._port = serial_port
@@ -34,7 +37,9 @@ class RelayActor(BaseActor):
             self._serial.close()
 
     async def activate(self, *, pin: int, duration: int = 1):
-        """Activate a relay
+        """Activate a relay.
+
+        Can be called from within an Atom.
 
         :param pin: Arduino pin number
         :param duration: in seconds.

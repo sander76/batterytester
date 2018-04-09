@@ -94,9 +94,11 @@ class Server:
             return web.Response(
                 text="There is another test running. Stop that one first.")
         else:
-            asyncio.ensure_future(self.start_test_process(p))
+            pid = await self.start_test_process(p)
+            asyncio.ensure_future(self.manage_process())
 
-        return web.Response(text="Test has started.")
+        return web.Response(
+            text="Test has started. process id: {}".format(pid))
         # todo: handle feedback over websocket.
 
     async def start_test_process(self, p):
@@ -106,6 +108,9 @@ class Server:
             stdin=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT, loop=self.loop
         )
+        return self.test_process.pid
+
+    async def manage_process(self):
         log, other = await self.test_process.communicate()
         code = await self.test_process.wait()
         self.test_process = None
@@ -186,15 +191,15 @@ class Server:
     def _parse_incoming(self, data, raw):
         self._send_to_ws(data, raw)
         if data[KEY_SUBJECT] == subj.TEST_FINISHED:
-            self._update_test_cache(data)
+            self._update_test_cache(data, subj.TEST_WARMUP)
         if data[KEY_SUBJECT] == subj.TEST_WARMUP:
             self.test_cache = {}
         if data.get(KEY_CACHE):
             self.test_cache[data[KEY_SUBJECT]] = data
 
-    def _update_test_cache(self, data):
+    def _update_test_cache(self, data, cache_key):
         for key, value in data.items():
-            self.test_cache[subj.TEST_WARMUP][key] = value
+            self.test_cache[cache_key][key] = value
 
     def _tester_disconnect(self):
         _data = self.test_cache.get(subj.TEST_WARMUP)

@@ -1,7 +1,4 @@
-"""PowerView actor
-
-Emits API commands to a PowerView HUB.
-"""
+"""PowerView actor"""
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.helpers.powerview_util import ResourceNotFoundException
@@ -18,7 +15,10 @@ from batterytester.core.actors.base_actor import BaseActor, \
 
 
 class PowerViewActor(BaseActor):
+    """Emits API commands to a PowerView HUB."""
+
     actor_type = ACTOR_TYPE_POWER_VIEW
+    """Identifier for this actor."""
 
     def __init__(self, hub_ip):
         self.hub_ip = hub_ip

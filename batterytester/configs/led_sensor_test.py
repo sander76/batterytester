@@ -1,6 +1,8 @@
-from batterytester.core.actors.base_actor import ACTOR_TYPE_POWER_VIEW
+
+import batterytester.core.actors as actor
 from batterytester.core.actors.power_view_actor import PowerViewActor
-from batterytester.core.atom import Atom
+from batterytester.core.atom.atom import Atom
+
 from batterytester.core.datahandlers.messaging import Messaging
 from batterytester.core.sensor.led_gate_sensor import LedGateSensor
 from batterytester.main_test.base_test import BaseTest
@@ -25,7 +27,7 @@ test.add_data_handlers(
 
 
 def get_sequence(actors):
-    powerview = actors[ACTOR_TYPE_POWER_VIEW]  # type: PowerViewActor
+    powerview = actor.get_power_view_actor(actors)
 
     shade_id = 6705
     room_id = 45211

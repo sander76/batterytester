@@ -1,8 +1,18 @@
-.. automodule:: batterytester.core.actors.base_actor
-    :members:
-    :undoc-members:
+Actors
+======
 
-.. automodule:: batterytester.core.actors.power_view_actor
+.. automodule:: batterytester.core.actors
     :members:
-    :undoc-members:
 
+
+PowerView actor
+---------------
+
+.. autoclass:: batterytester.core.actors.power_view_actor.PowerViewActor
+    :members:
+
+Relay actor
+-----------
+
+.. autoclass:: batterytester.core.actors.relay_actor.RelayActor
+    :members:

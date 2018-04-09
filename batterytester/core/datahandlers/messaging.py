@@ -17,6 +17,7 @@ from batterytester.core.helpers.message_data import to_serializable, \
     AtomStatus, AtomResult, TestSummary, Message, LoopData
 from batterytester.server.server import URL_TEST, MSG_TYPE_STOP_TEST
 
+# todo: make these parameters in the init method.
 ATTR_MESSAGE_BUS_ADDRESS = '127.0.0.1'
 ATTR_MESSAGE_BUS_PORT = 8567
 

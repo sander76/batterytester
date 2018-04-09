@@ -1,6 +1,7 @@
 from batterytester.core.actors.base_actor import ACTOR_TYPE_RELAY_ACTOR
 from batterytester.core.actors.relay_actor import RelayActor
-from batterytester.core.atom import Atom
+from batterytester.core.atom.atom import Atom
+
 from batterytester.main_test.base_test import BaseTest
 
 test = BaseTest(test_name='relay test', loop_count=20)
@@ -20,8 +21,8 @@ test.add_data_handlers(
 def get_sequence(actors):
     relay = actors[ACTOR_TYPE_RELAY_ACTOR]  # type: RelayActor
 
-    actor1 = 2  # arduino pin 2
-    actor2 = 3  # arduino pin 2
+    actor1 = 4  # arduino pin 2
+    actor2 = 5  # arduino pin 2
 
     _val = (
         Atom(

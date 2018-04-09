@@ -25,7 +25,7 @@ let containerTestInfo = document.getElementById('test_info')
 let containerAtomInfo = document.getElementById('atom_info')
 let containerSummaryInfo = document.getElementById('summary_info')
 // area where process output is put in
-let processResult_ui = document.getElementById('process_result')
+let processResultUi = document.getElementById('process_result')
 
 var sensorInfo = new StatusElement(document.getElementById('sensor_data'));
 // var testInfo = new StatusElement(document.getElementById('test_data'));
@@ -165,6 +165,7 @@ function stopTest(e) {
 
 function startTest(e) {
     // get selected test.
+    processResultUi.value = ''
     var selected = allTests.value
     var xhr = new XMLHttpRequest()
     xhr.open('POST', baseUrl + '/test_start', true)
@@ -181,187 +182,187 @@ function startTest(e) {
     }
 }
 
-    function queryAllTests(e) {
-        ws.send(JSON.stringify({
-            'type': 'all_tests'
-        }))
+function queryAllTests(e) {
+    ws.send(JSON.stringify({
+        'type': 'all_tests'
+    }))
+}
+
+function StatusElement(parentDiv) {
+    this.dataContainer = {}
+    this.parentDiv = parentDiv
+}
+
+function plainInterpreter(value) {
+    return value['v']
+}
+
+function jsonInterpreter(value) {
+    return JSON.stringify(value['v'], undefined, 4)
+}
+
+function timeInterpreter(value) {
+    if (value.v === 'unknown') {
+        return value.v
     }
 
-    function StatusElement(parentDiv) {
-        this.dataContainer = {}
-        this.parentDiv = parentDiv
-    }
+    var date = new Date(value.v * 1000)
+    return date.toISOString()
+}
 
-    function plainInterpreter(value) {
-        return value['v']
-    }
+StatusElement.prototype.clear = function () {
+    this.dataContainer = {}
+    this.parentDiv.innerHTML = ''
+}
+StatusElement.prototype.parse = function (data) {
+    for (const [key, value] of Object.entries(data)) {
+        // Check if there already exists a PropertyElement.
+        var el = this.dataContainer[key]
 
-    function jsonInterpreter(value) {
-        return JSON.stringify(value['v'], undefined, 4)
-    }
-
-    function timeInterpreter(value) {
-        if (value.v === 'unknown') {
-            return value.v
-        }
-
-        var date = new Date(value.v * 1000)
-        return date.toISOString()
-    }
-
-    StatusElement.prototype.clear = function () {
-        this.dataContainer = {}
-        this.parentDiv.innerHTML = ''
-    }
-    StatusElement.prototype.parse = function (data) {
-        for (const [key, value] of Object.entries(data)) {
-            // Check if there already exists a PropertyElement.
-            var el = this.dataContainer[key]
-
-            // If PropertyElement does not exist. Create it.
-            if (el === undefined) {
-                var interpreter = plainInterpreter
-                var valueContainer = 'div'
-                if (key === 'reference_data' || key === 'failed_ids') {
-                    interpreter = jsonInterpreter
-                    valueContainer = 'pre'
-                } else if (key === 'started' || key === 'time_finished' || key === 'status_updated' || key ===
-                    't') {
-                    interpreter = timeInterpreter
-                }
-                el = new PropertyElement(key, interpreter, valueContainer)
-                this.dataContainer[key] = el
-                this.parentDiv.appendChild(el.container)
+        // If PropertyElement does not exist. Create it.
+        if (el === undefined) {
+            var interpreter = plainInterpreter
+            var valueContainer = 'div'
+            if (key === 'reference_data' || key === 'failed_ids') {
+                interpreter = jsonInterpreter
+                valueContainer = 'pre'
+            } else if (key === 'started' || key === 'time_finished' || key === 'status_updated' || key ===
+                't') {
+                interpreter = timeInterpreter
             }
-            el.update(value)
+            el = new PropertyElement(key, interpreter, valueContainer)
+            this.dataContainer[key] = el
+            this.parentDiv.appendChild(el.container)
         }
+        el.update(value)
     }
+}
 
-    function PropertyElement(key, interpreter, valueContainer) {
-        // A property value container.
-        this.prop = document.createElement('div')
-        this.prop.innerHTML = key
-        this.prop.className = 'sensor_prop'
-        this.val = document.createElement(valueContainer)
-        this.val.className = 'sensor_val'
-        this.container = document.createElement('div')
-        this.container.className = 'sensor_container'
-        this.container.appendChild(this.prop)
-        this.container.appendChild(this.val)
-        this.interpreter = interpreter
+function PropertyElement(key, interpreter, valueContainer) {
+    // A property value container.
+    this.prop = document.createElement('div')
+    this.prop.innerHTML = key
+    this.prop.className = 'sensor_prop'
+    this.val = document.createElement(valueContainer)
+    this.val.className = 'sensor_val'
+    this.container = document.createElement('div')
+    this.container.className = 'sensor_container'
+    this.container.appendChild(this.prop)
+    this.container.appendChild(this.val)
+    this.interpreter = interpreter
+}
+
+PropertyElement.prototype.update = function (value) {
+    this.val.innerHTML = this.interpreter(value)
+    // if (key === 'reference_data' || key === 'failed_ids') {
+    //     var pre = document.createElement('pre');
+    //     pre.innerHTML = JSON.stringify(value['v'], undefined, 4);
+    //     this.val.appendChild(pre);
+    // } else {
+    //     this.val.innerHTML = value['v'];
+    // }
+    // this.prop.innerHTML = key;
+}
+
+function parseAllTests(data) {
+    allTests.options.length = 0
+    var tests = data['data']
+    for (var i = 0; i < tests.length; i++) {
+        var option = document.createElement('option')
+        option.value = option.text = tests[i]
+        allTests.add(option)
     }
+}
 
-    PropertyElement.prototype.update = function (value) {
-        this.val.innerHTML = this.interpreter(value)
-        // if (key === 'reference_data' || key === 'failed_ids') {
-        //     var pre = document.createElement('pre');
-        //     pre.innerHTML = JSON.stringify(value['v'], undefined, 4);
-        //     this.val.appendChild(pre);
-        // } else {
-        //     this.val.innerHTML = value['v'];
-        // }
-        // this.prop.innerHTML = key;
-    }
+function parseProcessResult(data) {
+    processResultUi.value = data.data.log
+}
 
-    function parseAllTests(data) {
-        allTests.options.length = 0
-        var tests = data['data']
-        for (var i = 0; i < tests.length; i++) {
-            var option = document.createElement('option')
-            option.value = option.text = tests[i]
-            allTests.add(option)
-        }
-    }
-
-    function parseProcessResult(data) {
-        processResult_ui.value = data.data.log
-    }
-
-    function objectIterator(container, data, parser) {
-        // Iterates through a list of nodes which are used to populate
-        // test information.
-        Object.entries(data).forEach(
-            function ([key, value], other) {
-                var _node = container.querySelector('.' + key)
-                if (_node !== null) {
-                    setKnown(_node)
-                    console.log(_node)
-                    parser(key, value, _node)
-                }
+function objectIterator(container, data, parser) {
+    // Iterates through a list of nodes which are used to populate
+    // test information.
+    Object.entries(data).forEach(
+        function ([key, value], other) {
+            var _node = container.querySelector('.' + key)
+            if (_node !== null) {
+                setKnown(_node)
+                console.log(_node)
+                parser(key, value, _node)
             }
-        )
-    }
-
-    function parseValueType(value) {
-        var _val = value.v
-        switch (value.type) {
-            case 'time':
-                _val = timeInterpreter(value)
-                break
-            case 'json':
-                _val = jsonInterpreter(value)
         }
-        return _val
-    }
+    )
+}
 
-    function parseTestInfo(data) {
-        function parser(key, value, _node) {
-            if (key === 'status') {
-                if (value.v === statusTestRunning) {
-                    replaceClass(_node, ['bg-error'], 'bg-success')
-                } else if (value.v === statusTestStopped) {
-                    replaceClass(_node, ['bg-success'], 'bg-error')
-                }
+function parseValueType(value) {
+    var _val = value.v
+    switch (value.type) {
+        case 'time':
+            _val = timeInterpreter(value)
+            break
+        case 'json':
+            _val = jsonInterpreter(value)
+    }
+    return _val
+}
+
+function parseTestInfo(data) {
+    function parser(key, value, _node) {
+        if (key === 'status') {
+            if (value.v === statusTestRunning) {
+                replaceClass(_node, ['bg-error'], 'bg-success')
+            } else if (value.v === statusTestStopped) {
+                replaceClass(_node, ['bg-success'], 'bg-error')
             }
-            _node.innerHTML = parseValueType(value)
         }
-        objectIterator(containerTestInfo, data, parser)
+        _node.innerHTML = parseValueType(value)
     }
+    objectIterator(containerTestInfo, data, parser)
+}
 
-    function parseAtomInfo(data) {
-        function parser(key, value, _node) {
-            _node.innerHTML = parseValueType(value)
-        }
-        objectIterator(containerAtomInfo, data, parser)
+function parseAtomInfo(data) {
+    function parser(key, value, _node) {
+        _node.innerHTML = parseValueType(value)
     }
+    objectIterator(containerAtomInfo, data, parser)
+}
 
-    function parseSummaryInfo(data) {
-        function parser(key, value, _node) {
-            _node.innerHTML = parseValueType(value)
-        }
-        objectIterator(containerSummaryInfo, data, parser)
+function parseSummaryInfo(data) {
+    function parser(key, value, _node) {
+        _node.innerHTML = parseValueType(value)
     }
+    objectIterator(containerSummaryInfo, data, parser)
+}
 
-    function parseSensor(data) {
-        let subj = data['subj']
-        delete data.subj
-        delete data.cache
-        console.log(subj, data)
-        if (subj === 'sensor_data') {
-            // Sensor data
-            sensorInfo.parse(data)
-        } else if (subj === 'atom_warmup') {
-            // Atom data.
-            parseAtomInfo(data)
-            // atomInfo.parse(data)
-        } else if (subj === 'test_warmup') {
-            this.clearData()
-            // Test data.
-            parseTestInfo(data)
-        } else if (subj === 'atom_status') {
-            parseAtomInfo(data)
-            // atomInfo.parse(data)
-        } else if (subj === 'result_summary') {
-            parseSummaryInfo(data)
-            atomSummary.parse(data)
-        } else if (subj === 'test_finished') {
-            parseTestInfo(data)
-            // testInfo.parse(data);
-        } else if (subj === 'all_tests') {
-            parseAllTests(data)
-        } else if (subj === 'process_result') {
-            parseProcessResult(data)
-        }
+function parseSensor(data) {
+    let subj = data['subj']
+    delete data.subj
+    delete data.cache
+    console.log(subj, data)
+    if (subj === 'sensor_data') {
+        // Sensor data
+        sensorInfo.parse(data)
+    } else if (subj === 'atom_warmup') {
+        // Atom data.
+        parseAtomInfo(data)
+        // atomInfo.parse(data)
+    } else if (subj === 'test_warmup') {
+        this.clearData()
+        // Test data.
+        parseTestInfo(data)
+    } else if (subj === 'atom_status') {
+        parseAtomInfo(data)
+        // atomInfo.parse(data)
+    } else if (subj === 'result_summary') {
+        parseSummaryInfo(data)
+        atomSummary.parse(data)
+    } else if (subj === 'test_finished') {
+        parseTestInfo(data)
+        // testInfo.parse(data);
+    } else if (subj === 'all_tests') {
+        parseAllTests(data)
+    } else if (subj === 'process_result') {
+        parseProcessResult(data)
     }
+}
 
-    connect()
+connect()
