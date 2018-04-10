@@ -16,6 +16,7 @@ ATTR_RESULT = 'result'
 
 ATTR_VALUES = 'v'
 ATTR_TIMESTAMP = 't'
+ATTR_SENSOR_NAME = 'n'
 
 KEY_ATOM_LOOP = 'loop'
 KEY_ATOM_INDEX = 'idx'

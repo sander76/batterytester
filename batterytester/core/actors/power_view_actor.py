@@ -18,7 +18,6 @@ class PowerViewActor(BaseActor):
     """Emits API commands to a PowerView HUB."""
 
     actor_type = ACTOR_TYPE_POWER_VIEW
-    """Identifier for this actor."""
 
     def __init__(self, hub_ip):
         self.hub_ip = hub_ip

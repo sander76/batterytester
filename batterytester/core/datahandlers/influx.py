@@ -3,12 +3,13 @@ import logging
 
 import async_timeout
 from aiohttp.client_exceptions import ClientError
+from aiopvapi.helpers.constants import ATTR_NAME
 from slugify import slugify
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.datahandlers import BaseDataHandler
 from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_VALUE, \
-    KEY_SUBJECT
+    ATTR_VALUES
 from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.helpers.message_data import AtomData
 
@@ -21,9 +22,8 @@ def line_protocol_fields(measurement: dict):
 
     incoming is a dict with {KEY:{KEY_VALUE:VALUE}} structure.
     """
-    return ','.join("{}={}".format(key, value[KEY_VALUE]) for key, value in
-                    measurement.items() if
-                    key != ATTR_TIMESTAMP and key != KEY_SUBJECT)
+    return ','.join("{}={}".format(
+        measurement[ATTR_NAME], measurement[ATTR_VALUES][ATTR_VALUES]))
 
 
 def line_protocol_tags(tags: dict):
@@ -120,7 +120,7 @@ class Influx(BaseDataHandler):
         _time_stamp = get_time_stamp(data)
         _fields = line_protocol_fields(data)
         # making a shallow copy to keep the test loop and index intact.
-        #todo: don't make a copy. Just immediately make it a lineprotocol.
+        # todo: don't make a copy. Just immediately make it a lineprotocol.
         _tags = line_protocol_tags(
             dict(self._tags))  # Shallow copy of the current tags.
         self.data.append(

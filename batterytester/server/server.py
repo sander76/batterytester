@@ -14,6 +14,7 @@ import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.helpers.constants import KEY_SUBJECT, KEY_CACHE
 from batterytester.core.helpers.message_data import to_serializable, \
     Data
+from batterytester.server.logger import setup_logging
 
 ATTR_MESSAGE_BUS_ADDRESS = '0.0.0.0'
 ATTR_MESSAGE_BUS_PORT = 8567
@@ -111,15 +112,19 @@ class Server:
         return self.test_process.pid
 
     async def manage_process(self):
-        log, other = await self.test_process.communicate()
-        code = await self.test_process.wait()
-        self.test_process = None
-        unicode_log = log.decode('utf-8')
-        self._send_json_to_clients(
+        try:
+            log, other = await self.test_process.communicate()
+            code = await self.test_process.wait()
 
-            {
-                KEY_SUBJECT: "process_result",
-                "data": {"log": unicode_log, "return_code": code}})
+            unicode_log = log.decode('utf-8')
+            self._send_json_to_clients(
+                {
+                    KEY_SUBJECT: "process_result",
+                    "data": {"log": unicode_log, "return_code": code}})
+        except Exception as err:
+            LOGGER.exception(err)
+        finally:
+            self.test_process = None
 
     async def test_stop_handler(self, request):
         data = await request.text()
@@ -135,7 +140,7 @@ class Server:
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     LOGGER.debug(msg.data)
                     _data = json.loads(msg.data)
-                    self._parse_incoming(_data, msg.data)
+                    self._parse_incoming_test_data(_data, msg.data)
                 else:
                     await self.test_ws.close()
         except Exception as err:
@@ -188,10 +193,12 @@ class Server:
             return True
         return False
 
-    def _parse_incoming(self, data, raw):
+    def _parse_incoming_test_data(self, data, raw):
         self._send_to_ws(data, raw)
-        if data[KEY_SUBJECT] == subj.TEST_FINISHED:
+        if (data[KEY_SUBJECT] == subj.TEST_FINISHED or
+                data[KEY_SUBJECT] == subj.TEST_FATAL):
             self._update_test_cache(data, subj.TEST_WARMUP)
+
         if data[KEY_SUBJECT] == subj.TEST_WARMUP:
             self.test_cache = {}
         if data.get(KEY_CACHE):
@@ -245,8 +252,16 @@ if __name__ == '__main__':
     parser.add_argument('--config_path',
                         help="path where config files are located.",
                         default=DEFAULT_CONFIG_PATH)
+    parser.add_argument('--log_folder',
+                        help="log file location",
+                        )
+
     args = parser.parse_args()
     _config_folder = args.config_path
+    _log_folder = args.log_folder
+
+    setup_logging(LOGGER, _log_folder)
+
     if sys.platform == 'win32':
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)

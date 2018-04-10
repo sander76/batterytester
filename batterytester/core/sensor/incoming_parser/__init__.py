@@ -6,15 +6,16 @@ from typing import Sequence, Generator
 
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.constants import KEY_VALUE, ATTR_TIMESTAMP, \
-    KEY_SUBJECT
+    KEY_SUBJECT, ATTR_SENSOR_NAME
 from batterytester.core.helpers.helpers import FatalTestFailException, \
     get_current_timestamp
 from batterytester.core.helpers.message_subjects import SENSOR_DATA
 
 
 def get_measurement(sensor_name, value) -> dict:
-    return {sensor_name: {
-        KEY_VALUE: value},
+    return {
+        ATTR_SENSOR_NAME: sensor_name,
+        KEY_VALUE: {KEY_VALUE: value},
         ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
         KEY_SUBJECT: SENSOR_DATA}
 

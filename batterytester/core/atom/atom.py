@@ -12,6 +12,8 @@ from batterytester.core.helpers.message_data import AtomData
 LOGGING = logging.getLogger(__name__)
 
 
+# todo: merge all atoms into one.
+
 class Atom:
     """Basic test atom."""
 

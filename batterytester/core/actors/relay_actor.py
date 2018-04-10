@@ -39,11 +39,12 @@ class RelayActor(BaseActor):
     async def activate(self, *, pin: int, duration: int = 1):
         """Activate a relay.
 
-        Can be called from within an Atom.
+        *Actor command*
 
         :param pin: Arduino pin number
         :param duration: in seconds.
         :return:
         """
+        
         _up = to_protocol('a', pin, duration)
         self._serial.write(_up.encode('utf-8'))

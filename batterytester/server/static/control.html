@@ -60,10 +60,10 @@
                     <div class="panel-header">
                         <h5>Test control</h5>
                         <div class="columns">
-                            <div class="column col-md-12 col-6">
+                            <div class="column col-md-12 col-8">
                                 <select id='all_tests_list' class="form-select"></select>
                             </div>
-                            <div class="column col-md-12 col-6">
+                            <div class="column col-md-12 col-4">
                                 <button type="button" class='btn btn-block' id="all_tests">Refresh</button>
                             </div>
                         </div>
@@ -91,17 +91,26 @@
                     <div class="columns">
                         <div class="column col-6">Test name</div>
                         <div class="column col-6">
-                            <span class='test_name value'>no name</span>
+                            <div class='test_name value'>no name</div>
                         </div>
 
                     </div>
                     <div class="columns">
                         <div class="column col-6">Status</div>
-                        <div class="column col-6 status value">
-                            no status
+                        <div class="column col-6">
+                            <div class="status value">unknown</div>
+                            
                         </div>
                     </div>
+                    <div class="columns">
+                        <div class="column col-6">Reason</div>
+                        <div class="column col-6">
+                            <span class="reason value">
 
+                            </span>
+                        </div>
+
+                    </div>
                     <div class="columns">
                         <div class="column col-6">Total loop count</div>
                         <div class="column col-6">
@@ -173,7 +182,7 @@
                 <div id="sensor_info">
 
                 </div>
-                <div id="sensor_data"></div>
+                
                 <h2>SUMMARY</h2>
                 <div id="summary_info">
                     <div class="columns">

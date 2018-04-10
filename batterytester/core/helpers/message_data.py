@@ -42,12 +42,6 @@ def message_serializable(val):
     return vars(val)
 
 
-class FatalData(Message):
-    def __init__(self, reason):
-        super().__init__()
-        self.reason = Data(value=reason)
-
-
 class BaseTestData(Message):
     def __init__(self):
         super().__init__()
@@ -60,6 +54,13 @@ class TestFinished(BaseTestData):
         super().__init__()
         self.status = Data("finished")
         self.time_finished = Data(get_current_timestamp(), type_=TYPE_TIME)
+        self.reason = Data(value='End of test reached.')
+
+
+class FatalData(TestFinished):
+    def __init__(self, reason):
+        super().__init__()
+        self.reason = Data(value=reason)
 
 
 class TestData(BaseTestData):
@@ -107,9 +108,9 @@ class TestSummary(Message):
     def __init__(self):
         super().__init__()
         self.subj = RESULT_SUMMARY
-        self.passed = Data(0)
-        self.failed = Data(0)
-        self.failed_ids = Data([])
+        self.passed = Data(0, type_=TYPE_INT)
+        self.failed = Data(0, type_=TYPE_INT)
+        self.failed_ids = Data([], type_=TYPE_JSON)
 
     def atom_passed(self):
         self.passed.value += 1

@@ -24,13 +24,14 @@ let allTests = document.getElementById('all_tests_list')
 let containerTestInfo = document.getElementById('test_info')
 let containerAtomInfo = document.getElementById('atom_info')
 let containerSummaryInfo = document.getElementById('summary_info')
+let containerSensorInfo = document.getElementById('sensor_info')
 // area where process output is put in
 let processResultUi = document.getElementById('process_result')
 
-var sensorInfo = new StatusElement(document.getElementById('sensor_data'));
+// var sensorInfo = new StatusElement(document.getElementById('sensor_data'))
 // var testInfo = new StatusElement(document.getElementById('test_data'));
 // var atomInfo = new StatusElement(document.getElementById('atom_data'));
-var atomSummary = new StatusElement(document.getElementById('summary'))
+// var atomSummary = new StatusElement(document.getElementById('summary'))
 
 const host = window.location.host
 const wsHost = `ws://${host}/ws`
@@ -80,13 +81,10 @@ function setConnectionStatus(statusKey) {
 }
 
 function clearData() {
-    // testInfo.clear();
     clearValues(containerTestInfo)
     clearValues(containerAtomInfo)
     clearValues(containerSummaryInfo)
-    // atomInfo.clear()
-    atomSummary.clear()
-    sensorInfo.clear()
+    clearValues(containerSensorInfo)
 }
 
 function clearValues(parent) {
@@ -133,6 +131,7 @@ function init() {
     ws.send(JSON.stringify({
         'type': 'test'
     })) // Get cached test data.
+    queryAllTests()
 }
 
 function connect(e) {
@@ -177,7 +176,7 @@ function startTest(e) {
     xhr.onreadystatechange = function () {
         if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
             var msg = (xhr.responseText)
-            alert(msg)
+            processResultUi.value = msg
         }
     }
 }
@@ -188,81 +187,83 @@ function queryAllTests(e) {
     }))
 }
 
-function StatusElement(parentDiv) {
-    this.dataContainer = {}
-    this.parentDiv = parentDiv
-}
+// function StatusElement(parentDiv) {
+//     this.dataContainer = {}
+//     this.parentDiv = parentDiv
+// }
 
-function plainInterpreter(value) {
-    return value['v']
-}
+// function plainInterpreter(value) {
+//     return value
+// }
 
 function jsonInterpreter(value) {
-    return JSON.stringify(value['v'], undefined, 4)
+    return JSON.stringify(value, undefined, 4)
 }
 
 function timeInterpreter(value) {
-    if (value.v === 'unknown') {
-        return value.v
+    if (value === 'unknown') {
+        return value
     }
 
-    var date = new Date(value.v * 1000)
-    return date.toISOString()
+    var date = new Date(value * 1000)
+    // return date.toISOString()
+
+    return [date.getHours(), date.getMinutes(), date.getSeconds()].join(':') + ' (' + date.toDateString() + ')'
 }
 
-StatusElement.prototype.clear = function () {
-    this.dataContainer = {}
-    this.parentDiv.innerHTML = ''
-}
-StatusElement.prototype.parse = function (data) {
-    for (const [key, value] of Object.entries(data)) {
-        // Check if there already exists a PropertyElement.
-        var el = this.dataContainer[key]
+// StatusElement.prototype.clear = function () {
+//     this.dataContainer = {}
+//     this.parentDiv.innerHTML = ''
+// }
+// StatusElement.prototype.parse = function (data) {
+//     for (const [key, value] of Object.entries(data)) {
+//         // Check if there already exists a PropertyElement.
+//         var el = this.dataContainer[key]
 
-        // If PropertyElement does not exist. Create it.
-        if (el === undefined) {
-            var interpreter = plainInterpreter
-            var valueContainer = 'div'
-            if (key === 'reference_data' || key === 'failed_ids') {
-                interpreter = jsonInterpreter
-                valueContainer = 'pre'
-            } else if (key === 'started' || key === 'time_finished' || key === 'status_updated' || key ===
-                't') {
-                interpreter = timeInterpreter
-            }
-            el = new PropertyElement(key, interpreter, valueContainer)
-            this.dataContainer[key] = el
-            this.parentDiv.appendChild(el.container)
-        }
-        el.update(value)
-    }
-}
+//         // If PropertyElement does not exist. Create it.
+//         if (el === undefined) {
+//             var interpreter = plainInterpreter
+//             var valueContainer = 'div'
+//             if (key === 'reference_data' || key === 'failed_ids') {
+//                 interpreter = jsonInterpreter
+//                 valueContainer = 'pre'
+//             } else if (key === 'started' || key === 'time_finished' || key === 'status_updated' || key ===
+//                 't') {
+//                 interpreter = timeInterpreter
+//             }
+//             el = new PropertyElement(key, interpreter, valueContainer)
+//             this.dataContainer[key] = el
+//             this.parentDiv.appendChild(el.container)
+//         }
+//         el.update(value)
+//     }
+// }
 
-function PropertyElement(key, interpreter, valueContainer) {
-    // A property value container.
-    this.prop = document.createElement('div')
-    this.prop.innerHTML = key
-    this.prop.className = 'sensor_prop'
-    this.val = document.createElement(valueContainer)
-    this.val.className = 'sensor_val'
-    this.container = document.createElement('div')
-    this.container.className = 'sensor_container'
-    this.container.appendChild(this.prop)
-    this.container.appendChild(this.val)
-    this.interpreter = interpreter
-}
+// function PropertyElement(key, interpreter, valueContainer) {
+//     // A property value container.
+//     this.prop = document.createElement('div')
+//     this.prop.innerHTML = key
+//     this.prop.className = 'sensor_prop'
+//     this.val = document.createElement(valueContainer)
+//     this.val.className = 'sensor_val'
+//     this.container = document.createElement('div')
+//     this.container.className = 'sensor_container'
+//     this.container.appendChild(this.prop)
+//     this.container.appendChild(this.val)
+//     this.interpreter = interpreter
+// }
 
-PropertyElement.prototype.update = function (value) {
-    this.val.innerHTML = this.interpreter(value)
-    // if (key === 'reference_data' || key === 'failed_ids') {
-    //     var pre = document.createElement('pre');
-    //     pre.innerHTML = JSON.stringify(value['v'], undefined, 4);
-    //     this.val.appendChild(pre);
-    // } else {
-    //     this.val.innerHTML = value['v'];
-    // }
-    // this.prop.innerHTML = key;
-}
+// PropertyElement.prototype.update = function (value) {
+//     this.val.innerHTML = this.interpreter(value)
+//     // if (key === 'reference_data' || key === 'failed_ids') {
+//     //     var pre = document.createElement('pre');
+//     //     pre.innerHTML = JSON.stringify(value['v'], undefined, 4);
+//     //     this.val.appendChild(pre);
+//     // } else {
+//     //     this.val.innerHTML = value['v'];
+//     // }
+//     // this.prop.innerHTML = key;
+// }
 
 function parseAllTests(data) {
     allTests.options.length = 0
@@ -275,12 +276,16 @@ function parseAllTests(data) {
 }
 
 function parseProcessResult(data) {
-    processResultUi.value = data.data.log
+    var _current = processResultUi.value
+    _current = _current + '\n' + data.data.log
+    processResultUi.value = _current
 }
 
 function objectIterator(container, data, parser) {
     // Iterates through a list of nodes which are used to populate
     // test information.
+    // We assume per container there is only one class with a specific key.
+    // thus using container as a namespace.
     Object.entries(data).forEach(
         function ([key, value], other) {
             var _node = container.querySelector('.' + key)
@@ -293,14 +298,28 @@ function objectIterator(container, data, parser) {
     )
 }
 
+function parseSensorData(data) {
+    var _sensorEntry = containerSensorInfo.querySelector('.' + data['n'])
+    if (_sensorEntry === null) {
+        // sensor dom does not exist yet.
+        _sensorEntry = createSensorDataContainer(data)
+        containerSensorInfo.appendChild(_sensorEntry)
+    }
+    // sensor data is always a dict.
+    var valEntry = _sensorEntry.querySelector('.value')
+    valEntry.innerHTML = jsonInterpreter(data['v']['v'])
+    var timeEntry = _sensorEntry.querySelector('.time')
+    timeEntry.innerHTML = timeInterpreter(data['t']['v'])
+}
+
 function parseValueType(value) {
     var _val = value.v
     switch (value.type) {
         case 'time':
-            _val = timeInterpreter(value)
+            _val = timeInterpreter(_val)
             break
         case 'json':
-            _val = jsonInterpreter(value)
+            _val = jsonInterpreter(_val)
     }
     return _val
 }
@@ -333,6 +352,28 @@ function parseSummaryInfo(data) {
     objectIterator(containerSummaryInfo, data, parser)
 }
 
+function createSensorDataContainer(data) {
+    function createValueContainer(colwidth, className) {
+        var _main = document.createElement('div')
+        _main.className = ('column ' + colwidth)
+        var _val = document.createElement('div')
+        _val.className = className
+        _main.appendChild(_val)
+        return _main
+    }
+    var _main = document.createElement('div')
+    _main.className = 'columns ' + data['n']
+    var _prop = document.createElement('div')
+    _prop.className = 'column col-4'
+    _prop.innerHTML = data['n']
+    _main.appendChild(_prop)
+
+    _main.appendChild(createValueContainer('col-4', 'value'))
+    _main.appendChild(createValueContainer('col-4', 'time'))
+
+    return _main
+}
+
 function parseSensor(data) {
     let subj = data['subj']
     delete data.subj
@@ -340,7 +381,7 @@ function parseSensor(data) {
     console.log(subj, data)
     if (subj === 'sensor_data') {
         // Sensor data
-        sensorInfo.parse(data)
+        parseSensorData(data)
     } else if (subj === 'atom_warmup') {
         // Atom data.
         parseAtomInfo(data)
@@ -354,7 +395,6 @@ function parseSensor(data) {
         // atomInfo.parse(data)
     } else if (subj === 'result_summary') {
         parseSummaryInfo(data)
-        atomSummary.parse(data)
     } else if (subj === 'test_finished') {
         parseTestInfo(data)
         // testInfo.parse(data);
@@ -362,6 +402,8 @@ function parseSensor(data) {
         parseAllTests(data)
     } else if (subj === 'process_result') {
         parseProcessResult(data)
+    } else if (subj === 'test_fatal') {
+        parseTestInfo(data)
     }
 }
 
