@@ -36,6 +36,9 @@ ATTR_FAILED_IDS = 'failed_ids'
 
 
 class Messaging(BaseDataHandler):
+    """Websocket messaging.
+
+    Needs a running websocket server to connect and interact with."""
     def __init__(self):
         super().__init__()
         self.ws_connection = None

@@ -65,6 +65,7 @@ def to_nanoseconds(timestamp):
 # todo: write tests.
 
 class Influx(BaseDataHandler):
+    """Writes data to an InfluxDB database."""
     def __init__(
             self, host=None, database='menc', buffer_size=5):
         """

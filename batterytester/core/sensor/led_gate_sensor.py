@@ -12,7 +12,26 @@ from batterytester.core.sensor.incoming_parser.boolean_parser import \
 
 
 class LedGateSensor(Sensor):
+    """Led gate sensor. Detects whether ledgate sensor is opened (True) or closed (False)
+
+    Expecting incoming bytes in form of "a:0" or "a:1"
+    a is the sensor name. 0 or 1 is the boolean value.
+    Incoming sensor data is parsed and emitted in the form of:
+
+
+
+    {'sensor_name':{'v':True/False}}
+
+    """
+
     def __init__(self, *, serial_port, serial_speed, sensor_name=None):
+        """Initialize the ledgate sensor
+
+        :param serial_port: Serial port where sensor is connected to.
+        :param serial_speed: Serial port speed.
+        :param sensor_name: Optional. Add an extra name to prevent duplicates
+            or for better identification.
+        """
         super().__init__(sensor_name=sensor_name)
         self.serialport = serial_port
         self.serialspeed = serial_speed

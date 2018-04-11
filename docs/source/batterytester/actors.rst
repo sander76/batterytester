@@ -1,9 +1,16 @@
+
+
 Actors
 ======
 
 .. automodule:: batterytester.core.actors
     :members:
 
+Example actor
+-------------
+
+.. autoclass:: batterytester.core.actors.example_actor.ExampleActor
+    :members:
 
 PowerView actor
 ---------------

@@ -1,3 +1,7 @@
+"""Datahandlers subscribe to specific events emitted by the test and handle
+the vent information by further processing it into database,
+report data etc."""
+
 from abc import ABCMeta, abstractmethod
 
 from batterytester.core.bus import Bus

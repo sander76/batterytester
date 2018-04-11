@@ -25,7 +25,15 @@ class VoltAmpsIrParser(IncomingParser):
             VoltAmpsIrParser.sensor_name)
 
     def _interpret(self, measurement):
-        """Interpret incoming data."""
+        """Interpret incoming data.
+
+        Incoming data as described above.
+        Parses to: {volts: <value>,amps: <value>}
+
+        Finally data is emitted in form of:
+
+        val = get_measurement(self.sensor_name,{volts: 1,amps: 2})
+        """
         _line = measurement.split(b';')
         try:
             data = {}

@@ -131,6 +131,7 @@ class MarkDownReport(BaseDataHandler):
 
 
 class Report(MarkDownReport):
+    """A markdown report data handler."""
 
     def get_subscriptions(self):
         """Returns a tuple of topics to listen for and
