@@ -1,7 +1,7 @@
 import logging
 
 from batterytester.core.bus import Bus
-from batterytester.core.helpers.helpers import TestFailException
+from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.sensor.incoming_parser import IncomingParserChunked
 
 _LOGGING = logging.getLogger(__name__)
@@ -42,13 +42,13 @@ class SequenceDataParser(IncomingParserChunked):
                     # if not equal the sequence does not match. So the
                     # collector missed a sequence.
                     if self._seq != self._prev_seq:
-                        raise TestFailException(
+                        raise FatalTestFailException(
                             'Sequence does not match {} vs {}'.format(
                                 self._seq, self._prev_seq)
                         )
                 self._prev_seq = current
             else:
-                raise TestFailException(
+                raise FatalTestFailException(
                     'incorrect sensor sequence previous:{} current:{}'.format(
                         self._prev_seq, current))
 

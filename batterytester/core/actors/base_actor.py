@@ -9,6 +9,7 @@ ACTOR_TYPE_POWER_VIEW = 'powerview_actor'
 ACTOR_TYPE_RELAY_ACTOR = 'relay_actor'
 """Relay actor."""
 
+
 class BaseActor(metaclass=ABCMeta):
     actor_type = ACTOR_TYPE_BASE
 

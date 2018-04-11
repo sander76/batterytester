@@ -37,12 +37,12 @@ def fake_sensor():
 
 @pytest.fixture
 def fake_influx():
-    influx = Influx('127.0.0.1', buffer_size=5)
-    influx._send = AsyncMock()
-    return influx
+    _influx = Influx('127.0.0.1', buffer_size=5)
+    _influx._send = AsyncMock()
+    return _influx
+
 
 @pytest.fixture
 def fake_messaging():
     fake_ms = Messaging()
     return fake_ms
-

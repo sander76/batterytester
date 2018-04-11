@@ -31,6 +31,7 @@ async def ws_client():
 
 async def server_test(loop, messager):
     # messager = Messaging(loop)
+
     await messager.start()
     sender = loop.create_task(send_sensor_data(messager))
     res = await ws_client()
@@ -43,7 +44,7 @@ async def server_test(loop, messager):
 
 def test_receive():
     loop = asyncio.get_event_loop()
-    messager = Messaging(loop)
+    messager = Messaging()
 
     val = loop.run_until_complete(server_test(loop, messager))
     assert json.loads(val.data) == {ATTR_VALUES: {'a': 1}}

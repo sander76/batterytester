@@ -1,6 +1,7 @@
 import pytest
 
-from batterytester.core.helpers.constants import KEY_SUBJECT, ATTR_TIMESTAMP
+from batterytester.core.helpers.constants import KEY_SUBJECT, ATTR_TIMESTAMP, \
+    ATTR_SENSOR_NAME, ATTR_VALUES
 from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.sensor.incoming_parser.volt_amps_ir_parser import \
     VoltAmpsIrParser
@@ -16,7 +17,8 @@ def fake_volt_amps_parser():
 
 def test_interpret(fake_volt_amps_parser):
     val = fake_volt_amps_parser._interpret(b'v;1;3')
-    assert val[VoltAmpsIrParser.sensor_name] == {'v': {'amps': 3, 'volts': 1}}
+    assert val[ATTR_SENSOR_NAME] == 'VI'
+    assert val[ATTR_VALUES] == {'v': {'amps': 3, 'volts': 1}}
     assert KEY_SUBJECT in val
     assert ATTR_TIMESTAMP in val
 

@@ -54,11 +54,14 @@ class Bus:
 
     def notify(self, subject, data=None):
         """Notifies the data handlers for incoming data."""
-        try:
+        if subject in self.subscriptions:
             for _subscriber in self.subscriptions[subject]:
-                _subscriber(subject, data)
-        except KeyError:
-            LOGGER.debug('No subscribers to subject {}.'.format(subject))
+                try:
+                    _subscriber(subject, data)
+                except Exception as err:
+                    raise
+    # except KeyError:
+    #     LOGGER.debug('No subscribers to subject {}.'.format(subject))
 
     def subscribe(self, subject, method):
         self.subscriptions[subject] = method

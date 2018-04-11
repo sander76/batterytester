@@ -68,8 +68,10 @@ class MarkDownReport(BaseDataHandler):
     def __init__(self, report_name=None, output_path='reports'):
         """
 
-        :param report_name: Optional name of the report. By default the name of the test is used.
-        :param output_path: Path to store the report file. Can be relative or absolute.
+        :param report_name: Optional name of the report.
+            By default the name of the test is used.
+        :param output_path: Path to store the report file.
+            Can be relative or absolute.
         """
         super().__init__()
         self._filename = None

@@ -10,7 +10,7 @@ class BaseDataHandler(metaclass=ABCMeta):
         self._current_loop = None
         self.test_name = None
         self._atom_name = None
-        self._bus=None
+        self._bus = None
         self.ready = False
 
     @abstractmethod

@@ -76,11 +76,11 @@ class Atom:
 
     async def execute(self):
         """Executes the defined command."""
-        _result = None
         try:
             if self._args:
                 self._check_args()
-                # todo: The result should be interpreted whether feedback is correct.
+                # todo: The result should be interpreted
+                # whether feedback is correct.
                 _result = await self._command(**self._args)
             else:
                 _result = await self._command()

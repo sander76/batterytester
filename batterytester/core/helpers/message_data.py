@@ -1,10 +1,10 @@
+import typing
 from functools import singledispatch
 from typing import List
 
 from batterytester.core.helpers.constants import KEY_ATOM_INDEX, \
     KEY_ATOM_LOOP, KEY_ATOM_NAME, REASON
 from batterytester.core.helpers.helpers import get_current_timestamp
-# todo: all properties should go in a list when serializing to manage the order of appearance.
 from batterytester.core.helpers.message_subjects import RESULT_SUMMARY
 
 TYPE_STR = 'str'
@@ -15,7 +15,7 @@ TYPE_JSON = 'json'
 
 
 class Data:
-    def __init__(self, value='unknown', type_=TYPE_STR):
+    def __init__(self, value: typing.Any = 'unknown', type_=TYPE_STR):
         self.value = value
         self.type = type_
 

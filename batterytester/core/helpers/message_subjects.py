@@ -1,6 +1,6 @@
 """Events emitted by the test.
 
-Each event has a subject. A datahandler can subscribe to these events."""
+Each event has a subject. A data handler can subscribe to these events."""
 
 SUBJ = 'subj'
 

@@ -1,10 +1,9 @@
 """Individual test being performed"""
-import os
 import logging
+import os
 
 LOGGING = logging.getLogger(__name__)
 SENSOR_FILE_FORMAT = 'loop_{}-idx_{}.json'
-
 
 
 def get_sensor_data_name(save_location, test_sequence_number,
@@ -39,6 +38,3 @@ class RefGetter:
         else:
             _val = getattr(_ref, self._attribute)
             return _val
-
-
-

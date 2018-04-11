@@ -1,14 +1,26 @@
 import pytest
 
-from batterytester.core.datahandlers.influx import line_protocol_tags, \
-    get_time_stamp, Influx
+from batterytester.core.datahandlers.influx import line_protocol_fields, \
+    line_protocol_tags, Influx, get_time_stamp
+from batterytester.core.helpers.constants import ATTR_VALUES
 from batterytester.core.sensor.incoming_parser import get_measurement
 
 
+@pytest.fixture
+def fake_measurement1():
+    meas = get_measurement('test', {'i': 10, 'b': 1.2})
+    return meas
+
+
+def test_line_protocol_fields(fake_measurement1):
+    _out = line_protocol_fields(fake_measurement1[ATTR_VALUES][ATTR_VALUES])
+    assert _out == 'i=10,b=1.2'
+
+
 def test_line_protocol_tags():
-    _in = {'a': 1, 'b': 2}
+    _in = {'a': 'sensor1'}
     _out = line_protocol_tags(_in)
-    assert _out == ',a=1,b=2'
+    assert _out == ',a=sensor1'
 
 
 def test_empty_time_protocol_tags():
@@ -34,8 +46,8 @@ def fake_influx():
 
 
 def test_add_data(fake_influx):
-    measurement = get_measurement('sensor1', 1)
+    measurement = get_measurement('sensor1', {'val': 1})
     fake_influx._add_to_database('not_important', measurement)
     assert len(fake_influx.data) == 1
 
-#todo: test url composition.
+# todo: test url composition.

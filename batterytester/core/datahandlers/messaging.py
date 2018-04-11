@@ -6,7 +6,7 @@ import logging
 from json import JSONDecodeError
 
 import aiohttp
-from aiohttp import ClientConnectorError, ClientConnectionError
+from aiohttp import ClientConnectionError
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.datahandlers import BaseDataHandler

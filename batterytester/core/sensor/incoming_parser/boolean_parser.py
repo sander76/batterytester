@@ -21,15 +21,15 @@ class BooleanParser(IncomingParserChunked):
         {'sensor_name':{'v':true/false}}
         """
         try:
-            sensorname, value = chunk.split(b':')
+            sensor_name, value = chunk.split(b':')
             if value == b'0':
                 value = False
             else:
                 value = True
 
             return get_measurement(
-                self.decorate_sensor_name(sensorname.decode('utf-8')), value)
+                self.decorate_sensor_name(sensor_name.decode('utf-8')), value)
 
-        except Exception as err:
+        except Exception:
             LOGGER.error('Incorrect measurement format: %s', chunk)
             raise FatalTestFailException

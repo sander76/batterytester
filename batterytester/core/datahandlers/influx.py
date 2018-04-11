@@ -3,13 +3,12 @@ import logging
 
 import async_timeout
 from aiohttp.client_exceptions import ClientError
-from aiopvapi.helpers.constants import ATTR_NAME
 from slugify import slugify
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.datahandlers import BaseDataHandler
 from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_VALUE, \
-    ATTR_VALUES
+    ATTR_VALUES, ATTR_SENSOR_NAME
 from batterytester.core.helpers.helpers import FatalTestFailException
 from batterytester.core.helpers.message_data import AtomData
 
@@ -18,12 +17,12 @@ LOGGER = logging.getLogger(__name__)
 
 def line_protocol_fields(measurement: dict):
     """Create the fields and their values.
-    But remove the timestamp attribute
 
-    incoming is a dict with {KEY:{KEY_VALUE:VALUE}} structure.
+    incoming is a dict with {KEY_VALUE:VALUE} structure.
     """
-    return ','.join("{}={}".format(
-        measurement[ATTR_NAME], measurement[ATTR_VALUES][ATTR_VALUES]))
+
+    return ','.join(("{}={}".format(key, value) for key, value in
+                     measurement.items()))
 
 
 def line_protocol_tags(tags: dict):
@@ -46,12 +45,12 @@ def get_time_stamp(data):
     val = data.get(ATTR_TIMESTAMP)
     if val:
         val = val.get(KEY_VALUE)
-        return to_nano_seconds(val)  # to nanoseconds.
+        return to_nanoseconds(val)  # to nanoseconds.
     else:
         raise FatalTestFailException("Data has no timestamp")
 
 
-def to_nano_seconds(timestamp):
+def to_nanoseconds(timestamp):
     """Milliseconds to nanoseconds"""
 
     try:
@@ -71,9 +70,7 @@ class Influx(BaseDataHandler):
         """
         :param host: ip address of the influx database
         :param database: The database to write data to.
-        :param measurement: The current test being run.
-            normally the name of the test.
-        :param datalength:
+        :param buffer_size: buffer length before call to influx api is made.
         """
         super().__init__()
         self.host = host
@@ -112,17 +109,15 @@ class Influx(BaseDataHandler):
         }
         _tags = line_protocol_tags(_tags)
         self.data.append(self._create_measurement(
-            _fields, _tags, to_nano_seconds(data.started.value)))
+            _fields, _tags, to_nanoseconds(data.started.value)))
         self.check_buffer()
 
     def _add_to_database(self, subject, data):
         # LOGGER.debug("Adding to database buffer")
         _time_stamp = get_time_stamp(data)
-        _fields = line_protocol_fields(data)
-        # making a shallow copy to keep the test loop and index intact.
-        # todo: don't make a copy. Just immediately make it a lineprotocol.
-        _tags = line_protocol_tags(
-            dict(self._tags))  # Shallow copy of the current tags.
+        _fields = line_protocol_fields(data[ATTR_VALUES][ATTR_VALUES])
+        self._tags[ATTR_SENSOR_NAME] = data[ATTR_SENSOR_NAME]
+        _tags = line_protocol_tags(self._tags)
         self.data.append(
             self._create_measurement(_fields, _tags, _time_stamp))
         self.check_buffer()

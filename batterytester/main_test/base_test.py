@@ -12,7 +12,7 @@ from batterytester.core.helpers.constants import ATOM_STATUS_EXECUTING, \
 from batterytester.core.helpers.helpers import NonFatalTestFailException, \
     get_current_timestamp, FatalTestFailException
 from batterytester.core.helpers.message_data import LoopData, AtomStatus, \
-    AtomResult, Data, TestData, FatalData, TestFinished
+    AtomResult, Data, TestData, TestFinished
 from batterytester.core.sensor import Sensor
 
 LOGGER = logging.getLogger(__name__)
@@ -171,7 +171,7 @@ class BaseTest:
                                      REASON: {KEY_VALUE: err}})
 
             self.bus.notify(subj.LOOP_FINISHED, get_current_timestamp())
-        self.bus.notify(subj.TEST_FINISHED,TestFinished())
+        self.bus.notify(subj.TEST_FINISHED, TestFinished())
 
     def _atom_warmup_data(self):
         return self._active_atom.get_atom_data()
@@ -193,7 +193,7 @@ class BaseTest:
                     sensor_data = await self.sensor_data_queue.get()
                     self.handle_sensor_data(sensor_data)
                 LOGGER.debug("stopping message loop.")
-            except CancelledError as err:
+            except CancelledError:
                 return
             except Exception as err:
                 LOGGER.exception(err)
