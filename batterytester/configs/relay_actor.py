@@ -1,8 +1,9 @@
-from batterytester.core.actors.base_actor import ACTOR_TYPE_RELAY_ACTOR
-from batterytester.core.actors.relay_actor import RelayActor
+
+from batterytester.components.actors import RelayActor
+from batterytester.components.actors.base_actor import ACTOR_TYPE_RELAY_ACTOR
 from batterytester.core.atom.atom import Atom
 
-from batterytester.main_test.base_test import BaseTest
+from batterytester.core.base_test import BaseTest
 
 test = BaseTest(test_name='relay test', loop_count=20)
 

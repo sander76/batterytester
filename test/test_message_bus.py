@@ -4,7 +4,7 @@ import json
 import aiohttp
 
 from batterytester.core.helpers.constants import ATTR_VALUES
-from batterytester.core.datahandlers.messaging import Messaging
+from batterytester.components.datahandlers.messaging import Messaging
 
 
 async def send_sensor_data(messager: Messaging):

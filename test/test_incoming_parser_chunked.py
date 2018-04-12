@@ -1,6 +1,7 @@
 import pytest
 
-from batterytester.core.sensor.incoming_parser import IncomingParserChunked
+from batterytester.components.sensor.incoming_parser import \
+    IncomingParserChunked
 
 
 @pytest.fixture

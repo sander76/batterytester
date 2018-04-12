@@ -1,4 +1,4 @@
-import batterytester.core.sensor.connector.async_serial_connector as sc
+import batterytester.components.sensor.connector.async_serial_connector as sc
 import pytest
 from unittest.mock import MagicMock
 from serial import Serial, SerialException
@@ -21,7 +21,7 @@ async def get_value(connection):
 def test_serial_incoming(monkeypatch, bus):
     """Teest incoming data"""
     monkeypatch.setattr(
-        'batterytester.core.sensor.connector.async_serial_connector.Serial',
+        'batterytester.components.sensor.connector.async_serial_connector.Serial',
         MagicMock(Serial))
 
     con = sc.AsyncSerialConnector(bus, MagicMock(), 124, 1234)
@@ -39,7 +39,7 @@ def test_stop_test_on_serial_error(monkeypatch, bus):
     """Raising a serial exception on the serial read command
     should stop the complete test."""
     monkeypatch.setattr(
-        'batterytester.core.sensor.connector.async_serial_connector.Serial',
+        'batterytester.components.sensor.connector.async_serial_connector.Serial',
         MagicMock(Serial))
 
     con = sc.AsyncSerialConnector(bus, MagicMock(), 124, 1234)

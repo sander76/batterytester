@@ -1,10 +1,11 @@
 import pytest
 
+from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import \
+    VoltAmpsIrParser
 from batterytester.core.helpers.constants import KEY_SUBJECT, ATTR_TIMESTAMP, \
     ATTR_SENSOR_NAME, ATTR_VALUES
 from batterytester.core.helpers.helpers import FatalTestFailException
-from batterytester.core.sensor.incoming_parser.volt_amps_ir_parser import \
-    VoltAmpsIrParser
+
 
 
 # todo: finish these tests.

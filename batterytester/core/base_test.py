@@ -2,10 +2,12 @@ import asyncio
 import logging
 from asyncio import CancelledError
 
-from batterytester.core.actors.base_actor import BaseActor
+from batterytester.components.actors.base_actor import BaseActor
+from batterytester.components.datahandlers.base_data_handler import \
+    BaseDataHandler
+from batterytester.components.sensor.sensor import Sensor
 from batterytester.core.atom.reference_atom import ReferenceAtom
 from batterytester.core.bus import Bus
-from batterytester.core.datahandlers import BaseDataHandler
 from batterytester.core.helpers import message_subjects as subj
 from batterytester.core.helpers.constants import ATOM_STATUS_EXECUTING, \
     ATOM_STATUS_COLLECTING, ATTR_RESULT, KEY_VALUE, REASON
@@ -13,7 +15,6 @@ from batterytester.core.helpers.helpers import NonFatalTestFailException, \
     get_current_timestamp, FatalTestFailException
 from batterytester.core.helpers.message_data import LoopData, AtomStatus, \
     AtomResult, Data, TestData, TestFinished
-from batterytester.core.sensor import Sensor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,6 @@ class BaseTest:
             self.bus.add_async_task((self._messager()))
         for _sensor in sensors:
             # todo: move the sensor_data_queue to the bus.
-            # todo: initialize the sensor data queue in the setup method
             _sensor.sensor_data_queue = self.sensor_data_queue
 
             self.bus.sensors.append(_sensor)

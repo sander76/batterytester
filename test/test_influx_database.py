@@ -1,9 +1,10 @@
 import pytest
 
-from batterytester.core.datahandlers.influx import line_protocol_fields, \
-    line_protocol_tags, Influx, get_time_stamp
+from batterytester.components.datahandlers import Influx
+from batterytester.components.datahandlers.influx import line_protocol_fields, \
+    line_protocol_tags, get_time_stamp
+from batterytester.components.sensor.incoming_parser import get_measurement
 from batterytester.core.helpers.constants import ATTR_VALUES
-from batterytester.core.sensor.incoming_parser import get_measurement
 
 
 @pytest.fixture

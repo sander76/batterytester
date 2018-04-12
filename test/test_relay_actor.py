@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
-import batterytester.core.actors.relay_actor as rl
-from batterytester.core.actors.relay_actor import to_protocol
+import batterytester.components.actors.relay_actor as rl
+from batterytester.components.actors.relay_actor import to_protocol
 
 MOCK_SERIAL_PORT = 'abc'
 
@@ -22,7 +22,7 @@ def test_instantiate(monkeypatch, fake_relay_actor):
     write_mock = Mock()
     fake_serial.write = write_mock
     # fake_serial.__init__ = Mock()
-    monkeypatch.setattr("batterytester.core.actors.relay_actor.Serial",
+    monkeypatch.setattr("batterytester.components.actors.relay_actor.Serial",
                         fake_serial)
 
     async def setup():

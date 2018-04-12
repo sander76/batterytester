@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from batterytester.core.datahandlers.report import check_output_folder
+from batterytester.components.datahandlers.report import check_output_folder
 
 TEST_FOLDER = 'testfolder'
 

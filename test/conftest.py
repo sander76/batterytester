@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from batterytester.core.datahandlers.influx import Influx
-from batterytester.core.datahandlers.messaging import Messaging
+from batterytester.components.datahandlers.influx import Influx
+from batterytester.components.datahandlers.messaging import Messaging
 from test.fake_components import FakeBaseTest, FakeVoltsAmpsSensor, FakeActor
 
 

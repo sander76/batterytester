@@ -1,5 +1,4 @@
 # scenario 1 : normal test. No reference. Sensor data incoming
-import asyncio
 import pytest
 
 from unittest.mock import MagicMock

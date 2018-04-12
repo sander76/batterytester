@@ -1,11 +1,11 @@
 import pytest
 
-
+from batterytester.components.sensor.incoming_parser.boolean_parser import \
+    BooleanParser
 from batterytester.core.helpers.constants import KEY_SUBJECT, ATTR_TIMESTAMP, \
     ATTR_VALUES, ATTR_SENSOR_NAME
 from batterytester.core.helpers.helpers import FatalTestFailException
-from batterytester.core.sensor.incoming_parser.boolean_parser import \
-    BooleanParser
+
 
 
 @pytest.fixture

@@ -33,12 +33,6 @@ class Bus:
         self.sensors = []
 
         self.subscriptions = {}
-        # # todo: Don't automatically include this.
-        # self.messaging = Messaging(self)
-
-        # Initialize the message bus
-
-        # self._register_subscriptions()
 
     def register_data_handler(self, data_handler, test_name):
         """Registers a data handler"""
@@ -114,9 +108,7 @@ class Bus:
 
         await self.test_runner_task
 
-        await asyncio.gather(
-            *(_actor.shutdown(self) for _actor in self.actors.values())
-        )
+
 
     def _start_test(self, test_runner, test_name):
         for callback in self.callbacks:
@@ -155,6 +147,10 @@ class Bus:
 
         if self.test_runner_task:
             self.test_runner_task.cancel()
+
+        await asyncio.gather(
+            *(_actor.shutdown(self) for _actor in self.actors.values())
+        )
 
         self.notify(subj.TEST_FINISHED, TestFinished())
         for _task in self.closing_task:

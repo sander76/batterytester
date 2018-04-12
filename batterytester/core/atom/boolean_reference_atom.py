@@ -32,6 +32,8 @@ class BooleanReferenceAtom(ReferenceAtom):
             return _result
 
     def reference_compare(self) -> bool:
+        # todo: make a key by key comparisson. The provided reference data
+        # should be source.
         _result = self._process_sensor_data()
         LOGGER.debug("Sensor data: {}".format(_result))
         return self.reference_data == _result

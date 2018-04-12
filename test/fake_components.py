@@ -3,13 +3,13 @@ from asyncio import CancelledError
 from random import random
 from unittest.mock import MagicMock
 
-from batterytester.core.actors.base_actor import BaseActor
-from batterytester.core.bus import Bus
-from batterytester.core.sensor import Sensor
-from batterytester.core.sensor.connector import AsyncSensorConnector
-from batterytester.core.sensor.incoming_parser.volt_amps_ir_parser import \
+from batterytester.components.actors.base_actor import BaseActor
+from batterytester.components.sensor.connector import AsyncSensorConnector
+from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import \
     VoltAmpsIrParser
-from batterytester.main_test.base_test import BaseTest
+from batterytester.components.sensor.sensor import Sensor
+from batterytester.core.bus import Bus
+from batterytester.core.base_test import BaseTest
 
 
 class FakeActor(BaseActor):

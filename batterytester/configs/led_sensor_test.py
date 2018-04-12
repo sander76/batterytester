@@ -1,11 +1,12 @@
 
-import batterytester.core.actors as actor
-from batterytester.core.actors.power_view_actor import PowerViewActor
+import batterytester.components.actors as actor
+import batterytester.components.actors.tools
+from batterytester.components.actors import PowerViewActor
 from batterytester.core.atom.atom import Atom
 
-from batterytester.core.datahandlers.messaging import Messaging
-from batterytester.core.sensor.led_gate_sensor import LedGateSensor
-from batterytester.main_test.base_test import BaseTest
+from batterytester.components.datahandlers.messaging import Messaging
+from batterytester.components.sensor import LedGateSensor
+from batterytester.core.base_test import BaseTest
 
 test = BaseTest(test_name='base test', loop_count=2)
 
@@ -27,7 +28,7 @@ test.add_data_handlers(
 
 
 def get_sequence(actors):
-    powerview = actor.get_power_view_actor(actors)
+    powerview = batterytester.components.actors.tools.get_power_view_actor(actors)
 
     shade_id = 6705
     room_id = 45211
