@@ -22,6 +22,16 @@ class BaseDataHandler(metaclass=ABCMeta):
         start."""
         pass
 
+    async def shutdown(self, bus: Bus):
+        """Shutdown the data handler
+
+        Is run at the end of the test.
+
+        :param bus: the bus.
+        :return:
+        """
+        pass
+
     def _atom_warmup(self, subject, data: AtomData):
         self._current_idx = data.idx.value
         self._current_loop = data.loop.value
@@ -29,7 +39,4 @@ class BaseDataHandler(metaclass=ABCMeta):
 
     @abstractmethod
     def get_subscriptions(self):
-        pass
-
-    async def stop_data_handler(self):
         pass

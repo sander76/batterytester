@@ -13,12 +13,12 @@ class Sensor(metaclass=ABCMeta):
     The connector connects to the sensor. The parser interprets
     incoming data."""
 
-    def __init__(self, sensor_name=None):
+    def __init__(self, sensor_prefix=None):
         self._bus = None
         self._connector = None
         self._sensor_data_parser = None
         self.sensor_data_queue = None
-        self.sensor_name = sensor_name
+        self.sensor_prefix = sensor_prefix
 
     @abstractmethod
     async def setup(self, test_name: str, bus: Bus):

@@ -8,7 +8,6 @@ from slugify import slugify
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.components.datahandlers.base_data_handler import \
     BaseDataHandler
-
 from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_VALUE, \
     ATTR_VALUES, ATTR_SENSOR_NAME
 from batterytester.core.helpers.helpers import FatalTestFailException
@@ -68,8 +67,9 @@ def to_nanoseconds(timestamp):
 
 class Influx(BaseDataHandler):
     """Writes data to an InfluxDB database."""
+
     def __init__(
-            self, host=None, database='menc', buffer_size=5):
+            self, *, host=None, database='menc', buffer_size=5):
         """
         :param host: ip address of the influx database
         :param database: The database to write data to.

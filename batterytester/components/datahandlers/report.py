@@ -148,7 +148,7 @@ class Report(MarkDownReport):
             (subj.ATOM_RESULT, self._atom_result)
         )
 
-    async def stop_data_handler(self):
+    async def shutdown(self, bus):
         self._create_summary()
         self._flush()
 

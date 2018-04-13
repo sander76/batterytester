@@ -19,7 +19,11 @@ class PowerViewActor(BaseActor):
 
     actor_type = ACTOR_TYPE_POWER_VIEW
 
-    def __init__(self, hub_ip):
+    def __init__(self,*, hub_ip: str):
+        """
+
+        :param hub_ip: The Powerview hub ip address. like: 192.168.2.4
+        """
         self.hub_ip = hub_ip
         self.test_name = None
         self.request = None

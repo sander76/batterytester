@@ -11,7 +11,7 @@ MOCK_SERIAL_PORT = 'abc'
 
 @pytest.fixture
 def fake_relay_actor(monkeypatch):
-    fake_pv = rl.RelayActor(MOCK_SERIAL_PORT)
+    fake_pv = rl.RelayActor(serial_port=MOCK_SERIAL_PORT)
 
     return fake_pv
 

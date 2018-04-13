@@ -11,17 +11,12 @@ from aiohttp import ClientConnectionError
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.components.datahandlers.base_data_handler import \
     BaseDataHandler
-
 from batterytester.core.helpers.helpers import FatalTestFailException, \
     TestSetupException
 from batterytester.core.helpers.message_data import to_serializable, \
     FatalData, TestFinished, TestData, AtomData, \
     AtomStatus, AtomResult, TestSummary, Message, LoopData
 from batterytester.server.server import URL_TEST, MSG_TYPE_STOP_TEST
-
-# todo: move these parameters to the init method.
-ATTR_MESSAGE_BUS_ADDRESS = '127.0.0.1'
-ATTR_MESSAGE_BUS_PORT = 8567
 
 URL_CLOSE = 'close'
 URL_ATOM = 'atom'  # General info about the current atom.
@@ -41,12 +36,20 @@ class Messaging(BaseDataHandler):
     """Websocket messaging.
 
     Needs a running websocket server to connect and interact with."""
-    def __init__(self):
+
+    def __init__(self, *, host='127.0.0.1', port=8567):
+        """
+
+        :param host: Web(socket) server address (182.167.24.3)
+        :param port: Socket port.
+        """
         super().__init__()
         self.ws_connection = None
         self.session = None
         self.test_summary = TestSummary()
         self.test_summary.cache = True
+        self._host = host
+        self._port = port
         # self._bus.add_async_task(self.ws_connect())
 
     def get_subscriptions(self):
@@ -61,7 +64,7 @@ class Messaging(BaseDataHandler):
             (subj.SENSOR_DATA, self.test_data)
         )
 
-    async def stop_data_handler(self):
+    async def shutdown(self, bus):
         if self.ws_connection:
             await self.ws_connection.close()
 
@@ -119,8 +122,8 @@ class Messaging(BaseDataHandler):
 
     async def setup(self, test_name, bus):
         self._bus = bus
-        _addr = 'http://{}:{}{}'.format(ATTR_MESSAGE_BUS_ADDRESS,
-                                        ATTR_MESSAGE_BUS_PORT,
+        _addr = 'http://{}:{}{}'.format(self._host,
+                                        self._port,
                                         URL_TEST)
         try:
             self.ws_connection = await asyncio.wait_for(

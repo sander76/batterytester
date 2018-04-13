@@ -13,7 +13,8 @@ class FakeVoltsAmpsSensor(Sensor):
 
 
     """
+
     def setup(self, test_name: str, bus: Bus):
         self._connector = RandomVoltAmpsConnector(bus)
-        self._sensor_data_parser = VoltAmpsIrParser(bus)
+        self._sensor_data_parser = VoltAmpsIrParser(bus, self.sensor_prefix)
         return super().setup(test_name, bus)

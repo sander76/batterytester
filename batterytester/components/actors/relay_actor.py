@@ -21,7 +21,7 @@ class RelayActor(BaseActor):
 
     actor_type = ACTOR_TYPE_RELAY_ACTOR
 
-    def __init__(self, serial_port, serial_speed=115200):
+    def __init__(self,* , serial_port, serial_speed=115200):
         self._port = serial_port
         self._speed = serial_speed
         self._serial = None

@@ -41,7 +41,7 @@ def fake_influx():
     def fake_send(_self, data):
         return data
 
-    influx = Influx('127.0.0.1', buffer_size=5)
+    influx = Influx(host='127.0.0.1', buffer_size=5)
     influx._send = fake_send
     return influx
 

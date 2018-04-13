@@ -37,7 +37,7 @@ def fake_sensor():
 
 @pytest.fixture
 def fake_influx():
-    _influx = Influx('127.0.0.1', buffer_size=5)
+    _influx = Influx(host='127.0.0.1', buffer_size=5)
     _influx._send = AsyncMock()
     return _influx
 

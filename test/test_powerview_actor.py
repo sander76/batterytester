@@ -11,7 +11,7 @@ from test.fake_components import FakeBaseTest
 
 @pytest.fixture
 def fake_powerview_actor():
-    fake_pv = PowerViewActor('172.3.3.1')
+    fake_pv = PowerViewActor(hub_ip='172.3.3.1')
     fake_pv.open_shade = AsyncMock()
     fake_pv.close_shade = AsyncMock()
     fake_pv.warmup = AsyncMock()

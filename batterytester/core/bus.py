@@ -132,7 +132,6 @@ class Bus:
             LOGGER.error(err)
             self.notify(subj.TEST_FATAL, FatalData(err))
         finally:
-
             self.loop.run_until_complete(self.stop_test())
             # todo: double check whether all tasks finished
             # checking all_tasks like below.
@@ -149,8 +148,15 @@ class Bus:
             self.test_runner_task.cancel()
 
         await asyncio.gather(
+            *(_handler.shutdown(self) for _handler in
+              self._data_handlers))
+        await asyncio.gather(
             *(_actor.shutdown(self) for _actor in self.actors.values())
         )
+        await asyncio.gather(
+            *(_sensor.shutdown(self) for _sensor in self.sensors)
+        )
+
 
         self.notify(subj.TEST_FINISHED, TestFinished())
         for _task in self.closing_task:
@@ -162,8 +168,7 @@ class Bus:
             except Exception as err:
                 LOGGER.error(
                     "problem during execution of closing task: {}".format(err))
-        for _handlers in self._data_handlers:
-            await _handlers.stop_data_handler()
+
         await self.session.close()
 
         # todo: throttle this as it may run forever if a task cannot be closed.

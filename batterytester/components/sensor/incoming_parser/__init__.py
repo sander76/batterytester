@@ -21,9 +21,9 @@ def get_measurement(sensor_name, value) -> dict:
 
 
 class IncomingParser:
-    def __init__(self, bus: Bus, sensor_prefix=None):
+    def __init__(self, bus: Bus, separator=b'\n', sensor_prefix=None):
         self.bus = bus
-        self.separator = b'\n'
+        self.separator = separator
         self.sensor_prefix = sensor_prefix
 
     def _interpret(self, measurement) -> dict:
@@ -48,7 +48,7 @@ class IncomingParserChunked(IncomingParser):
     """Incoming data parser where data is coming in as a stream."""
 
     def __init__(self, bus: Bus, sensor_prefix=None):
-        IncomingParser.__init__(self, bus, sensor_prefix)
+        IncomingParser.__init__(self, bus, sensor_prefix=sensor_prefix)
         self.incoming_retries = 2
         self.current_retry = 0
         self.incoming_data = bytearray()  # all incoming data.
