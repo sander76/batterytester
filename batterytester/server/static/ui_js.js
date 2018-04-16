@@ -299,7 +299,7 @@ function objectIterator(container, data, parser) {
 }
 
 function parseSensorData(data) {
-    var _sensorEntry = containerSensorInfo.querySelector('.' + data['n'])
+    var _sensorEntry = containerSensorInfo.querySelector('.' + getSensorClassName(data['n']))
     if (_sensorEntry === null) {
         // sensor dom does not exist yet.
         _sensorEntry = createSensorDataContainer(data)
@@ -345,6 +345,10 @@ function parseAtomInfo(data) {
     objectIterator(containerAtomInfo, data, parser)
 }
 
+function getSensorClassName(sensorName) {
+    return 'sensor_' + sensorName
+}
+
 function parseSummaryInfo(data) {
     function parser(key, value, _node) {
         _node.innerHTML = parseValueType(value)
@@ -362,7 +366,8 @@ function createSensorDataContainer(data) {
         return _main
     }
     var _main = document.createElement('div')
-    _main.className = 'columns ' + data['n']
+
+    _main.className = 'columns ' + getSensorClassName(data['n'])
     var _prop = document.createElement('div')
     _prop.className = 'column col-4'
     _prop.innerHTML = data['n']
