@@ -42,13 +42,14 @@ URL_ALL_TESTS = '/all_tests'
 
 DEFAULT_CONFIG_PATH = '/home/pi/test_configs'
 
-#todo: use this as feedback for the running process.
+# todo: use this as feedback for the running process.
 
 process_data = {
     'process_id': None,
     'status': 'not running',
     'test_feedback': None
 }
+
 
 class Server:
     def __init__(self, config_folder=None, loop_=None):

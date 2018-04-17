@@ -1,10 +1,8 @@
 import logging
 import os
 from typing import Union
-
 from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
     PvApiResponseStatusError
-
 
 from batterytester.core.helpers.helpers import TestSetupException, \
     NonFatalTestFailException
@@ -12,7 +10,6 @@ from batterytester.core.helpers.message_data import AtomData
 
 LOGGING = logging.getLogger(__name__)
 
-# todo: merge all atoms into one.
 
 class Atom:
     """Basic test atom."""

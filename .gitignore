@@ -10,3 +10,4 @@ build
 reports
 dist
 .pytest_cache
+secret.py
