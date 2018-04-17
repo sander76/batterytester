@@ -10,5 +10,5 @@ setup(
     author_email='s.teunissen@gmail.com',
     description='',
     install_requires=['pyserial', 'aiopvapi', 'aiohttp', 'python-slugify',
-                      'slack-sansio[aiohttp']
+                      'slack-sansio[aiohttp]']
 )

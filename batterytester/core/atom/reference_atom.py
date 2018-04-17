@@ -1,7 +1,7 @@
 import logging
 
 from batterytester.core.atom.atom import Atom
-from batterytester.core.helpers.message_data import Data, TYPE_JSON
+from batterytester.core.helpers.message_data import Data, TYPE_JSON, AtomResult
 
 LOGGING = logging.getLogger(__name__)
 
@@ -27,9 +27,9 @@ class ReferenceAtom(Atom):
         LOGGING.debug("Processing sensor data.")
         pass
 
-    def reference_compare(self) -> bool:
+    def reference_compare(self) -> AtomResult:
         """Compare sensor data with reference data"""
-        return False
+        return AtomResult(False)
 
     def get_atom_data(self):
         _data = super().get_atom_data()

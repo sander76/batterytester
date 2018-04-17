@@ -42,6 +42,13 @@ URL_ALL_TESTS = '/all_tests'
 
 DEFAULT_CONFIG_PATH = '/home/pi/test_configs'
 
+#todo: use this as feedback for the running process.
+
+process_data = {
+    'process_id': None,
+    'status': 'not running',
+    'test_feedback': None
+}
 
 class Server:
     def __init__(self, config_folder=None, loop_=None):
@@ -128,7 +135,7 @@ class Server:
 
     async def test_stop_handler(self, request):
         data = await request.text()
-        resp = self.send_to_tester(data)
+        resp = await self.send_to_tester(data)
         return web.json_response({"running": resp})
 
     async def test_handler(self, request):
@@ -184,14 +191,17 @@ class Server:
                                   aiohttp.WSMsgType.CLOSED):
                     await ws.close()
         finally:
+
             self.sensor_sockets.remove(ws)
         return ws
 
-    def send_to_tester(self, data: str):
+    async def send_to_tester(self, data: str):
+        """Send data to the connected test."""
         if self.test_ws is not None:
-            asyncio.ensure_future(self.test_ws.send_str(data))
-            return True
-        return False
+            try:
+                return await self.test_ws.send_str(data)
+            except Exception as err:
+                LOGGER.exception(err)
 
     def _parse_incoming_test_data(self, data, raw):
         self._send_to_ws(data, raw)
@@ -234,6 +244,7 @@ class Server:
                            message='server shutdown')
 
     async def start(self):
+        """Initialize this data handler"""
         self.handler = self.app.make_handler()
         self.server = await self.loop.create_server(
             self.handler, ATTR_MESSAGE_BUS_ADDRESS, ATTR_MESSAGE_BUS_PORT)

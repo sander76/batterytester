@@ -141,11 +141,8 @@ class BaseTest:
                                                   ReferenceAtom):
             # Actual testing mode. reference data
             # and testing data can be compared.
-            _success = self._active_atom.reference_compare()
-            _data = AtomResult(_success)
-            if not _success:
-                _data.reason = Data("Reference testing failed.")
-            self.bus.notify(subj.ATOM_RESULT, _data)
+            _atom_result = self._active_atom.reference_compare()
+            self.bus.notify(subj.ATOM_RESULT, _atom_result)
 
     async def async_test(self):
         self.bus.notify(subj.TEST_WARMUP,

@@ -5,11 +5,13 @@ from unittest.mock import MagicMock
 
 from batterytester.components.actors.base_actor import BaseActor
 from batterytester.components.sensor.connector import AsyncSensorConnector
+from batterytester.components.sensor.incoming_parser.boolean_parser import \
+    BooleanParser
 from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import \
     VoltAmpsIrParser
 from batterytester.components.sensor.sensor import Sensor
-from batterytester.core.bus import Bus
 from batterytester.core.base_test import BaseTest
+from batterytester.core.bus import Bus
 
 
 class FakeActor(BaseActor):
@@ -55,6 +57,24 @@ class FakeSensorConnector(AsyncSensorConnector):
             return
 
 
+class FakeLedGateConnector(AsyncSensorConnector):
+    def __init__(self, bus: Bus, delay=1.0):
+        self._delay = delay
+        super().__init__(bus)
+
+    async def async_listen_for_data(self, *args):
+        """Periodically send out boolean values"""
+        try:
+            pins = (5, 4)
+            while True:
+                for pin in pins:
+                    _message = '{}:1'.format(pin)
+                    await self.raw_sensor_data_queue.put(_message)
+                    await asyncio.sleep(self._delay)
+        except CancelledError:
+            return
+
+
 class FakeBoundSensorConnector(AsyncSensorConnector):
     """Sensor connect which sends out a fixed amount of data."""
 
@@ -76,10 +96,17 @@ class FakeBoundSensorConnector(AsyncSensorConnector):
 
 
 class FakeVoltsAmpsSensor(Sensor):
-    def setup(self, test_name: str, bus: Bus):
+    async def setup(self, test_name: str, bus: Bus):
         self._connector = FakeSensorConnector(bus)
         self._sensor_data_parser = VoltAmpsIrParser(bus)
-        return super().setup(test_name, bus)
+        return await super().setup(test_name, bus)
+
+
+class FakeLedGateSensor(Sensor):
+    async def setup(self, test_name: str, bus: Bus):
+        self._connector = FakeLedGateConnector(bus, delay=0.1)
+        self._sensor_data_parser = BooleanParser(bus)
+        return await super().setup(test_name, bus)
 
 
 class FakeBaseTest(BaseTest):

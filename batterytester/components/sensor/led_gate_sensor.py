@@ -20,11 +20,9 @@ class LedGateSensor(Sensor):
     If using the arduino sensors sensor names "4","5","6","7" corresponding
     to the connected digital pins.
 
-    If a sensor prefix is defined the sensor name is prefixed.
+    If a sensor prefix is defined the sensor name is prefixed with that value.
 
-    Incoming sensor data is parsed and emitted in the form of:
-
-    {'sensor_name':{'v':True/False}}
+    Finally the sensor is emitted in the form of
 
     """
 

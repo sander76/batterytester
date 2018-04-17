@@ -12,6 +12,7 @@ TYPE_TIME = 'time'
 TYPE_INT = 'int'
 TYPE_TIME_DELTA = 'time_delta'
 TYPE_JSON = 'json'
+TYPE_BOOL = 'bool'
 
 
 class Data:

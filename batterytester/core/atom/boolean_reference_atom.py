@@ -1,7 +1,8 @@
 import logging
 
 from batterytester.core.atom.reference_atom import ReferenceAtom
-from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_SUBJECT
+from batterytester.core.helpers.constants import ATTR_SENSOR_NAME, KEY_VALUE
+from batterytester.core.helpers.message_data import AtomResult, Data, TYPE_BOOL
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,19 +22,38 @@ class BooleanReferenceAtom(ReferenceAtom):
             arguments=arguments, result_key=result_key)
 
     def _process_sensor_data(self):
+        """Get the most recent values of stored sensor data."""
+
         super()._process_sensor_data()
         _result = {}
         if self.sensor_data:
-            for _data in self.sensor_data:
-                for key, value in _data.items():
-                    if not key == ATTR_TIMESTAMP and not key == KEY_SUBJECT:
-                        # do not take timestamps into comparison.
-                        _result[key] = value
+            for _measurement in self.sensor_data:
+                _result[_measurement[ATTR_SENSOR_NAME]] = \
+                    _measurement[KEY_VALUE][KEY_VALUE]
+
             return _result
 
-    def reference_compare(self) -> bool:
-        # todo: make a key by key comparisson. The provided reference data
-        # should be source.
-        _result = self._process_sensor_data()
-        LOGGER.debug("Sensor data: {}".format(_result))
-        return self.reference_data == _result
+    def reference_compare(self) -> AtomResult:
+        _sensor_data = self._process_sensor_data()
+        _atom_result = AtomResult(True)
+        for key, value in self.reference_data.items():
+            try:
+                if not _sensor_data[key] == value:
+                    _atom_result.passed = Data(False, type_=TYPE_BOOL)
+                    _atom_result.reason = Data("""
+                    Reference values don't match.
+                    ref: {}
+                    sensor: {}""".format(
+                        str(_sensor_data), str(self.reference_data)))
+                    return _atom_result
+            except KeyError:
+                _atom_result.passed = Data(False, type_=TYPE_BOOL)
+                _atom_result.reason = Data("""
+                Provided reference sensor data not present in actual sensor
+                feedback.
+                ref: {}
+                sensor: {}""".format(
+                    str(_sensor_data), str(self.reference_data))
+                )
+
+        return _atom_result

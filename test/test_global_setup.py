@@ -1,12 +1,12 @@
 # scenario 1 : normal test. No reference. Sensor data incoming
-import pytest
-
 from unittest.mock import MagicMock
+
+import pytest
 
 from batterytester.core.atom.atom import Atom
 from batterytester.core.atom.reference_atom import ReferenceAtom
-
-from test.fake_components import FakeActor, FakeBaseTest, FakeVoltsAmpsSensor
+from test.fake_components import FakeActor, FakeBaseTest, FakeVoltsAmpsSensor, \
+    FakeLedGateSensor
 
 
 def get_sequence1(actors):
@@ -165,6 +165,11 @@ def test_influx(fake_test: FakeBaseTest, fake_actor, fake_sensor, fake_influx):
     fake_influx._send.mock.assert_called()
 
     print(len(fake_influx.data))
+
+
+def test_fake_ledgate_reference(fake_test: FakeBaseTest, fake_actor):
+    fake_test.add_actor(fake_actor)
+    fake_test.add_sensors(FakeLedGateSensor())
 
 
 # def test_stop_test(fake_test: FakeBaseTest, fake_messaging, fake_actor):
