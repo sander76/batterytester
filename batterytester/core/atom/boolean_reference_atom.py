@@ -31,7 +31,7 @@ class BooleanReferenceAtom(ReferenceAtom):
                 _result[_measurement[ATTR_SENSOR_NAME]] = \
                     _measurement[KEY_VALUE][KEY_VALUE]
 
-            return _result
+        return _result
 
     def reference_compare(self) -> AtomResult:
         _sensor_data = self._process_sensor_data()

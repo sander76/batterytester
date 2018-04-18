@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import aiohttp
+import async_timeout
 from aiohttp import web, WSCloseCode
 
 import batterytester.core.helpers.message_subjects as subj
@@ -46,7 +47,7 @@ DEFAULT_CONFIG_PATH = '/home/pi/test_configs'
 
 process_data = {
     'process_id': None,
-    'status': 'not running',
+    'status': 'running',
     'test_feedback': None
 }
 
@@ -58,12 +59,13 @@ class Server:
         self.config_folder = config_folder
         self.loop = loop_ or asyncio.get_event_loop()
         self.app = web.Application()
-        self._add_routes()
+        self.process_id = None
         self.handler = None
         self.server = None
         self.test_cache = {}
         # self.test_summary = TestSummary()
         self.test_process = None
+        self.process_data = None
 
     @property
     def test_is_running(self):
@@ -78,7 +80,7 @@ class Server:
         self.app.router.add_get(URL_TEST, self.test_handler)
         self.app.router.add_static('/static/', path='static', name='static')
         self.app.router.add_post(URL_TEST_START, self.test_start_handler)
-        self.app.router.add_post(URL_TEST_STOP, self.test_stop_handler)
+        self.app.router.add_post(URL_TEST_STOP, self.stop_test_handler)
 
     def start_server(self):
         """Create a web server"""
@@ -103,21 +105,20 @@ class Server:
             return web.Response(
                 text="There is another test running. Stop that one first.")
         else:
-            pid = await self.start_test_process(p)
-            asyncio.ensure_future(self.manage_process())
-
+            await self._start_test_process(p)
         return web.Response(
-            text="Test has started. process id: {}".format(pid))
+            text="Test has started. process id: {}".format(self.process_id))
         # todo: handle feedback over websocket.
 
-    async def start_test_process(self, p):
+    async def _start_test_process(self, p):
         self.test_process = await asyncio.create_subprocess_exec(
             sys.executable, p,
             stdout=asyncio.subprocess.PIPE,
             stdin=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT, loop=self.loop
         )
-        return self.test_process.pid
+        self.process_task = asyncio.ensure_future(self.manage_process())
+        self.process_id = self.test_process.pid
 
     async def manage_process(self):
         try:
@@ -125,6 +126,8 @@ class Server:
             code = await self.test_process.wait()
 
             unicode_log = log.decode('utf-8')
+            LOGGER.debug('exit code: {}'.format(code))
+            LOGGER.debug(unicode_log)
             self._send_json_to_clients(
                 {
                     KEY_SUBJECT: "process_result",
@@ -134,10 +137,38 @@ class Server:
         finally:
             self.test_process = None
 
-    async def test_stop_handler(self, request):
-        data = await request.text()
-        resp = await self.send_to_tester(data)
-        return web.json_response({"running": resp})
+    async def stop_test_handler(self, request):
+        # todo: if no websocket connection somehow. Just kill the process.
+        await self.stop_test()
+        # data = await request.text()
+        # resp = await self.send_to_tester(data)
+        return web.json_response({"running": False})
+
+    async def stop_test(self):
+        """Stop the running test process."""
+        if self.test_is_running:
+            if self.test_ws is not None:
+                try:
+                    with async_timeout.timeout(5):
+                        await self.test_ws.send_str(
+                            json.dumps({'type': MSG_TYPE_STOP_TEST}))
+                except asyncio.TimeoutError:
+                    LOGGER.info("Graceful shutdown failed.")
+                    self.close_tester_connection()
+                    await self.stop_test()
+            LOGGER.info("killing the process.")
+            self.test_process.kill()
+            self.test_process = None
+
+    async def close_tester_connection(self):
+        if self.test_ws is not None:
+            try:
+                with async_timeout.timeout(5):
+                    await self.test_ws.close()
+            except asyncio.TimeoutError:
+                LOGGER.info("unable to close the tester websocket connection"
+                            "gracefully")
+                self.test_ws = None
 
     async def test_handler(self, request):
         """Handle incoming data from the running test."""
@@ -196,14 +227,6 @@ class Server:
             self.sensor_sockets.remove(ws)
         return ws
 
-    async def send_to_tester(self, data: str):
-        """Send data to the connected test."""
-        if self.test_ws is not None:
-            try:
-                return await self.test_ws.send_str(data)
-            except Exception as err:
-                LOGGER.exception(err)
-
     def _parse_incoming_test_data(self, data, raw):
         self._send_to_ws(data, raw)
         if (data[KEY_SUBJECT] == subj.TEST_FINISHED or
@@ -246,7 +269,9 @@ class Server:
 
     async def start(self):
         """Initialize this data handler"""
+        self._add_routes()
         self.handler = self.app.make_handler()
+
         self.server = await self.loop.create_server(
             self.handler, ATTR_MESSAGE_BUS_ADDRESS, ATTR_MESSAGE_BUS_PORT)
 

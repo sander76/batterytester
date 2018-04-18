@@ -1,7 +1,8 @@
 """Telegram. Notifies status updates on Telegram"""
+from asyncio import CancelledError
 from datetime import datetime
-
-from telepot.aio import Bot
+import logging
+from aiotg import Bot
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.components.datahandlers.base_data_handler import \
@@ -9,6 +10,7 @@ from batterytester.components.datahandlers.base_data_handler import \
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.message_data import TestData, TestFinished
 
+LOGGER = logging.getLogger(__name__)
 
 class Telegram(BaseDataHandler):
     def __init__(self, *, token, chat_id):
@@ -22,15 +24,14 @@ class Telegram(BaseDataHandler):
     async def setup(self, test_name: str, bus: Bus):
         self._bus = bus
         self._test_name = test_name
-        self.bot = Bot(self._token, self._bus.loop)
+        self.bot = Bot(self._token)
 
         # self.slack = SlackAPI(token=self._token, session=self._session)
 
     async def shutdown(self, bus: Bus):
-        pass
-        # self.slack.close()
-        # if self._session:
-        #     await self._session.close()
+
+        if self.bot.session:
+            await self.bot.session.close()
 
     def get_subscriptions(self):
         return (
@@ -61,6 +62,15 @@ class Telegram(BaseDataHandler):
         self._send_message(_message)
 
     def _send_message(self, message):
-        self._bus.add_async_task(
-            self.bot.sendMessage(self._chat_id, message, parse_mode='Markdown')
-        )
+        async def send():
+            try:
+                await self.bot.send_message(
+                    self._chat_id, message, parse_mode='Markdown')
+            except CancelledError:
+                LOGGER.warning('send message task cancelled')
+
+        self._bus.add_async_task(send())
+        # self._bus.add_async_task(
+        #     self.bot.send_message(
+        #         self._chat_id, message, parse_mode='Markdown')
+        # )

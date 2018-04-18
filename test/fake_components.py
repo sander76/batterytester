@@ -3,6 +3,8 @@ from asyncio import CancelledError
 from random import random
 from unittest.mock import MagicMock
 
+import sys
+
 from batterytester.components.actors.base_actor import BaseActor
 from batterytester.components.sensor.connector import AsyncSensorConnector
 from batterytester.components.sensor.incoming_parser.boolean_parser import \
@@ -12,6 +14,7 @@ from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import 
 from batterytester.components.sensor.sensor import Sensor
 from batterytester.core.base_test import BaseTest
 from batterytester.core.bus import Bus
+from batterytester.server.server import Server
 
 
 class FakeActor(BaseActor):
@@ -113,3 +116,21 @@ class FakeBaseTest(BaseTest):
 
     def handle_sensor_data(self, sensor_data: dict):
         super().handle_sensor_data(sensor_data)
+
+# class FakeServer():
+    # if sys.platform == 'win32':
+    #     loop = asyncio.ProactorEventLoop()
+    #     asyncio.set_event_loop(loop)
+    # else:
+    #     loop = asyncio.get_event_loop()
+    # server = Server(
+    #     config_folder='',
+    #     loop_=loop)
+    # server.start_server()
+    # try:
+    #     loop.run_forever()
+    # except KeyboardInterrupt:
+    #     pass
+    # finally:
+    #     loop.run_until_complete(server.stop_data_handler())
+    # loop.close()

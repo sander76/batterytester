@@ -34,3 +34,8 @@ def test_reference_compare_fail_no_key(fake_bool_atom):
     fake_bool_atom.sensor_data.append(_measurement)
     _atom_result = fake_bool_atom.reference_compare()
     assert _atom_result.passed.value is False
+
+
+def test_reference_compare_no_data(fake_bool_atom):
+    _atom_result = fake_bool_atom.reference_compare()
+    assert _atom_result.passed.value is False

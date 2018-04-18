@@ -1,3 +1,4 @@
+import json
 import typing
 from functools import singledispatch
 from typing import List
@@ -13,6 +14,11 @@ TYPE_INT = 'int'
 TYPE_TIME_DELTA = 'time_delta'
 TYPE_JSON = 'json'
 TYPE_BOOL = 'bool'
+TYPE_STATUS = 'status'
+
+STATUS_RUNNING = 'running'
+STATUS_UNKOWN = 'unknown'
+STATUS_FINISHED = 'finished'
 
 
 class Data:
@@ -25,6 +31,9 @@ class Message:
     def __init__(self):
         self.subj = ''
         self.cache = False
+
+    def to_json(self):
+        return json.dumps(self, default=to_serializable)
 
 
 @singledispatch
@@ -50,11 +59,25 @@ class BaseTestData(Message):
         self.status = Data("unknown")
 
 
+class ProcessData(Message):
+    def __init__(self, process_id):
+        super().__init__()
+        self.process_id = Data(process_id, TYPE_INT)
+        self.status = Data(STATUS_RUNNING, TYPE_STATUS)
+        self.messages = []
+
+    def update(self, status=None, message=None):
+        if status:
+            self.status = Data(status, TYPE_STATUS)
+        if message:
+            self.messages.append(message)
+
+
 class TestFinished(BaseTestData):
     def __init__(self):
         super().__init__()
         # todo: add total runtime.
-        self.status = Data("finished")
+        self.status = Data(STATUS_FINISHED, TYPE_STATUS)
         self.time_finished = Data(get_current_timestamp(), type_=TYPE_TIME)
         self.reason = Data(value='End of test reached.')
 

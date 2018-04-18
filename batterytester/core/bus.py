@@ -73,7 +73,7 @@ class Bus:
             """An exception is raised. Meaning one of the long running 
             tasks has encountered an error. Cancelling the main task and
             subsequently cancelling all other long running tasks."""
-            if self.test_runner_task:
+            if not self.test_runner_task.done():
                 self.test_runner_task.cancel()
 
     def add_async_task(self, coro):
@@ -141,10 +141,11 @@ class Bus:
         return self.exit_message
 
     async def stop_test(self, message=None):
-
+        # wait a little to have all tasks finish gracefully.
+        await asyncio.sleep(4)
         LOGGER.info("stopping test")
 
-        if self.test_runner_task:
+        if not self.test_runner_task.done():
             self.test_runner_task.cancel()
 
         await asyncio.gather(
@@ -157,8 +158,9 @@ class Bus:
             *(_sensor.shutdown(self) for _sensor in self.sensors)
         )
 
-
         self.notify(subj.TEST_FINISHED, TestFinished())
+        # todo: making this obsolete in favour of calling shutdown methods
+        # in each component.
         for _task in self.closing_task:
             try:
                 async with timeout(10):

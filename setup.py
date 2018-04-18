@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='batterytester',
-    version='1.3.1',
+    version='1.3.3',
     packages=find_packages(exclude='test'),
     url='',
     license='',
@@ -10,5 +10,5 @@ setup(
     author_email='s.teunissen@gmail.com',
     description='',
     install_requires=['pyserial', 'aiopvapi', 'aiohttp', 'python-slugify',
-                      'telepot']
+                      'aiotg']
 )

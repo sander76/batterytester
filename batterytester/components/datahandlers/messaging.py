@@ -152,6 +152,7 @@ class Messaging(BaseDataHandler):
         else:
             if _type == MSG_TYPE_STOP_TEST:
                 # await self.ws_connection.close()
+                # todo: Make a dedicated exception for this.
                 raise FatalTestFailException("Stop test signal received.")
 
     async def ws_loop(self):

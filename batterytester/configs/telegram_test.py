@@ -5,9 +5,10 @@ import batterytester.components.actors.tools as actor_tools
 import batterytester.components.datahandlers as datahandlers
 import batterytester.core.atom as atoms
 # All imports. Please leave alone.
-from batterytester.configs.secret import telegram_token, telegram_sander
+from batterytester.configs.secret import telegram_token, chat_id
 from batterytester.core.base_test import BaseTest
-
+import logging
+logging.basicConfig(level=logging.DEBUG)
 # Define a test. Give it a proper name and define the amount
 # of loops to run.
 test = BaseTest(test_name='telegram test', loop_count=1)
@@ -25,7 +26,7 @@ test.add_sensors(
 # Add data handlers to the test.
 test.add_data_handlers(
     # datahandlers.Report()
-    datahandlers.Telegram(token=telegram_token, chat_id=telegram_sander)
+    datahandlers.Telegram(token=telegram_token, chat_id=chat_id)
     # test_frame.datahandler_slack()
 )
 
