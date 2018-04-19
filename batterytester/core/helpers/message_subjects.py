@@ -9,6 +9,10 @@ A `START` indicates an event and sends a start time as data.
 A `WARMUP` sends the general info about the test, atom etc.
 """
 
+PROCESS_INFO = 'process_info'
+
+PROCESS_STARTED = 'process_started'
+
 TEST_FINISHED = 'test_finished'
 """Emitted when a test has finished."""
 

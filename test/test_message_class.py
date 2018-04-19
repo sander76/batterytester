@@ -1,7 +1,7 @@
 import json
 
 from batterytester.core.helpers.message_data import Data, to_serializable, \
-    FatalData, Message
+    FatalData, Message, ProcessData
 
 
 def test_simple():
@@ -26,3 +26,12 @@ def test_fatal():
     _js = fatal.to_json()
     _dict = json.loads(_js)
     assert _dict['reason']['v'] == 'no idea'
+
+
+def test_process_data():
+    process_name = 'test_process'
+    process = ProcessData()
+    process.process_name = process_name
+    _js = process.to_json()
+    _dict = json.loads(_js)
+    assert _dict['_process_name']['v'] == process_name

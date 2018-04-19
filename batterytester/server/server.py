@@ -14,7 +14,7 @@ from aiohttp import web, WSCloseCode
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.helpers.constants import KEY_SUBJECT, KEY_CACHE
 from batterytester.core.helpers.message_data import to_serializable, \
-    Data
+    Data, ProcessData, STATUS_FINISHED, STATUS_RUNNING, ProcessStarted
 from batterytester.server.logger import setup_logging
 
 ATTR_MESSAGE_BUS_ADDRESS = '0.0.0.0'
@@ -43,18 +43,10 @@ URL_ALL_TESTS = '/all_tests'
 
 DEFAULT_CONFIG_PATH = '/home/pi/test_configs'
 
-# todo: use this as feedback for the running process.
-
-process_data = {
-    'process_id': None,
-    'status': 'running',
-    'test_feedback': None
-}
-
 
 class Server:
     def __init__(self, config_folder=None, loop_=None):
-        self.sensor_sockets = []  # connected ui clients
+        self.client_sockets = []  # connected ui clients
         self.test_ws = None  # Socket connection to the actual running test.
         self.config_folder = config_folder
         self.loop = loop_ or asyncio.get_event_loop()
@@ -65,7 +57,7 @@ class Server:
         self.test_cache = {}
         # self.test_summary = TestSummary()
         self.test_process = None
-        self.process_data = None
+        self.process_data = ProcessData()
 
     @property
     def test_is_running(self):
@@ -75,7 +67,7 @@ class Server:
 
     def _add_routes(self):
         # User interface connects here.
-        self.app.router.add_get(URL_INTERFACE, self.sensor_handler)
+        self.app.router.add_get(URL_INTERFACE, self.client_handler)
         # tests connect here
         self.app.router.add_get(URL_TEST, self.test_handler)
         self.app.router.add_static('/static/', path='static', name='static')
@@ -98,6 +90,7 @@ class Server:
         return data
 
     async def test_start_handler(self, request):
+
         data = await request.json()
         p = str(Path(self.config_folder).joinpath(data['test']))
 
@@ -105,12 +98,20 @@ class Server:
             return web.Response(
                 text="There is another test running. Stop that one first.")
         else:
+
             await self._start_test_process(p)
-        return web.Response(
-            text="Test has started. process id: {}".format(self.process_id))
+            self.process_data.process_name = data['test']
+            self.process_data.process_id = self.process_id
+            self.process_data.status = STATUS_RUNNING
+            await self.send_to_client(self.process_data.to_json())
+        return web.Response()
+
         # todo: handle feedback over websocket.
 
     async def _start_test_process(self, p):
+        await self.send_to_client(ProcessStarted().to_json())
+        self.clear_cache()
+
         self.test_process = await asyncio.create_subprocess_exec(
             sys.executable, p,
             stdout=asyncio.subprocess.PIPE,
@@ -128,10 +129,14 @@ class Server:
             unicode_log = log.decode('utf-8')
             LOGGER.debug('exit code: {}'.format(code))
             LOGGER.debug(unicode_log)
-            self._send_json_to_clients(
-                {
-                    KEY_SUBJECT: "process_result",
-                    "data": {"log": unicode_log, "return_code": code}})
+
+            self.process_data.return_code = code
+            self.process_data.add_message(unicode_log)
+            self.process_data.status = STATUS_FINISHED
+            await self.send_to_client(
+                self.process_data.to_json()
+            )
+
         except Exception as err:
             LOGGER.exception(err)
         finally:
@@ -153,12 +158,13 @@ class Server:
                         await self.test_ws.send_str(
                             json.dumps({'type': MSG_TYPE_STOP_TEST}))
                 except asyncio.TimeoutError:
-                    LOGGER.info("Graceful shutdown failed.")
+                    LOGGER.warning("Graceful shutdown failed.")
                     self.close_tester_connection()
                     await self.stop_test()
-            LOGGER.info("killing the process.")
-            self.test_process.kill()
-            self.test_process = None
+            else:
+                LOGGER.warning("killing the process.")
+
+                self.test_process.kill()
 
     async def close_tester_connection(self):
         if self.test_ws is not None:
@@ -166,9 +172,16 @@ class Server:
                 with async_timeout.timeout(5):
                     await self.test_ws.close()
             except asyncio.TimeoutError:
-                LOGGER.info("unable to close the tester websocket connection"
-                            "gracefully")
+                LOGGER.warning(
+                    "unable to close the tester websocket connection"
+                    "gracefully")
+            finally:
                 self.test_ws = None
+        _data = self.test_cache.get(subj.TEST_WARMUP)
+        if _data:
+            _data['status'] = Data('tester disconnected')
+            await self.send_to_client(
+                json.dumps(_data, default=to_serializable))
 
     async def test_handler(self, request):
         """Handle incoming data from the running test."""
@@ -179,21 +192,23 @@ class Server:
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     LOGGER.debug(msg.data)
                     _data = json.loads(msg.data)
-                    self._parse_incoming_test_data(_data, msg.data)
-                else:
-                    await self.test_ws.close()
+                    await self._parse_incoming_test_data(_data, msg.data)
+                elif msg.type in (aiohttp.WSMsgType.CLOSE,
+                                  aiohttp.WSMsgType.CLOSING,
+                                  aiohttp.WSMsgType.CLOSED):
+                    await self.close_tester_connection()
         except Exception as err:
             LOGGER.error(err)
-            self._tester_disconnect()
+            await self.close_tester_connection()
 
         return self.test_ws
 
-    async def sensor_handler(self, request):
+    async def client_handler(self, request):
         """Handle connection to the connected user interfaces."""
         ws = web.WebSocketResponse()
         await ws.prepare(request)
 
-        self.sensor_sockets.append(ws)
+        self.client_sockets.append(ws)
         try:
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
@@ -216,25 +231,25 @@ class Server:
                         )
 
                     elif _type == MSG_TYPE_ALL_TESTS:
-                        self._send_json_to_clients(self.list_configs())
+                        await self.send_to_client(
+                            json.dumps(self.list_configs()))
 
                 elif msg.type in (aiohttp.WSMsgType.CLOSE,
                                   aiohttp.WSMsgType.CLOSING,
                                   aiohttp.WSMsgType.CLOSED):
                     await ws.close()
         finally:
-
-            self.sensor_sockets.remove(ws)
+            self.client_sockets.remove(ws)
         return ws
 
-    def _parse_incoming_test_data(self, data, raw):
-        self._send_to_ws(data, raw)
+    async def _parse_incoming_test_data(self, data, raw):
+        await self.send_to_client(raw)
         if (data[KEY_SUBJECT] == subj.TEST_FINISHED or
                 data[KEY_SUBJECT] == subj.TEST_FATAL):
             self._update_test_cache(data, subj.TEST_WARMUP)
 
-        if data[KEY_SUBJECT] == subj.TEST_WARMUP:
-            self.test_cache = {}
+        # if data[KEY_SUBJECT] == subj.TEST_WARMUP:
+        #     self.test_cache = {}
         if data.get(KEY_CACHE):
             self.test_cache[data[KEY_SUBJECT]] = data
 
@@ -242,19 +257,15 @@ class Server:
         for key, value in data.items():
             self.test_cache[cache_key][key] = value
 
-    def _tester_disconnect(self):
-        _data = self.test_cache.get(subj.TEST_WARMUP)
-        if _data:
-            _data['status'] = Data('tester disconnected')
-            self._send_to_ws(_data, json.dumps(_data, default=to_serializable))
+    def clear_cache(self):
+        self.test_cache = {}
+        self.process_data = ProcessData()
 
-    def _send_json_to_clients(self, js: dict):
-        for _ws in self.sensor_sockets:
-            asyncio.ensure_future(_ws.send_json(js))
-
-    def _send_to_ws(self, data, raw):
-        for _ws in self.sensor_sockets:
-            asyncio.ensure_future(_ws.send_str(raw))
+    async def send_to_client(self, raw):
+        res = await asyncio.gather(
+            *(_ws.send_str(raw) for _ws in self.client_sockets))
+        for _res in res:
+            LOGGER.debug(_res)
 
     def return_cached_data(self, ws_client, cache_key):
         cached_data = self.test_cache.get(cache_key)
@@ -263,7 +274,7 @@ class Server:
             asyncio.ensure_future(ws_client.send_str(_js))
 
     async def shutdown(self):
-        for ws in self.sensor_sockets:
+        for ws in self.client_sockets:
             await ws.close(code=WSCloseCode.GOING_AWAY,
                            message='server shutdown')
 

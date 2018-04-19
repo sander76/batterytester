@@ -26,7 +26,9 @@ let containerAtomInfo = document.getElementById('atom_info')
 let containerSummaryInfo = document.getElementById('summary_info')
 let containerSensorInfo = document.getElementById('sensor_info')
 // area where process output is put in
-let processResultUi = document.getElementById('process_result')
+// let processResultUi = document.getElementById('process_result')
+
+let containerProcessInfo = document.getElementById('process_info')
 
 // var sensorInfo = new StatusElement(document.getElementById('sensor_data'))
 // var testInfo = new StatusElement(document.getElementById('test_data'));
@@ -85,6 +87,7 @@ function clearData() {
     clearValues(containerAtomInfo)
     clearValues(containerSummaryInfo)
     clearValues(containerSensorInfo)
+    clearValues(containerProcessInfo)
 }
 
 function clearValues(parent) {
@@ -164,7 +167,7 @@ function stopTest(e) {
 
 function startTest(e) {
     // get selected test.
-    processResultUi.value = ''
+
     var selected = allTests.value
     var xhr = new XMLHttpRequest()
     xhr.open('POST', baseUrl + '/test_start', true)
@@ -173,12 +176,12 @@ function startTest(e) {
         'test': selected
     }))
 
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-            var msg = (xhr.responseText)
-            processResultUi.value = msg
-        }
-    }
+    // xhr.onreadystatechange = function () {
+    //     if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+    //         var msg = (xhr.responseText)
+    //         processResultUi.value = msg
+    //     }
+    // }
 }
 
 function queryAllTests(e) {
@@ -275,10 +278,31 @@ function parseAllTests(data) {
     }
 }
 
-function parseProcessResult(data) {
-    var _current = processResultUi.value
-    _current = _current + '\n' + data.data.log
-    processResultUi.value = _current
+function createListItem(value) {
+    var _itm = document.createElement('div')
+    _itm.innerHTML = value
+    return _itm
+}
+
+function parseProcessInfo(data) {
+    function parser(key, value, _node) {
+        if (value.type === 'status') {
+            if (value.v === statusTestRunning) {
+                replaceClass(_node, ['bg-error'], 'bg-success')
+            } else if (value.v === statusTestStopped) {
+                replaceClass(_node, ['bg-success'], 'bg-error')
+            }
+        } else if (value.type === 'strlist') {
+            while (_node.lastChild) {
+                _node.removeChild(_node.lastChild)
+            }
+            value.v.forEach(function (val, index) {
+                _node.appendChild(createListItem(val))
+            })
+        }
+        _node.innerHTML = parseValueType(value)
+    }
+    objectIterator(containerProcessInfo, data, parser)
 }
 
 function objectIterator(container, data, parser) {
@@ -333,6 +357,7 @@ function parseTestInfo(data) {
                 replaceClass(_node, ['bg-success'], 'bg-error')
             }
         }
+
         _node.innerHTML = parseValueType(value)
     }
     objectIterator(containerTestInfo, data, parser)
@@ -381,8 +406,8 @@ function createSensorDataContainer(data) {
 
 function parseSensor(data) {
     let subj = data['subj']
-    delete data.subj
-    delete data.cache
+    // delete data.subj
+    // delete data.cache
     console.log(subj, data)
     if (subj === 'sensor_data') {
         // Sensor data
@@ -405,10 +430,14 @@ function parseSensor(data) {
         // testInfo.parse(data);
     } else if (subj === 'all_tests') {
         parseAllTests(data)
-    } else if (subj === 'process_result') {
-        parseProcessResult(data)
+        // } else if (subj === 'process_result') {
+        //     parseProcessResult(data)
     } else if (subj === 'test_fatal') {
         parseTestInfo(data)
+    } else if (subj === 'process_info') {
+        parseProcessInfo(data)
+    } else if (subj === 'process_started') {
+        this.clearData()
     }
 }
 

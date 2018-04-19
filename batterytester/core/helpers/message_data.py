@@ -6,7 +6,8 @@ from typing import List
 from batterytester.core.helpers.constants import KEY_ATOM_INDEX, \
     KEY_ATOM_LOOP, KEY_ATOM_NAME, REASON
 from batterytester.core.helpers.helpers import get_current_timestamp
-from batterytester.core.helpers.message_subjects import RESULT_SUMMARY
+from batterytester.core.helpers.message_subjects import RESULT_SUMMARY, \
+    PROCESS_INFO, PROCESS_STARTED
 
 TYPE_STR = 'str'
 TYPE_TIME = 'time'
@@ -15,6 +16,7 @@ TYPE_TIME_DELTA = 'time_delta'
 TYPE_JSON = 'json'
 TYPE_BOOL = 'bool'
 TYPE_STATUS = 'status'
+TYPE_STR_LIST = 'strlist'
 
 STATUS_RUNNING = 'running'
 STATUS_UNKOWN = 'unknown'
@@ -27,9 +29,24 @@ class Data:
         self.type = type_
 
 
-class Message:
+class ListData:
     def __init__(self):
-        self.subj = ''
+        self._value = []
+        self.type = TYPE_STR_LIST
+
+    @property
+    def value(self):
+        return self._value
+
+    def add(self, value):
+        self._value.append(value)
+
+
+class Message:
+    subj = ''
+
+    def __init__(self):
+        # todo: remove this property
         self.cache = False
 
     def to_json(self):
@@ -47,9 +64,16 @@ def data_serializable(val):
     return {"v": val.value, "type": val.type}
 
 
+@to_serializable.register(ListData)
+def data_serializable(val):
+    return {'v': val.value, 'type': val.type}
+
+
 @to_serializable.register(Message)
 def message_serializable(val):
-    return vars(val)
+    _val = vars(val)
+    _val['subj'] = val.subj
+    return _val
 
 
 class BaseTestData(Message):
@@ -59,18 +83,55 @@ class BaseTestData(Message):
         self.status = Data("unknown")
 
 
-class ProcessData(Message):
-    def __init__(self, process_id):
-        super().__init__()
-        self.process_id = Data(process_id, TYPE_INT)
-        self.status = Data(STATUS_RUNNING, TYPE_STATUS)
-        self.messages = []
+class ProcessStarted(Message):
+    subj = PROCESS_STARTED
 
-    def update(self, status=None, message=None):
-        if status:
-            self.status = Data(status, TYPE_STATUS)
-        if message:
-            self.messages.append(message)
+
+class ProcessData(Message):
+    subj = PROCESS_INFO
+
+    def __init__(self):
+        super().__init__()
+        self._process_name = Data()
+        self._process_id = Data(type_=TYPE_INT)
+        self._status = Data(STATUS_UNKOWN, TYPE_STATUS)
+        self._return_code = Data(type_=TYPE_INT)
+        self._messages = ListData()
+
+    @property
+    def process_name(self):
+        return self._process_name.value
+
+    @process_name.setter
+    def process_name(self, value):
+        self._process_name.value = value
+
+    @property
+    def process_id(self):
+        return self._process_id.value
+
+    @process_id.setter
+    def process_id(self, value):
+        self._process_id.value = value
+
+    @property
+    def status(self):
+        return self._status.value
+
+    @status.setter
+    def status(self, value):
+        self._status.value = value
+
+    @property
+    def return_code(self):
+        return self._return_code.value
+
+    @return_code.setter
+    def return_code(self, value):
+        self._return_code.value = value
+
+    def add_message(self, message: str):
+        self._messages.add(message)
 
 
 class TestFinished(BaseTestData):

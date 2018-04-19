@@ -22,6 +22,8 @@ def get_loop():
     return loop
 
 
+# todo: create a fake websocket tester connection and test interaction.
+
 def test_process():
     """Test a process raising an unhandled exception."""
     loop = get_loop()
@@ -48,7 +50,9 @@ def test_stop_process_no_ws():
         assert server.test_is_running is True
         await asyncio.sleep(1)
         resp = await server.stop_test()
-        print(resp)
+        while not server.process_task.done():
+            await asyncio.sleep(1)
+        return
 
     loop.run_until_complete(start_process())
     assert server.test_is_running is False
