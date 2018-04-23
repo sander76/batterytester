@@ -65,6 +65,25 @@ function openSocket(url) {
     }
 }
 
+function getStatus() {
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', baseUrl + '/get_status', true)
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
+
+    xhr.send(null)
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            var msg = JSON.parse(xhr.responseText)
+            for (const key in msg) {
+                if (msg.hasOwnProperty(key)) {
+                    parseSensor(msg[key])
+                }
+            }
+        }
+    }
+}
+
 function setConnectionStatus(statusKey) {
     switch (statusKey) {
         case connectStatusConnected:
@@ -128,12 +147,12 @@ function setUnknown(node) {
 }
 
 function init() {
-    ws.send(JSON.stringify({
-        'type': 'atom'
-    })) // Get cached atom data.
-    ws.send(JSON.stringify({
-        'type': 'test'
-    })) // Get cached test data.
+    // ws.send(JSON.stringify({
+    //     'type': 'atom'
+    // })) // Get cached atom data.
+    // ws.send(JSON.stringify({
+    //     'type': 'test'
+    // })) // Get cached test data.
     queryAllTests()
 }
 
@@ -144,6 +163,7 @@ function connect(e) {
     clearData()
     setConnectionStatus(connectStatusConnecting)
     openSocket(wsHost)
+    getStatus()
 }
 
 function stopTest(e) {
@@ -213,60 +233,6 @@ function timeInterpreter(value) {
 
     return [date.getHours(), date.getMinutes(), date.getSeconds()].join(':') + ' (' + date.toDateString() + ')'
 }
-
-// StatusElement.prototype.clear = function () {
-//     this.dataContainer = {}
-//     this.parentDiv.innerHTML = ''
-// }
-// StatusElement.prototype.parse = function (data) {
-//     for (const [key, value] of Object.entries(data)) {
-//         // Check if there already exists a PropertyElement.
-//         var el = this.dataContainer[key]
-
-//         // If PropertyElement does not exist. Create it.
-//         if (el === undefined) {
-//             var interpreter = plainInterpreter
-//             var valueContainer = 'div'
-//             if (key === 'reference_data' || key === 'failed_ids') {
-//                 interpreter = jsonInterpreter
-//                 valueContainer = 'pre'
-//             } else if (key === 'started' || key === 'time_finished' || key === 'status_updated' || key ===
-//                 't') {
-//                 interpreter = timeInterpreter
-//             }
-//             el = new PropertyElement(key, interpreter, valueContainer)
-//             this.dataContainer[key] = el
-//             this.parentDiv.appendChild(el.container)
-//         }
-//         el.update(value)
-//     }
-// }
-
-// function PropertyElement(key, interpreter, valueContainer) {
-//     // A property value container.
-//     this.prop = document.createElement('div')
-//     this.prop.innerHTML = key
-//     this.prop.className = 'sensor_prop'
-//     this.val = document.createElement(valueContainer)
-//     this.val.className = 'sensor_val'
-//     this.container = document.createElement('div')
-//     this.container.className = 'sensor_container'
-//     this.container.appendChild(this.prop)
-//     this.container.appendChild(this.val)
-//     this.interpreter = interpreter
-// }
-
-// PropertyElement.prototype.update = function (value) {
-//     this.val.innerHTML = this.interpreter(value)
-//     // if (key === 'reference_data' || key === 'failed_ids') {
-//     //     var pre = document.createElement('pre');
-//     //     pre.innerHTML = JSON.stringify(value['v'], undefined, 4);
-//     //     this.val.appendChild(pre);
-//     // } else {
-//     //     this.val.innerHTML = value['v'];
-//     // }
-//     // this.prop.innerHTML = key;
-// }
 
 function parseAllTests(data) {
     allTests.options.length = 0

@@ -26,6 +26,8 @@ def test_fatal():
     _js = fatal.to_json()
     _dict = json.loads(_js)
     assert _dict['reason']['v'] == 'no idea'
+    _dct = fatal.to_dict()
+    assert _dct['reason']['v'] == 'no idea'
 
 
 def test_process_data():

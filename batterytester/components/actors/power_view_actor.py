@@ -19,7 +19,7 @@ class PowerViewActor(BaseActor):
 
     actor_type = ACTOR_TYPE_POWER_VIEW
 
-    def __init__(self,*, hub_ip: str):
+    def __init__(self, *, hub_ip: str):
         """
 
         :param hub_ip: The Powerview hub ip address. like: 192.168.2.4
@@ -102,6 +102,8 @@ class PowerViewActor(BaseActor):
 
         if not from_cache:
             await self.get_shades()
+        if not self.shades:
+            await self.get_shades()
         for _shade in self.shades:
             if _shade.id == shade_id:
                 return _shade
@@ -121,6 +123,11 @@ class PowerViewActor(BaseActor):
         """Close a shade."""
         _shade = await self.get_shade(shade_id)
         await _shade.close()
+
+    async def jog_shade(self, shade_id):
+        """Jog a shade"""
+        _shade = await self.get_shade(shade_id)
+        await _shade.jog()
 
     async def activate_scene(self, scene_id: int):
         """Activate a scene

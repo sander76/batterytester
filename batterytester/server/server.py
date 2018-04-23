@@ -73,6 +73,7 @@ class Server:
         self.app.router.add_static('/static/', path='static', name='static')
         self.app.router.add_post(URL_TEST_START, self.test_start_handler)
         self.app.router.add_post(URL_TEST_STOP, self.stop_test_handler)
+        self.app.router.add_get('/get_status', self.get_status_handler)
 
     def start_server(self):
         """Create a web server"""
@@ -148,6 +149,11 @@ class Server:
         # data = await request.text()
         # resp = await self.send_to_tester(data)
         return web.json_response({"running": False})
+
+    async def get_status_handler(self, request):
+        # todo: finish this.
+        self.test_cache['process_info']=self.process_data.to_dict()
+        return web.json_response(self.test_cache)
 
     async def stop_test(self):
         """Stop the running test process."""

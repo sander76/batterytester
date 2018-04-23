@@ -52,6 +52,10 @@ class Message:
     def to_json(self):
         return json.dumps(self, default=to_serializable)
 
+    def to_dict(self):
+        return json.loads(self.to_json())
+
+
 
 @singledispatch
 def to_serializable(val):

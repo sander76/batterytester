@@ -55,6 +55,9 @@ class BaseTest:
 
     def add_actor(self, *actors: BaseActor):
         """Add actors to the test."""
+
+        # todo: have the option to include multiple actors of the same type
+
         for _actor in actors:
             self.bus.actors[_actor.actor_type] = _actor
 
