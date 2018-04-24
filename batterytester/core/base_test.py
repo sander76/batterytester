@@ -84,7 +84,7 @@ class BaseTest:
         self.bus.notify(subj.SENSOR_DATA, sensor_data)
 
         if self.active_atom:
-            self.active_atom.sensor_data.append(sensor_data)
+            self.active_atom.add_sensor_data(sensor_data)
 
     def get_sequence(self, *args):
         """Gets called to retrieve a list of test atoms to be performed.

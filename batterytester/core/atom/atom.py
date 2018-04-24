@@ -1,6 +1,7 @@
 import logging
 import os
 from typing import Union
+
 from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
     PvApiResponseStatusError
 
@@ -51,6 +52,9 @@ class Atom:
     @property
     def duration(self):
         return self._duration
+
+    def add_sensor_data(self, sensor_data):
+        self.sensor_data.append(sensor_data)
 
     def prepare_test_atom(self, idx, current_loop, stored_atom_results):
         self._idx = idx
