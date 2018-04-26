@@ -1,7 +1,7 @@
 import datetime
 import logging
 import os
-from time import time
+from time import time, strftime, localtime
 
 LOOP_TIME_OUT = 2
 
@@ -21,6 +21,10 @@ def get_current_timestamp():
 
 def get_time_string(datetime_obj: datetime.datetime):
     return datetime_obj.strftime(TIME_FORMAT)
+
+
+def get_localtime_string(timestamp):
+    return strftime(TIME_FORMAT, localtime(timestamp))
 
 
 def get_current_time_string():
