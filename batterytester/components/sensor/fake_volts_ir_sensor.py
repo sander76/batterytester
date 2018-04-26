@@ -14,7 +14,11 @@ class FakeVoltsAmpsSensor(Sensor):
 
     """
 
+    def __init__(self, sensor_prefix=None, delay=1):
+        super().__init__(sensor_prefix=sensor_prefix)
+        self.delay = delay
+
     def setup(self, test_name: str, bus: Bus):
-        self._connector = RandomVoltAmpsConnector(bus)
+        self._connector = RandomVoltAmpsConnector(bus, self.delay)
         self._sensor_data_parser = VoltAmpsIrParser(bus, self.sensor_prefix)
         return super().setup(test_name, bus)
