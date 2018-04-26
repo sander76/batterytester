@@ -1,16 +1,13 @@
 import logging
 import os
 from datetime import datetime
-from pathlib import Path
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.components.datahandlers.base_data_handler import \
-    BaseDataHandler
-
+    FileBasedDataHandler
 from batterytester.core.helpers.constants import RESULT_FAIL, \
     RESULT_PASS
-from batterytester.core.helpers.helpers import get_current_time_string, \
-    get_time_string
+from batterytester.core.helpers.helpers import get_time_string
 from batterytester.core.helpers.message_data import FatalData, TestFinished, \
     TestData, AtomData, AtomResult, TestSummary
 
@@ -45,28 +42,7 @@ def block_quote(content):
     return BLOCKQUOTE_FORMAT.format(content), True
 
 
-def check_output_folder(output_path) -> Path:
-    _path = Path(output_path)
-    if not _path.is_absolute():
-        _path = Path.cwd().joinpath(_path)
-    try:
-        _path.mkdir(parents=True)
-    except FileExistsError:
-        LOGGER.debug("Path already exists.")
-    return _path
-
-
-def create_report_file(test_name, report_name, output_path):
-    """Create a report file."""
-    _base_filename = report_name or test_name
-    _filename = '{}_{}.md'.format(_base_filename, get_current_time_string())
-
-    _path = check_output_folder(output_path)
-    # converting the Path object to string for Python 3.5 compatibility.
-    return str(_path.joinpath(_filename))
-
-
-class MarkDownReport(BaseDataHandler):
+class MarkDownReport(FileBasedDataHandler):
     def __init__(self, report_name=None, output_path='reports'):
         """
 
@@ -75,22 +51,13 @@ class MarkDownReport(BaseDataHandler):
         :param output_path: Path to store the report file.
             Can be relative or absolute.
         """
-        super().__init__()
-        self._filename = None
-        self._report_name = report_name
-        self._output_path = output_path
+        super().__init__(report_name,output_path)
         self.start_time = None
         self.stop_time = None
         self._test_summary = TestSummary()
-        self._report_data = []  # All report lines are stored here.
 
     def get_subscriptions(self):
         pass
-
-    async def setup(self, test_name, bus):
-        self._filename = create_report_file(
-            test_name, self._report_name, self._output_path
-        )
 
     def _check_block(self):
         if not self._report_data or self._report_data[-1] != '':
@@ -143,14 +110,13 @@ class Report(MarkDownReport):
             (subj.TEST_WARMUP, self._test_warmup),
             (subj.TEST_FATAL, self._test_fatal),
             (subj.TEST_FINISHED, self._test_finished),
-
             (subj.ATOM_WARMUP, self._atom_warmup),
             (subj.ATOM_RESULT, self._atom_result)
         )
 
     async def shutdown(self, bus):
         self._create_summary()
-        self._flush()
+        await super().shutdown(bus)
 
     def _test_warmup(self, subject, data: TestData):
         """Create a file and write headers"""
@@ -228,11 +194,3 @@ class Report(MarkDownReport):
 
     def summarize_result(self, summary_table):
         pass
-
-    def _flush(self):
-        """Writes buffer to file"""
-        with open(self._filename, 'a') as fl:
-            fl.write('\n'.join(self._report_data))
-            fl.write('\n')
-        # reset the summary
-        self._report_data = []

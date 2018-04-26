@@ -54,6 +54,7 @@ class Bus:
                     _subscriber(subject, data)
                 except Exception as err:
                     raise
+
     # except KeyError:
     #     LOGGER.debug('No subscribers to subject {}.'.format(subject))
 
@@ -108,8 +109,6 @@ class Bus:
 
         await self.test_runner_task
 
-
-
     def _start_test(self, test_runner, test_name):
         for callback in self.callbacks:
             callback()
@@ -142,6 +141,7 @@ class Bus:
 
     async def stop_test(self, message=None):
         # wait a little to have all tasks finish gracefully.
+        self.notify(subj.TEST_FINISHED, TestFinished())
         await asyncio.sleep(4)
         LOGGER.info("stopping test")
 
@@ -158,7 +158,9 @@ class Bus:
             *(_sensor.shutdown(self) for _sensor in self.sensors)
         )
 
-        self.notify(subj.TEST_FINISHED, TestFinished())
+        self.running = False
+
+
         # todo: making this obsolete in favour of calling shutdown methods
         # in each component.
         for _task in self.closing_task:
