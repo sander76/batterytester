@@ -13,7 +13,7 @@ from batterytester.core.bus import Bus
 
 
 def to_protocol(command, *args):
-    return '{}:{}\n'.format(command, ':'.join(str(x) for x in args))
+    return '{{{}:{}}}\n'.format(command, ':'.join(str(x) for x in args))
 
 
 class RelayActor(BaseActor):
@@ -21,7 +21,7 @@ class RelayActor(BaseActor):
 
     actor_type = ACTOR_TYPE_RELAY_ACTOR
 
-    def __init__(self,* , serial_port, serial_speed=115200):
+    def __init__(self, *, serial_port, serial_speed=115200):
         self._port = serial_port
         self._speed = serial_speed
         self._serial = None
@@ -44,6 +44,6 @@ class RelayActor(BaseActor):
         :param duration: in seconds.
         :return:
         """
-        
+
         _up = to_protocol('a', pin, duration)
         self._serial.write(_up.encode('utf-8'))

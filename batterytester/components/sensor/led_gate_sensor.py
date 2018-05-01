@@ -3,8 +3,8 @@
 When the sensor is open it will return True.
 if sensor is blocked it will return False.
 """
-from batterytester.components.sensor.connector.async_threaded_serial_connector import \
-    ThreadedSerialSensorConnector
+from batterytester.components.sensor.connector.arduino_connector import \
+    ArduinoConnector
 from batterytester.components.sensor.incoming_parser.boolean_parser import \
     BooleanParser
 from batterytester.components.sensor.sensor import Sensor
@@ -40,11 +40,12 @@ class LedGateSensor(Sensor):
         self.serialspeed = serial_speed
 
     async def setup(self, test_name: str, bus: Bus):
-        self._connector = ThreadedSerialSensorConnector(
-            bus, self.serialport, self.serialspeed)
+        self._connector = ArduinoConnector(
+            bus=bus, serial_port=self.serialport,
+            serial_speed=self.serialspeed)
         self._sensor_data_parser = BooleanParser(bus, self.sensor_prefix)
         await super().setup(test_name, bus)
 
     async def shutdown(self, bus: Bus):
         await super().shutdown(bus)
-        self._connector.close_method()
+        await self._connector.close_method()

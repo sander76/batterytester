@@ -26,6 +26,8 @@ class AsyncSensorConnector(SensorConnector):
     def __init__(self, bus):
         super().__init__(bus)
         self.bus.add_async_task(self.async_listen_for_data())
+
+        # todo: replace this for the general shutdown call.
         self.bus.add_closing_task(self.close_method())
 
     async def close_method(self):

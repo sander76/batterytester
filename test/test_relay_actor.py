@@ -42,13 +42,13 @@ def test_instantiate(monkeypatch, fake_relay_actor):
 
 
 def test_to_protocol():
-    _ref = "a:2:3\n"
+    _ref = "{a:2:3}\n"
     _val = to_protocol('a', 2, 3)
     assert _ref == _val
 
     _val = to_protocol('a', 3, 2)
     assert _ref != _val
 
-    _ref = "a:2\n"
+    _ref = "{a:2}\n"
     _val = to_protocol('a', 2)
     assert _ref == _val

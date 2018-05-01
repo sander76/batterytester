@@ -56,7 +56,6 @@ class Message:
         return json.loads(self.to_json())
 
 
-
 @singledispatch
 def to_serializable(val):
     """Used by default"""

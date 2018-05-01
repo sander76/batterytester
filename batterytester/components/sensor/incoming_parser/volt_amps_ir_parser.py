@@ -22,7 +22,7 @@ class VoltAmpsIrParser(IncomingParser):
     sensor_name = 'VI'
 
     def __init__(self, bus, sensor_prefix=None):
-        super().__init__(bus, sensor_prefix)
+        super().__init__(bus, sensor_prefix=sensor_prefix)
         self.sensor_name = self.decorate_sensor_name(
             VoltAmpsIrParser.sensor_name)
 

@@ -6,13 +6,12 @@ from serial import Serial, SerialException
 from batterytester.components.sensor.connector import AsyncSensorConnector
 from batterytester.core.helpers.helpers import FatalTestFailException
 
-
 LOGGER = logging.getLogger(__name__)
 
 
-class ThreadedSerialSensorConnector(AsyncSensorConnector):
+class ArduinoConnector(AsyncSensorConnector):
     def __init__(
-            self,
+            self,*,
             bus,
             serial_port,
             serial_speed,
@@ -24,6 +23,10 @@ class ThreadedSerialSensorConnector(AsyncSensorConnector):
         self.s.baudrate = serial_speed
         self.trydelay = try_delay
 
+    def get_version(self):
+        if self.s.is_open:
+            self.s.write('{i}')
+
     async def close_method(self):
         """Close the serial port. This gets called after the main test
         has stopped.
@@ -32,6 +35,7 @@ class ThreadedSerialSensorConnector(AsyncSensorConnector):
         threaded serial listener effectively stopping
         the wrapping async task"""
         LOGGER.debug("Closing serial connection")
+        self.s.cancel_read()
         self.s.close()
 
     def _connect(self):
@@ -49,15 +53,27 @@ class ThreadedSerialSensorConnector(AsyncSensorConnector):
         self._connect()
         while self.bus.running:
             try:
-                data = self.s.read(self.s.in_waiting or 1)
-                self.bus.loop.call_soon_threadsafe(
-                    self.raw_sensor_data_queue.put_nowait, data)
+                data = self.s.readline()
+                self.check_command(data)
+                #self.bus.loop.call_soon_threadsafe(
+                #    self.raw_sensor_data_queue.put_nowait, data)
             except SerialException:
                 if self.s.is_open:
                     self.s.close()
 
                 LOGGER.error("error reading from serial port")
                 raise FatalTestFailException("Problem reading serial port.")
+
+    def check_command(self, data):
+        command = data[1]
+        if command == 105: # 'i' ascii character
+            LOGGER.info("sensor identity {}".format(data))
+            # report version
+            pass
+        elif command == 115: # 's' ascii character
+            # sensor data
+            self.bus.loop.call_soon_threadsafe(
+                self.raw_sensor_data_queue.put_nowait, data[3:-2])
 
     async def async_listen_for_data(self, *args):
         with ThreadPoolExecutor(max_workers=1) as executor:
