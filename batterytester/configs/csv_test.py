@@ -19,8 +19,9 @@ test.add_actor(
 
 # Add sensors to the test.
 test.add_sensors(
-    sensors.FakeVoltsAmpsSensor(delay=2),
-    sensors.FakeVoltsAmpsSensor(sensor_prefix='abc')
+    #sensors.FakeVoltsAmpsSensor(delay=2),
+    #sensors.FakeVoltsAmpsSensor(sensor_prefix='abc')
+    sensors.LedGateSensor(serial_port='COM6')
 )
 
 # Add data handlers to the test.

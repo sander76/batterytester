@@ -15,6 +15,8 @@ LOGGER = logging.getLogger(__name__)
 COL_SENSOR_NAME = 'sensor_name'
 COL_TIME_STAMP = 'time_stamp'
 COL_TIME_STRING = 'time_string'
+COL_VALUE = 'value'
+
 
 class CsvSensorData:
     def __init__(self, test_name, output_path, bus):
@@ -43,11 +45,11 @@ class CsvSensorData:
         self.data.append(data)
 
     def create_columns(self, sensor_data):
-        _cols = [COL_SENSOR_NAME, COL_TIME_STAMP, COL_TIME_STRING]
-
-        for _key in sensor_data[KEY_VALUE][KEY_VALUE].keys():
-            self.value_keys.append(_key)
-        _cols.extend(self.value_keys)
+        _cols = [COL_SENSOR_NAME, COL_TIME_STAMP, COL_TIME_STRING, COL_VALUE]
+        # self.value_keys.append()
+        # for _key in sensor_data[KEY_VALUE][KEY_VALUE].keys():
+        #     self.value_keys.append(_key)
+        #_cols.extend(self.value_keys)
 
         self.file_data_queue.put_nowait(self.separator.join(_cols))
 
@@ -71,10 +73,11 @@ class CsvSensorData:
     def get_values(self, sensor_data):
         vals = [sensor_data[ATTR_SENSOR_NAME],
                 str(sensor_data[ATTR_TIMESTAMP][KEY_VALUE]),
-                get_localtime_string(sensor_data[ATTR_TIMESTAMP][KEY_VALUE])
+                get_localtime_string(sensor_data[ATTR_TIMESTAMP][KEY_VALUE]),
+                str(sensor_data[KEY_VALUE][KEY_VALUE])
                 ]
-        for _value_key in self.value_keys:
-            vals.append(str(sensor_data[KEY_VALUE][KEY_VALUE][_value_key]))
+        # for _value_key in self.value_keys:
+        #     vals.append(str(sensor_data[KEY_VALUE][KEY_VALUE][_value_key]))
         return self.separator.join(vals)
 
     def flush(self):
