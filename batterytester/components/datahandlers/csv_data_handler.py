@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import os
+
 from asyncio import CancelledError
 from concurrent.futures import ThreadPoolExecutor
 
@@ -46,10 +48,6 @@ class CsvSensorData:
 
     def create_columns(self, sensor_data):
         _cols = [COL_SENSOR_NAME, COL_TIME_STAMP, COL_TIME_STRING, COL_VALUE]
-        # self.value_keys.append()
-        # for _key in sensor_data[KEY_VALUE][KEY_VALUE].keys():
-        #     self.value_keys.append(_key)
-        #_cols.extend(self.value_keys)
 
         self.file_data_queue.put_nowait(self.separator.join(_cols))
 
@@ -68,6 +66,9 @@ class CsvSensorData:
                 with open(self.file_name, 'a') as fl:
                     fl.write(_line)
                     fl.write('\n')
+                    fl.flush()
+                    os.fsync(fl.fileno())
+
         pass
 
     def get_values(self, sensor_data):
@@ -76,8 +77,6 @@ class CsvSensorData:
                 get_localtime_string(sensor_data[ATTR_TIMESTAMP][KEY_VALUE]),
                 str(sensor_data[KEY_VALUE][KEY_VALUE])
                 ]
-        # for _value_key in self.value_keys:
-        #     vals.append(str(sensor_data[KEY_VALUE][KEY_VALUE][_value_key]))
         return self.separator.join(vals)
 
     def flush(self):
@@ -123,6 +122,7 @@ class CsvDataHandler(BaseDataHandler):
         self.sensor_data[data[ATTR_SENSOR_NAME]].add_data(data)
 
         if self.current_buffer >= self.write_buffer:
+            self.current_buffer = 0
             self._flush()
 
     def _flush(self):
