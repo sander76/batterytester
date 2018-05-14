@@ -1,9 +1,11 @@
-import batterytester.components.sensor.connector.async_serial_connector as sc
-import pytest
-from unittest.mock import MagicMock
-from serial import Serial, SerialException
-from batterytester.core.bus import Bus
 import asyncio
+from unittest.mock import MagicMock
+
+import pytest
+from serial import Serial, SerialException
+
+import batterytester.components.sensor.connector.async_serial_connector as sc
+from batterytester.core.bus import Bus
 
 
 @pytest.fixture
@@ -12,14 +14,13 @@ def bus():
     return bus
 
 
-
 async def get_value(connection):
     val = await connection.raw_sensor_data_queue.get()
     return val
 
 
 def test_serial_incoming(monkeypatch, bus):
-    """Teest incoming data"""
+    """Test incoming data"""
     monkeypatch.setattr(
         'batterytester.components.sensor.connector.async_serial_connector.Serial',
         MagicMock(Serial))
@@ -29,9 +30,9 @@ def test_serial_incoming(monkeypatch, bus):
     con.s.in_waiting = 1
 
     loop = asyncio.get_event_loop()
-    #return_val = loop.create_task(get_value(con))
+    # return_val = loop.create_task(get_value(con))
     val = loop.run_until_complete(get_value(con))
-    #res = return_val.result()
+    # res = return_val.result()
     assert val == b'a'
 
 
@@ -49,5 +50,5 @@ def test_stop_test_on_serial_error(monkeypatch, bus):
     async def fake_test():
         pass
 
-    bus._start_test(fake_test(),'fake_test')
+    bus._start_test(fake_test(), 'fake_test')
     assert True

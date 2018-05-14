@@ -45,10 +45,6 @@ class ListData:
 class Message:
     subj = ''
 
-    def __init__(self):
-        # todo: remove this property
-        self.cache = False
-
     def to_json(self):
         return json.dumps(self, default=to_serializable)
 
