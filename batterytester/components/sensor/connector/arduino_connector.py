@@ -11,7 +11,7 @@ LOGGER = logging.getLogger(__name__)
 
 class ArduinoConnector(AsyncSensorConnector):
     def __init__(
-            self,*,
+            self, *,
             bus,
             serial_port,
             serial_speed,
@@ -55,7 +55,7 @@ class ArduinoConnector(AsyncSensorConnector):
             try:
                 data = self.s.readline()
                 self.check_command(data)
-                #self.bus.loop.call_soon_threadsafe(
+                # self.bus.loop.call_soon_threadsafe(
                 #    self.raw_sensor_data_queue.put_nowait, data)
             except SerialException:
                 if self.s.is_open:
@@ -66,11 +66,11 @@ class ArduinoConnector(AsyncSensorConnector):
 
     def check_command(self, data):
         command = data[1]
-        if command == 105: # 'i' ascii character
+        if command == 105:  # 'i' ascii character
             LOGGER.info("sensor identity {}".format(data))
             # report version
             pass
-        elif command == 115: # 's' ascii character
+        elif command == 115:  # 's' ascii character
             # sensor data
             self.bus.loop.call_soon_threadsafe(
                 self.raw_sensor_data_queue.put_nowait, data[3:-2])
