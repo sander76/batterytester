@@ -155,16 +155,16 @@ def test_mix_atoms(fake_tester_4):
     _reference_atom.reference_compare.assert_called_once()
 
 
-def test_influx(fake_test: FakeBaseTest, fake_actor, fake_sensor, fake_influx):
-    fake_test.add_actor(fake_actor)
-    fake_test.add_sensors(fake_sensor)
-    fake_test.add_data_handlers(fake_influx)
-    fake_test.get_sequence = get_sequence1
-    fake_test.start_test()
-
-    fake_influx._send.mock.assert_called()
-
-    print(len(fake_influx.data))
+# def test_influx(fake_test: FakeBaseTest, fake_actor, fake_sensor, fake_influx):
+#     fake_test.add_actor(fake_actor)
+#     fake_test.add_sensors(fake_sensor)
+#     fake_test.add_data_handlers(fake_influx)
+#     fake_test.get_sequence = get_sequence1
+#     fake_test.start_test()
+#
+#     fake_influx._send.mock.assert_called()
+#
+#     print(len(fake_influx.data))
 
 
 def test_fake_ledgate_reference(fake_test: FakeBaseTest, fake_actor):

@@ -24,6 +24,7 @@ class ArduinoSensor(Sensor):
 
     async def setup(self, test_name: str, bus: Bus):
         self._connector = ArduinoConnector(
-            bus=bus, serial_port=self.serialport, serial_speed=self.serialspeed)
+            bus=bus, serial_port=self.serialport,
+            serial_speed=self.serialspeed)
         self._sensor_data_parser = ArduinoParser(bus, self.sensor_prefix)
         return await super().setup(test_name, bus)

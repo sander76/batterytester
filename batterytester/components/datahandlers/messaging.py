@@ -22,9 +22,6 @@ URL_CLOSE = 'close'
 URL_ATOM = 'atom'  # General info about the current atom.
 # URL_TEST = 'test'  # General test information.
 
-CACHE_ATOM_DATA = 'atom_data'  # Cache key where to store atom data.
-CACHE_TEST_DATA = 'test_data'  # Cache key where to store test info.
-
 LOGGER = logging.getLogger(__name__)
 
 KEY_PASS = 'passed'

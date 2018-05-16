@@ -10,7 +10,10 @@ import batterytester.core.atom as atoms
 from batterytester.components.actors import ExampleActor
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers import message_subjects as subj
+from batterytester.core.helpers.constants import ATOM_STATUS_EXECUTING, \
+    ATOM_STATUS_COLLECTING
 from batterytester.core.helpers.helpers import TestSetupException
+from batterytester.core.helpers.message_data import Data
 
 logging.basicConfig(level=logging.INFO)
 
@@ -85,3 +88,10 @@ def test_notifications_sequence(base_test):
     for idx, _subj in enumerate(subjects):
         args, kwargs = base_test.bus.notify.call_args_list[idx]
         assert args[0] == _subj
+
+    atom_status1 = base_test.bus.notify.call_args_list[3][0][1]
+    atom_status2 = base_test.bus.notify.call_args_list[4][0][1]
+
+    _data1 = Data(ATOM_STATUS_EXECUTING)
+    assert atom_status1.status == _data1
+    assert atom_status2.status == Data(ATOM_STATUS_COLLECTING)
