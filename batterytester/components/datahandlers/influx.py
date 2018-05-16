@@ -95,8 +95,6 @@ def to_nanoseconds(timestamp):
             "Unable to convert milliseconds to nanoseconds.")
 
 
-# todo: write tests.
-
 class Influx(BaseDataHandler):
     """Writes data to an InfluxDB database."""
 

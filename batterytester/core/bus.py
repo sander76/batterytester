@@ -33,6 +33,11 @@ class Bus:
         self.sensors = []
 
         self.subscriptions = {}
+        self._exception = None
+
+    @property
+    def exception(self):
+        return self._exception
 
     def register_data_handler(self, data_handler, test_name):
         """Registers a data handler"""
@@ -119,6 +124,7 @@ class Bus:
                 self.start_main_test(test_runner, test_name))
         except TestSetupException as err:
             LOGGER.error(err)
+            self._exception = err
             # sys.exit(1)
         except CancelledError:
             LOGGER.error("Main test loop cancelled.")
@@ -141,7 +147,7 @@ class Bus:
 
     async def stop_test(self, message=None):
         # wait a little to have all tasks finish gracefully.
-        self.notify(subj.TEST_FINISHED, TestFinished())
+        # self.notify(subj.TEST_FINISHED, TestFinished())
         await asyncio.sleep(4)
         LOGGER.info("stopping test")
 
@@ -159,7 +165,6 @@ class Bus:
         )
 
         self.running = False
-
 
         # todo: making this obsolete in favour of calling shutdown methods
         # in each component.

@@ -28,6 +28,18 @@ class Data:
         self.value = value
         self.type = type_
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (
+                    self.value == other.value and
+                    self.type == other.type
+            )
+
+    def __ne__(self, other):
+        return (
+            self.value != other.value or
+            self.type != other.type
+        )
 
 class ListData:
     def __init__(self):
@@ -44,10 +56,6 @@ class ListData:
 
 class Message:
     subj = ''
-
-    def __init__(self):
-        # todo: remove this property
-        self.cache = False
 
     def to_json(self):
         return json.dumps(self, default=to_serializable)

@@ -26,7 +26,6 @@ MSG_TYPE_TEST = 'test'  # General test information.
 MSG_TYPE_STOP_TEST = 'stop_test'
 MSG_TYPE_ALL_TESTS = 'all_tests'
 
-CACHE_ATOM_DATA = 'atom_data'  # Cache key where to store atom data.
 CACHE_TEST_DATA = 'test_data'  # Cache key where to store test info.
 
 LOGGER = logging.getLogger(__name__)
@@ -248,6 +247,7 @@ class Server:
 
     async def _parse_incoming_test_data(self, data, raw):
         await self.send_to_client(raw)
+
         try:
             _subj = data[KEY_SUBJECT]
         except KeyError:

@@ -22,9 +22,6 @@ URL_CLOSE = 'close'
 URL_ATOM = 'atom'  # General info about the current atom.
 # URL_TEST = 'test'  # General test information.
 
-CACHE_ATOM_DATA = 'atom_data'  # Cache key where to store atom data.
-CACHE_TEST_DATA = 'test_data'  # Cache key where to store test info.
-
 LOGGER = logging.getLogger(__name__)
 
 KEY_PASS = 'passed'
@@ -75,13 +72,11 @@ class Messaging(BaseDataHandler):
     def _atom_warmup(self, subject, data: AtomData):
         super()._atom_warmup(subject, data)
         data.subj = subject
-        data.cache = True
         self._send_to_ws(data)
 
     def test_warmup(self, subject, data: TestData):
         LOGGER.debug("warmup test: {} data: {}".format(subject, data))
         data.subj = subject
-        data.cache = True
         self._send_to_ws(data)
 
     def test_fatal(self, subject, data: FatalData):
@@ -94,7 +89,6 @@ class Messaging(BaseDataHandler):
 
     def atom_result(self, subject, data: AtomResult):
         """Sends out a summary of the current running test result."""
-        data.cache = True
         if data.passed.value:
             self.test_summary.atom_passed()
         else:
@@ -113,7 +107,6 @@ class Messaging(BaseDataHandler):
 
     def atom_status(self, subject, data: AtomStatus):
         data.subj = subject
-        data.cache = True
         self._send_to_ws(data)
 
     def _send_to_ws(self, data: Message):

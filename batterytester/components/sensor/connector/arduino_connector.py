@@ -49,14 +49,11 @@ class ArduinoConnector(AsyncSensorConnector):
                 raise FatalTestFailException("Error connecting to serial port")
 
     def _listen_for_data(self):
-        # todo: change reading based on changed serial arduino protocol
         self._connect()
         while self.bus.running:
             try:
                 data = self.s.readline()
                 self.check_command(data)
-                # self.bus.loop.call_soon_threadsafe(
-                #    self.raw_sensor_data_queue.put_nowait, data)
             except SerialException:
                 if self.s.is_open:
                     self.s.close()

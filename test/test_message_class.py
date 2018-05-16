@@ -15,7 +15,7 @@ def test_internal_to_json():
     m = Message()
     _js = m.to_json()
     _dict = json.loads(_js)
-    assert _dict == {'subj': '', 'cache': False}
+    assert _dict == {'subj': ''}
 
 
 def test_fatal():
