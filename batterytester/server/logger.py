@@ -21,6 +21,6 @@ def setup_logging(logger: Logger, log_folder=None):
 
         rfh = RotatingFileHandler(str(pt.joinpath('server.log')),
                                   maxBytes=10024, backupCount=10)
-        rfh.setLevel(logging.ERROR)
+        rfh.setLevel(logging.INFO)
         rfh.setFormatter(formatter)
         logger.addHandler(rfh)

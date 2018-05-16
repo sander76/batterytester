@@ -3,6 +3,9 @@ import logging
 import os
 import sys
 
+import batterytester.core.helpers.message_subjects as subj
+from batterytester.core.helpers.message_data import TestData
+
 logging.basicConfig(level=logging.DEBUG)
 from batterytester.server.server import Server
 
@@ -56,3 +59,11 @@ def test_stop_process_no_ws():
 
     loop.run_until_complete(start_process())
     assert server.test_is_running is False
+
+
+def test__update_test_cache():
+    server = Server()
+    data = TestData('name', 10)
+    _js = data.to_dict()
+    server._update_test_cache(_js, subj.TEST_WARMUP)
+    assert server.test_cache[subj.TEST_WARMUP] == _js

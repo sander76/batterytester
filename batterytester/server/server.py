@@ -12,7 +12,7 @@ import async_timeout
 from aiohttp import web, WSCloseCode
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.core.helpers.constants import KEY_SUBJECT, KEY_CACHE
+from batterytester.core.helpers.constants import KEY_SUBJECT
 from batterytester.core.helpers.message_data import to_serializable, \
     Data, ProcessData, STATUS_FINISHED, STATUS_RUNNING, ProcessStarted
 from batterytester.server.logger import setup_logging
@@ -55,7 +55,6 @@ class Server:
         self.handler = None
         self.server = None
         self.test_cache = {}
-        # self.test_summary = TestSummary()
         self.test_process = None
         self.process_data = ProcessData()
 
@@ -66,9 +65,9 @@ class Server:
         return True
 
     def _add_routes(self):
-        # User interface connects here.
+        # User interface(s) connects here.
         self.app.router.add_get(URL_INTERFACE, self.client_handler)
-        # tests connect here
+        # Test connects here.
         self.app.router.add_get(URL_TEST, self.test_handler)
         self.app.router.add_static('/static/', path='static', name='static')
         self.app.router.add_post(URL_TEST_START, self.test_start_handler)
@@ -99,7 +98,6 @@ class Server:
             return web.Response(
                 text="There is another test running. Stop that one first.")
         else:
-
             await self._start_test_process(p)
             self.process_data.process_name = data['test']
             self.process_data.process_id = self.process_id
@@ -152,7 +150,7 @@ class Server:
 
     async def get_status_handler(self, request):
         # todo: finish this.
-        self.test_cache['process_info']=self.process_data.to_dict()
+        self.test_cache['process_info'] = self.process_data.to_dict()
         return web.json_response(self.test_cache)
 
     async def stop_test(self):
@@ -250,16 +248,27 @@ class Server:
 
     async def _parse_incoming_test_data(self, data, raw):
         await self.send_to_client(raw)
-        if (data[KEY_SUBJECT] == subj.TEST_FINISHED or
-                data[KEY_SUBJECT] == subj.TEST_FATAL):
-            self._update_test_cache(data, subj.TEST_WARMUP)
+        try:
+            _subj = data[KEY_SUBJECT]
+        except KeyError:
+            LOGGER.error('{} has no subj defined.')
+        else:
+            if (_subj == subj.TEST_FINISHED or
+                    _subj == subj.TEST_FATAL or
+                    _subj == subj.TEST_WARMUP or
+                    _subj == subj.TEST_RESULT):
 
-        # if data[KEY_SUBJECT] == subj.TEST_WARMUP:
-        #     self.test_cache = {}
-        if data.get(KEY_CACHE):
-            self.test_cache[data[KEY_SUBJECT]] = data
+                self._update_test_cache(data, subj.TEST_WARMUP)
+            elif (_subj == subj.ATOM_WARMUP or
+                  _subj == subj.ATOM_STATUS or
+                  _subj == subj.ATOM_RESULT or
+                  _subj == subj.ATOM_FINISHED):
+
+                self._update_test_cache(data, subj.ATOM_WARMUP)
 
     def _update_test_cache(self, data, cache_key):
+        if cache_key not in self.test_cache:
+            self.test_cache[cache_key] = {}
         for key, value in data.items():
             self.test_cache[cache_key][key] = value
 
