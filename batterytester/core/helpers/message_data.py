@@ -7,7 +7,7 @@ from batterytester.core.helpers.constants import KEY_ATOM_INDEX, \
     KEY_ATOM_LOOP, KEY_ATOM_NAME, REASON
 from batterytester.core.helpers.helpers import get_current_timestamp
 from batterytester.core.helpers.message_subjects import RESULT_SUMMARY, \
-    PROCESS_INFO, PROCESS_STARTED
+    PROCESS_INFO
 
 TYPE_STR = 'str'
 TYPE_TIME = 'time'
@@ -21,7 +21,7 @@ TYPE_STR_LIST = 'strlist'
 STATUS_RUNNING = 'running'
 STATUS_UNKOWN = 'unknown'
 STATUS_FINISHED = 'finished'
-
+STATUS_STARTING = 'starting'
 
 class Data:
     def __init__(self, value: typing.Any = 'unknown', type_=TYPE_STR):
@@ -37,9 +37,10 @@ class Data:
 
     def __ne__(self, other):
         return (
-            self.value != other.value or
-            self.type != other.type
+                self.value != other.value or
+                self.type != other.type
         )
+
 
 class ListData:
     def __init__(self):
@@ -55,7 +56,8 @@ class ListData:
 
 
 class Message:
-    subj = ''
+    def __init__(self):
+        self.subj = ''
 
     def to_json(self):
         return json.dumps(self, default=to_serializable)
@@ -86,6 +88,7 @@ def message_serializable(val):
     _val['subj'] = val.subj
     return _val
 
+# todo: rename subj to event to match name and functionality
 
 class BaseTestData(Message):
     def __init__(self):
@@ -94,15 +97,15 @@ class BaseTestData(Message):
         self.status = Data("unknown")
 
 
-class ProcessStarted(Message):
-    subj = PROCESS_STARTED
+# class ProcessStarted(Message):
+#     subj = PROCESS_STARTED
 
 
 class ProcessData(Message):
-    subj = PROCESS_INFO
 
     def __init__(self):
         super().__init__()
+        self.subj=PROCESS_INFO
         self._process_name = Data()
         self._process_id = Data(type_=TYPE_INT)
         self._status = Data(STATUS_UNKOWN, TYPE_STATUS)

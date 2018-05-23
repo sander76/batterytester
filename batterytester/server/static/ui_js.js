@@ -13,6 +13,10 @@ stopButton.onclick = stopTest
 let startButton = document.getElementById('start_test_button')
 startButton.onclick = startTest
 
+// clear data button
+let clearButton = document.getElementById('clear_button')
+clearButton.onclick = clearData
+
 // all tests button
 let allTestButton = document.getElementById('all_tests')
 allTestButton.onclick = queryAllTests
@@ -105,8 +109,12 @@ function clearData() {
     clearValues(containerTestInfo)
     clearValues(containerAtomInfo)
     clearValues(containerSummaryInfo)
-    clearValues(containerSensorInfo)
+    clearSensorData()
     clearValues(containerProcessInfo)
+}
+
+function clearSensorData() {
+    containerSensorInfo.innerHTML = ''
 }
 
 function clearValues(parent) {
@@ -143,16 +151,11 @@ function setKnown(node) {
 }
 
 function setUnknown(node) {
-    replaceClass(node, ['text-primary'], 'text-gray')
+    replaceClass(node, ['text-primary', 'bg-error', 'bg-success'], 'text-gray')
+    node.innerHTML = 'unknown'
 }
 
 function init() {
-    // ws.send(JSON.stringify({
-    //     'type': 'atom'
-    // })) // Get cached atom data.
-    // ws.send(JSON.stringify({
-    //     'type': 'test'
-    // })) // Get cached test data.
     queryAllTests()
 }
 
@@ -195,13 +198,6 @@ function startTest(e) {
     xhr.send(JSON.stringify({
         'test': selected
     }))
-
-    // xhr.onreadystatechange = function () {
-    //     if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-    //         var msg = (xhr.responseText)
-    //         processResultUi.value = msg
-    //     }
-    // }
 }
 
 function queryAllTests(e) {
@@ -209,15 +205,6 @@ function queryAllTests(e) {
         'type': 'all_tests'
     }))
 }
-
-// function StatusElement(parentDiv) {
-//     this.dataContainer = {}
-//     this.parentDiv = parentDiv
-// }
-
-// function plainInterpreter(value) {
-//     return value
-// }
 
 function jsonInterpreter(value) {
     return JSON.stringify(value, undefined, 4)
@@ -372,8 +359,6 @@ function createSensorDataContainer(data) {
 
 function parseSensor(data) {
     let subj = data['subj']
-    // delete data.subj
-    // delete data.cache
     console.log(subj, data)
     if (subj === 'sensor_data') {
         // Sensor data
@@ -381,29 +366,25 @@ function parseSensor(data) {
     } else if (subj === 'atom_warmup') {
         // Atom data.
         parseAtomInfo(data)
-        // atomInfo.parse(data)
     } else if (subj === 'test_warmup') {
-        this.clearData()
+        // this.clearData()
         // Test data.
         parseTestInfo(data)
     } else if (subj === 'atom_status') {
         parseAtomInfo(data)
-        // atomInfo.parse(data)
     } else if (subj === 'result_summary') {
         parseSummaryInfo(data)
     } else if (subj === 'test_finished') {
         parseTestInfo(data)
-        // testInfo.parse(data);
     } else if (subj === 'all_tests') {
         parseAllTests(data)
-        // } else if (subj === 'process_result') {
-        //     parseProcessResult(data)
     } else if (subj === 'test_fatal') {
         parseTestInfo(data)
     } else if (subj === 'process_info') {
         parseProcessInfo(data)
     } else if (subj === 'process_started') {
         this.clearData()
+        parseProcessInfo(data)
     }
 }
 

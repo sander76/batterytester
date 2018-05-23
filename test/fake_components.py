@@ -3,8 +3,6 @@ from asyncio import CancelledError
 from random import random
 from unittest.mock import MagicMock
 
-import sys
-
 from batterytester.components.actors.base_actor import BaseActor
 from batterytester.components.sensor.connector import AsyncSensorConnector
 from batterytester.components.sensor.incoming_parser.boolean_parser import \
@@ -14,7 +12,6 @@ from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import 
 from batterytester.components.sensor.sensor import Sensor
 from batterytester.core.base_test import BaseTest
 from batterytester.core.bus import Bus
-from batterytester.server.server import Server
 
 
 class FakeActor(BaseActor):
@@ -33,6 +30,9 @@ class FakeActor(BaseActor):
     async def close(self, *args, **kwargs):
         self.close_mock(*args, **kwargs)
         print("close {}".format(self.test_name))
+
+    async def raise_exception(self, *args, **kwargs):
+        raise Exception("Fake exception raised.")
 
     async def setup(self, test_name: str, bus: Bus):
         """Initialize method.
@@ -118,19 +118,19 @@ class FakeBaseTest(BaseTest):
         super().handle_sensor_data(sensor_data)
 
 # class FakeServer():
-    # if sys.platform == 'win32':
-    #     loop = asyncio.ProactorEventLoop()
-    #     asyncio.set_event_loop(loop)
-    # else:
-    #     loop = asyncio.get_event_loop()
-    # server = Server(
-    #     config_folder='',
-    #     loop_=loop)
-    # server.start_server()
-    # try:
-    #     loop.run_forever()
-    # except KeyboardInterrupt:
-    #     pass
-    # finally:
-    #     loop.run_until_complete(server.stop_data_handler())
-    # loop.close()
+# if sys.platform == 'win32':
+#     loop = asyncio.ProactorEventLoop()
+#     asyncio.set_event_loop(loop)
+# else:
+#     loop = asyncio.get_event_loop()
+# server = Server(
+#     config_folder='',
+#     loop_=loop)
+# server.start_server()
+# try:
+#     loop.run_forever()
+# except KeyboardInterrupt:
+#     pass
+# finally:
+#     loop.run_until_complete(server.stop_data_handler())
+# loop.close()

@@ -14,7 +14,9 @@ from aiohttp import web, WSCloseCode
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.helpers.constants import KEY_SUBJECT
 from batterytester.core.helpers.message_data import to_serializable, \
-    Data, ProcessData, STATUS_FINISHED, STATUS_RUNNING, ProcessStarted
+    Data, ProcessData, STATUS_FINISHED, STATUS_RUNNING, STATUS_STARTING
+from batterytester.core.helpers.message_subjects import PROCESS_STARTED, \
+    PROCESS_INFO
 from batterytester.server.logger import setup_logging
 
 ATTR_MESSAGE_BUS_ADDRESS = '0.0.0.0'
@@ -50,7 +52,7 @@ class Server:
         self.config_folder = config_folder
         self.loop = loop_ or asyncio.get_event_loop()
         self.app = web.Application()
-        self.process_id = None
+        # self.process_id = None
         self.handler = None
         self.server = None
         self.test_cache = {}
@@ -98,17 +100,18 @@ class Server:
                 text="There is another test running. Stop that one first.")
         else:
             await self._start_test_process(p)
+
             self.process_data.process_name = data['test']
-            self.process_data.process_id = self.process_id
-            self.process_data.status = STATUS_RUNNING
             await self.send_to_client(self.process_data.to_json())
         return web.Response()
 
         # todo: handle feedback over websocket.
 
     async def _start_test_process(self, p):
-        await self.send_to_client(ProcessStarted().to_json())
         self.clear_cache()
+        self.process_data.status = STATUS_STARTING
+        self.process_data.subj = PROCESS_STARTED
+        await self.send_to_client(self.process_data.to_json())
 
         self.test_process = await asyncio.create_subprocess_exec(
             sys.executable, p,
@@ -116,20 +119,28 @@ class Server:
             stdin=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT, loop=self.loop
         )
+        self.process_data.status = STATUS_RUNNING
+        self.process_data.subj = PROCESS_INFO
+        self.process_data.process_id = self.test_process.pid
+
         self.process_task = asyncio.ensure_future(self.manage_process())
-        self.process_id = self.test_process.pid
+
 
     async def manage_process(self):
         try:
-            log, other = await self.test_process.communicate()
+            while not self.test_process.stdout.at_eof():
+                line = await self.test_process.stdout.readline()
+                self.process_data.add_message(line.decode('utf-8'))
+                await self.send_to_client(self.process_data.to_json())
+            # log, other = await self.test_process.communicate()
             code = await self.test_process.wait()
 
-            unicode_log = log.decode('utf-8')
+            # unicode_log = log.decode('utf-8')
             LOGGER.debug('exit code: {}'.format(code))
-            LOGGER.debug(unicode_log)
+            # LOGGER.debug(unicode_log)
 
             self.process_data.return_code = code
-            self.process_data.add_message(unicode_log)
+            # self.process_data.add_message(unicode_log)
             self.process_data.status = STATUS_FINISHED
             await self.send_to_client(
                 self.process_data.to_json()
@@ -137,6 +148,7 @@ class Server:
 
         except Exception as err:
             LOGGER.exception(err)
+            await self.stop_test()
         finally:
             self.test_process = None
 
@@ -148,7 +160,6 @@ class Server:
         return web.json_response({"running": False})
 
     async def get_status_handler(self, request):
-        # todo: finish this.
         self.test_cache['process_info'] = self.process_data.to_dict()
         return web.json_response(self.test_cache)
 
@@ -220,19 +231,6 @@ class Server:
                     _type = _data['type']
                     if _type == URL_CLOSE:
                         await ws.close()
-                    elif _type == MSG_TYPE_ATOM:
-                        self.return_cached_data(
-                            ws, subj.ATOM_WARMUP)
-                        self.return_cached_data(
-                            ws, subj.ATOM_STATUS
-                        )
-                    elif _type == MSG_TYPE_TEST:
-                        self.return_cached_data(
-                            ws, subj.TEST_WARMUP)
-                        self.return_cached_data(
-                            ws, subj.RESULT_SUMMARY
-                        )
-
                     elif _type == MSG_TYPE_ALL_TESTS:
                         await self.send_to_client(
                             json.dumps(self.list_configs()))
@@ -250,6 +248,7 @@ class Server:
 
         try:
             _subj = data[KEY_SUBJECT]
+
         except KeyError:
             LOGGER.error('{} has no subj defined.')
         else:
@@ -265,6 +264,8 @@ class Server:
                   _subj == subj.ATOM_FINISHED):
 
                 self._update_test_cache(data, subj.ATOM_WARMUP)
+            elif _subj == subj.SENSOR_DATA:
+                self._update_test_cache(data, subj.SENSOR_DATA)
 
     def _update_test_cache(self, data, cache_key):
         if cache_key not in self.test_cache:
@@ -281,12 +282,6 @@ class Server:
             *(_ws.send_str(raw) for _ws in self.client_sockets))
         for _res in res:
             LOGGER.debug(_res)
-
-    def return_cached_data(self, ws_client, cache_key):
-        cached_data = self.test_cache.get(cache_key)
-        if cached_data:
-            _js = json.dumps(cached_data, default=to_serializable)
-            asyncio.ensure_future(ws_client.send_str(_js))
 
     async def shutdown(self):
         for ws in self.client_sockets:
