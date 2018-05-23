@@ -70,7 +70,7 @@ class BaseTest:
 
     def start_test(self):
         """Start the actual test."""
-        LOGGER.debug("Starting the test.")
+        LOGGER.info("Starting the test.")
         try:
             self.bus._start_test(self.async_test(), self.test_name)
         except KeyboardInterrupt:
@@ -148,6 +148,7 @@ class BaseTest:
             self.bus.notify(subj.ATOM_RESULT, _atom_result)
 
     async def async_test(self):
+        LOGGER.info("STARTING async_test")
         self.bus.notify(subj.TEST_WARMUP,
                         TestData(self.test_name, self._loopcount))
         await self.test_warmup()
