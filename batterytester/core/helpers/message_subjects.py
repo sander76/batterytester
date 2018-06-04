@@ -22,6 +22,12 @@ TEST_RESULT = 'test_result'
 TEST_WARMUP = 'test_warmup'
 """Emitted at the start of the test."""
 
+ACTOR_EXECUTED = 'actor_executed'
+"""Emitted when an actor has been executed."""
+
+ACTOR_RESPONSE_RECEIVED = 'actor_response_received'
+"""Emitted when an actor response has been received."""
+
 ATOM_FINISHED = 'atom_finished'
 """Emitted when an atom has finished."""
 
