@@ -8,6 +8,7 @@ ACTOR_TYPE_POWER_VIEW = 'powerview_actor'
 """PowerView actor."""
 ACTOR_TYPE_RELAY_ACTOR = 'relay_actor'
 """Relay actor."""
+ACTOR_TYPE_POWERVIEW_VERSION_CHECKER = 'pv_version_checker'
 
 
 class BaseActor(metaclass=ABCMeta):
