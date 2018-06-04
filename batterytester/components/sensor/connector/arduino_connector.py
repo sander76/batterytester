@@ -10,6 +10,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ArduinoConnector(AsyncSensorConnector):
+    """Arduino based squid connector.
+    Listen method is adapted to incoming squid line protocol."""
+
     def __init__(
             self, *,
             bus,
