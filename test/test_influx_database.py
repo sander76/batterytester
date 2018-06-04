@@ -106,3 +106,5 @@ def test_flush(fake_influx: Influx, fake_measurement1):
     fake_influx._flush()
     assert len(fake_influx.data) == 0
     fake_influx._send.assert_called_once()
+
+#todo: test when connection with database server is lost.
