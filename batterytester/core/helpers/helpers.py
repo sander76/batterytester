@@ -39,6 +39,10 @@ class FatalTestFailException(Exception):
     pass
 
 
+class AtomExecuteError(Exception):
+    pass
+
+
 class TestSetupException(Exception):
     pass
 

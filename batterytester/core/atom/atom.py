@@ -6,7 +6,7 @@ from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
     PvApiResponseStatusError
 
 from batterytester.core.helpers.helpers import TestSetupException, \
-    NonFatalTestFailException
+    NonFatalTestFailException, AtomExecuteError
 from batterytester.core.helpers.message_data import AtomData
 
 LOGGING = logging.getLogger(__name__)
@@ -87,6 +87,12 @@ class Atom:
                 _result = await self._command()
             if self._result_key:
                 self._stored_atom_results[self._result_key] = _result
+        except AtomExecuteError as err:
+            # todo: somehow define whether execution is fatal or not.
+            raise NonFatalTestFailException(
+                "Problem executing Atom {}".format(err))
+        # todo: move the below exceptions to their actors. The actors should
+        # raise an AtomExecuteError on fail.
         except (
                 PvApiConnectionError, PvApiError,
                 PvApiResponseStatusError) as err:
