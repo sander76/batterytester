@@ -51,9 +51,8 @@ class Server:
         self.test_ws = None  # Socket connection to the actual running test.
         self.config_folder = config_folder
         self.loop = loop_ or asyncio.get_event_loop()
-        self.app = web.Application()
-        # self.process_id = None
-        self.handler = None
+        self.app = web.Application(loop=self.loop)
+        self.runner = None
         self.server = None
         self.test_cache = {}
         self.test_process = None
@@ -91,7 +90,6 @@ class Server:
         return data
 
     async def test_start_handler(self, request):
-
         data = await request.json()
         p = str(Path(self.config_folder).joinpath(data['test']))
 
@@ -124,7 +122,6 @@ class Server:
         self.process_data.process_id = self.test_process.pid
 
         self.process_task = asyncio.ensure_future(self.manage_process())
-
 
     async def manage_process(self):
         try:
@@ -291,17 +288,23 @@ class Server:
     async def start(self):
         """Initialize this data handler"""
         self._add_routes()
-        self.handler = self.app.make_handler()
+        # self.handler = self.app.make_handler()
+        self.runner = web.AppRunner(self.app)
 
-        self.server = await self.loop.create_server(
-            self.handler, ATTR_MESSAGE_BUS_ADDRESS, ATTR_MESSAGE_BUS_PORT)
+        await self.runner.setup()
+        self.server = web.TCPSite(
+            self.runner,
+            host=ATTR_MESSAGE_BUS_ADDRESS,
+            port=ATTR_MESSAGE_BUS_PORT)
+        await self.server.start()
 
     async def stop_data_handler(self):
-        self.server.close()
-        await self.server.wait_closed()
+        # self.server.close()
+        # await self.server.wait_closed()
         await self.shutdown()
-        await self.handler.shutdown(60.0)
-        await self.app.cleanup()
+        await self.runner.cleanup()
+        # await self.handler.shutdown(60.0)
+        # await self.app.cleanup()
 
 
 if __name__ == '__main__':
