@@ -1,9 +1,11 @@
 import asyncio
 from asyncio import CancelledError
 from random import random
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 from batterytester.components.actors.base_actor import BaseActor
+from batterytester.components.datahandlers.base_data_handler import \
+    BaseDataHandler
 from batterytester.components.sensor.connector import AsyncSensorConnector
 from batterytester.components.sensor.incoming_parser.boolean_parser import \
     BooleanParser
@@ -12,6 +14,8 @@ from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import 
 from batterytester.components.sensor.sensor import Sensor
 from batterytester.core.base_test import BaseTest
 from batterytester.core.bus import Bus
+from batterytester.core.helpers.helpers import FatalTestFailException, \
+    NonFatalTestFailException
 
 
 class FakeActor(BaseActor):
@@ -22,6 +26,8 @@ class FakeActor(BaseActor):
         self.test_name = None
         self.open_mock = MagicMock()
         self.close_mock = MagicMock()
+        self._setup = Mock()
+        self._shutdown = Mock()
 
     async def open(self, *args, **kwargs):
         self.open_mock(*args, *kwargs)
@@ -31,8 +37,14 @@ class FakeActor(BaseActor):
         self.close_mock(*args, **kwargs)
         print("close {}".format(self.test_name))
 
-    async def raise_exception(self, *args, **kwargs):
+    async def raise_unknown_exception(self, *args, **kwargs):
         raise Exception("Fake exception raised.")
+
+    async def raise_fatal_test_exception(self, *args, **kwargs):
+        raise FatalTestFailException("Fatal exception raised.")
+
+    async def raise_non_fatal_test_exception(self, *args, **kwargs):
+        raise NonFatalTestFailException("Non fatal exception raised.")
 
     async def setup(self, test_name: str, bus: Bus):
         """Initialize method.
@@ -40,7 +52,11 @@ class FakeActor(BaseActor):
         Executed before starting the actual test.
         Cannot be an infinite task. Needs to return for the main test to
         start."""
+        self._setup(test_name, bus)
         self.test_name = test_name
+
+    async def shutdown(self, bus: Bus):
+        self._shutdown(bus)
 
 
 class FakeSensorConnector(AsyncSensorConnector):
@@ -117,20 +133,6 @@ class FakeBaseTest(BaseTest):
     def handle_sensor_data(self, sensor_data: dict):
         super().handle_sensor_data(sensor_data)
 
-# class FakeServer():
-# if sys.platform == 'win32':
-#     loop = asyncio.ProactorEventLoop()
-#     asyncio.set_event_loop(loop)
-# else:
-#     loop = asyncio.get_event_loop()
-# server = Server(
-#     config_folder='',
-#     loop_=loop)
-# server.start_server()
-# try:
-#     loop.run_forever()
-# except KeyboardInterrupt:
-#     pass
-# finally:
-#     loop.run_until_complete(server.stop_data_handler())
-# loop.close()
+
+class FakeDataHandler(BaseDataHandler):
+    pass

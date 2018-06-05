@@ -13,7 +13,7 @@ test.add_sensors(
 )
 
 test.add_actor(
-    actors.RelayActor(serial_port='COM4')
+    actors.RelayActor(serial_port='COM6')
 )
 
 test.add_data_handlers(
@@ -24,8 +24,8 @@ test.add_data_handlers(
 def get_sequence(actors):
     relay = actor_tools.get_relay_actor(actors)
 
-    actor1 = 4  # arduino pin 2
-    actor2 = 5  # arduino pin 2
+    actor1 = 4  # arduino pin 4
+    #actor2 = 5  # arduino pin 2
 
     _val = (
         atoms.Atom(
@@ -34,12 +34,12 @@ def get_sequence(actors):
             arguments={"pin": actor1},
             duration=3
         ),
-        atoms.Atom(
-            name='activate 2',
-            command=relay.activate,
-            arguments={"pin": actor2},
-            duration=3
-        )
+        # atoms.Atom(
+        #     name='activate 2',
+        #     command=relay.activate,
+        #     arguments={"pin": actor2},
+        #     duration=3
+        # )
     )
     return _val
 

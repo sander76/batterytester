@@ -87,12 +87,12 @@ class Atom:
                 _result = await self._command()
             if self._result_key:
                 self._stored_atom_results[self._result_key] = _result
-        except AtomExecuteError as err:
-            # todo: somehow define whether execution is fatal or not.
-            raise NonFatalTestFailException(
-                "Problem executing Atom {}".format(err))
+        # except AtomExecuteError as err:
+        #     # todo: somehow define whether execution is fatal or not.
+        #     raise NonFatalTestFailException(
+        #         "Problem executing Atom {}".format(err))
         # todo: move the below exceptions to their actors. The actors should
-        # raise an AtomExecuteError on fail.
+        # raise an Fatal or NonFatal TestFailException on fail.
         except (
                 PvApiConnectionError, PvApiError,
                 PvApiResponseStatusError) as err:

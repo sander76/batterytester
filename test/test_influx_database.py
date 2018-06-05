@@ -1,14 +1,15 @@
-from unittest.mock import MagicMock, Mock
-
 import pytest
 
 from batterytester.components.datahandlers import Influx
 from batterytester.components.datahandlers.influx import get_time_stamp, \
-    InfluxLineProtocol
+    InfluxLineProtocol, line_protocol_fields
 from batterytester.components.sensor.incoming_parser import get_measurement
+from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers.constants import ATTR_VALUES, ATTR_TIMESTAMP, \
     ATTR_SENSOR_NAME
 from batterytester.core.helpers.message_data import AtomData, Data
+from test.fake_components import FakeActor
+from test.seqeuences import get_empty_sequence, get_unknown_exception_sequence
 
 
 @pytest.fixture
@@ -19,15 +20,8 @@ def fake_measurement1():
 
 
 @pytest.fixture
-def fake_influx():
-    influx = Influx(host='127.0.0.1', buffer_size=5)
-    influx.bus = MagicMock()
-    influx.bus.add_async_task = Mock()
-    influx._send = Mock()
-    influx.test_name = 'fake_test'
-    influx.measurement = 'fake_test'
-
-    return influx
+def fake_tag():
+    return {'tag1': 'abc', 'tag2': 10}
 
 
 @pytest.fixture
@@ -41,14 +35,15 @@ MEASUREMENT = 'test measurement'
 SLUGGED = 'test-measurement'
 
 
-def test_influx_line_protocol_notags(fake_measurement1):
+def test_influx_line_protocol_notags(fake_measurement1, fake_tag):
     inf = InfluxLineProtocol(
         MEASUREMENT,
         fake_measurement1[ATTR_TIMESTAMP][ATTR_VALUES],
-        fields={'value': fake_measurement1[ATTR_VALUES][ATTR_VALUES]})
+        fields=fake_tag)
     assert inf._measurement == SLUGGED
     _measurement = inf.create_measurement()
-    assert _measurement == '{} value=10 12345678000000000'.format(SLUGGED)
+    assert _measurement == '{} tag1="abc",tag2=10 12345678000000000'.format(
+        SLUGGED)
 
 
 def test_influx_line_protocol1_nofields(fake_measurement1):
@@ -56,8 +51,19 @@ def test_influx_line_protocol1_nofields(fake_measurement1):
         MEASUREMENT,
         fake_measurement1[ATTR_TIMESTAMP][ATTR_VALUES],
         tags={'value': fake_measurement1[ATTR_VALUES][ATTR_VALUES]})
+    assert inf._measurement == SLUGGED
     _measurement = inf.create_measurement()
     assert _measurement == '{},value=10 12345678000000000'.format(SLUGGED)
+
+
+def test_line_protocol_fields():
+    field = {'test': 'test'}
+    result = line_protocol_fields(field)
+    assert result == 'test="test"'
+
+    field['value'] = 10
+    result = line_protocol_fields(field)
+    assert result == 'test="test",value=10'
 
 
 def test_get_time_stamp():
@@ -100,11 +106,37 @@ def test_handle_sensor(fake_influx: Influx, fake_measurement1, fake_atom_data):
     assert _data._tags == {'loop': 0, 'idx': 0}
 
 
-def test_flush(fake_influx: Influx, fake_measurement1):
-    fake_influx._handle_sensor('no subj', fake_measurement1)
-    assert len(fake_influx.data) == 1
-    fake_influx._flush()
-    assert len(fake_influx.data) == 0
-    fake_influx._send.assert_called_once()
+def test_flush(fake_influx_nobus: Influx, fake_measurement1):
+    fake_influx_nobus._handle_sensor('no subj', fake_measurement1)
+    assert len(fake_influx_nobus.data) == 1
+    fake_influx_nobus._flush()
+    assert len(fake_influx_nobus.data) == 0
 
-#todo: test when connection with database server is lost.
+
+def test_shutdown(fake_influx: Influx, base_test: BaseTest, fake_measurement1):
+    fake_influx._handle_sensor('no subj', fake_measurement1)
+    base_test.get_sequence = get_empty_sequence
+    base_test.add_data_handlers(fake_influx)
+
+    assert len(fake_influx.data) == 1
+    base_test.start_test()
+
+    fake_influx._send.mock.assert_called_once()
+    assert len(fake_influx.data) == 0
+
+
+def test_shutdown_test_error(
+        fake_influx: Influx, base_test: BaseTest, fake_measurement1):
+    fake_influx._handle_sensor('no subj', fake_measurement1)
+    base_test.get_sequence = get_unknown_exception_sequence
+
+    base_test.add_actor(FakeActor())
+    base_test.add_data_handlers(fake_influx)
+
+    assert len(fake_influx.data) == 1
+
+    base_test.start_test()
+    fake_influx._send.mock.assert_called_once()
+    assert len(fake_influx.data) == 0
+
+# todo: test when connection with database server is lost.

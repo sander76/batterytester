@@ -18,7 +18,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class InfluxLineProtocol:
-    """https://docs.influxdata.com/influxdb/v1.5/write_protocols/line_protocol_tutorial/"""
+    """https://docs.influxdata.com/influxdb/v1.5/
+    write_protocols/line_protocol_tutorial/"""
 
     def __init__(self, measurement, time_stamp, tags: dict = None,
                  fields: dict = None):
@@ -54,21 +55,29 @@ def line_protocol_fields(tags: dict):
     incoming is a dict with {KEY_VALUE:VALUE} structure.
     """
 
+    def key_value_generator(pairs):
+        for key, value in pairs:
+            if isinstance(value, str):
+                _val = '"{}"'.format(value)
+                yield (key, _val)
+            else:
+                yield key, value
+
     return ','.join(('{}={}'.format(key, value) for key, value in
-                     tags.items()))
+                     key_value_generator(tags.items())))
 
 
-def line_protocol_tags(tags: dict):
-    """Create influx measurement tags.
-
-    Incoming is dict with key:value pairs."""
-    if tags:
-        _val = ',{}'.format(','.join(
-            ('{}={}'.format(key, value) for key, value in tags.items())))
-        return _val
-    # if atom:
-    #     return ',idx={},loop={}'.format(atom.idx, atom.loop)
-    return ''
+# def line_protocol_tags(tags: dict):
+#     """Create influx measurement tags.
+#
+#     Incoming is dict with key:value pairs."""
+#     if tags:
+#         _val = ',{}'.format(','.join(
+#             ('{}={}'.format(key, value) for key, value in tags.items())))
+#         return _val
+#     # if atom:
+#     #     return ',idx={},loop={}'.format(atom.idx, atom.loop)
+#     return ''
 
 
 def get_time_stamp(data):
@@ -142,13 +151,13 @@ class Influx(BaseDataHandler):
         self._tags['loop'] = data.loop.value  # data[KEY_ATOM_LOOP][KEY_VALUE]
         self._tags['idx'] = data.idx.value  # data[KEY_ATOM_INDEX][KEY_VALUE]
 
-        annotation_tags = '"loop {},index {}"'.format(data.loop.value,
-                                                      data.idx.value)
+        annotation_tags = 'loop {},index {}'.format(data.loop.value,
+                                                    data.idx.value)
         _influx = InfluxLineProtocol(
             self.measurement,
             data.started.value,
-            fields={'title': '"atom warmup"',
-                    'text': '"{}"'.format(data.atom_name.value),
+            fields={'title': 'atom warmup',
+                    'text': '{}'.format(data.atom_name.value),
                     'tags': annotation_tags}
         )
         self.add_to_buffer(_influx)
