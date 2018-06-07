@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from asyncio import CancelledError
+from enum import Enum
 from threading import Thread
 
 import aiohttp
@@ -9,9 +10,16 @@ from async_timeout import timeout
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.helpers.helpers import FatalTestFailException, \
     TestSetupException
-from batterytester.core.helpers.message_data import FatalData, TestFinished
+from batterytester.core.helpers.message_data import FatalData
 
 LOGGER = logging.getLogger(__name__)
+
+
+class BusState(Enum):
+    undefined = 0
+    setting_up = 1
+    running = 2
+    shutting_down = 3
 
 
 class Bus:
@@ -34,6 +42,7 @@ class Bus:
 
         self.subscriptions = {}
         self._exception = None
+        self._state = BusState.undefined
 
     @property
     def exception(self):
@@ -79,16 +88,19 @@ class Bus:
             """An exception is raised. Meaning one of the long running 
             tasks has encountered an error. Cancelling the main task and
             subsequently cancelling all other long running tasks."""
-            if not self.test_runner_task.done():
-                self.test_runner_task.cancel()
+            if self._state == BusState.running:
+                if self.test_runner_task:
+                    self.test_runner_task.cancel()
+            self._state = BusState.shutting_down
 
     def add_async_task(self, coro):
         """Add an async task. The callback will be used to check
         whether these tasks do not exit prematurely. If so, the complete
         test will be stopped."""
-        _task = self.loop.create_task(coro)
-        _task.add_done_callback(self.task_finished_callback)
-        self.tasks.append(_task)
+        if not self._state == BusState.shutting_down:
+            _task = self.loop.create_task(coro)
+            _task.add_done_callback(self.task_finished_callback)
+            self.tasks.append(_task)
 
     def add_closing_task(self, coro):
         """Adds all coroutines to a list for later scheduling"""
@@ -101,6 +113,8 @@ class Bus:
         self.callbacks.append(callback)
 
     async def start_main_test(self, test_runner, test_name):
+        self._state = BusState.setting_up
+
         await asyncio.gather(
             *(_handler.setup(test_name, self) for _handler in
               self._data_handlers))
@@ -110,9 +124,11 @@ class Bus:
         await asyncio.gather(
             *(_sensor.setup(test_name, self) for _sensor in self.sensors)
         )
-        self.test_runner_task = asyncio.ensure_future(test_runner)
+        if self._state == BusState.setting_up:
+            self._state = BusState.running
+            self.test_runner_task = asyncio.ensure_future(test_runner)
 
-        await self.test_runner_task
+            await self.test_runner_task
 
     def _start_test(self, test_runner, test_name):
         for callback in self.callbacks:
@@ -151,8 +167,9 @@ class Bus:
         await asyncio.sleep(4)
         LOGGER.info("stopping test")
 
-        if not self.test_runner_task.done():
-            self.test_runner_task.cancel()
+        if self.test_runner_task:
+            if not self.test_runner_task.done():
+                self.test_runner_task.cancel()
 
         await asyncio.gather(
             *(_handler.shutdown(self) for _handler in

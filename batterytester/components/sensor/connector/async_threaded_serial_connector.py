@@ -6,7 +6,6 @@ from serial import Serial, SerialException
 from batterytester.components.sensor.connector import AsyncSensorConnector
 from batterytester.core.helpers.helpers import FatalTestFailException
 
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -24,7 +23,7 @@ class ThreadedSerialSensorConnector(AsyncSensorConnector):
         self.s.baudrate = serial_speed
         self.trydelay = try_delay
 
-    async def close_method(self):
+    async def shutdown(self, bus):
         """Close the serial port. This gets called after the main test
         has stopped.
 
@@ -33,6 +32,10 @@ class ThreadedSerialSensorConnector(AsyncSensorConnector):
         the wrapping async task"""
         LOGGER.debug("Closing serial connection")
         self.s.close()
+
+    async def setup(self, test_name: str, bus):
+        self._connect()
+        await super().setup(test_name, bus)
 
     def _connect(self):
         if not self.s.is_open:
@@ -45,7 +48,6 @@ class ThreadedSerialSensorConnector(AsyncSensorConnector):
                 raise FatalTestFailException("Error connecting to serial port")
 
     def _listen_for_data(self):
-        # todo: change reading based on changed serial arduino protocol
         self._connect()
         while self.bus.running:
             try:

@@ -36,19 +36,19 @@ def test_serial_incoming(monkeypatch, bus):
     assert val == b'a'
 
 
-def test_stop_test_on_serial_error(monkeypatch, bus):
-    """Raising a serial exception on the serial read command
-    should stop the complete test."""
-    monkeypatch.setattr(
-        'batterytester.components.sensor.connector.async_serial_connector.Serial',
-        MagicMock(Serial))
-
-    con = sc.AsyncSerialConnector(bus, MagicMock(), 124, 1234)
-    con.s.read.side_effect = SerialException
-    con.s.in_waiting = 1
-
-    async def fake_test():
-        pass
-
-    bus._start_test(fake_test(), 'fake_test')
-    assert True
+# def test_stop_test_on_serial_error(monkeypatch, bus):
+#     """Raising a serial exception on the serial read command
+#     should stop the complete test."""
+#     monkeypatch.setattr(
+#         'batterytester.components.sensor.connector.async_serial_connector.Serial',
+#         MagicMock(Serial))
+#
+#     con = sc.AsyncSerialConnector(bus, MagicMock(), 124, 1234)
+#     con.s.read.side_effect = SerialException
+#     con.s.in_waiting = 1
+#
+#     async def fake_test():
+#         pass
+#
+#     bus._start_test(fake_test(), 'fake_test')
+#     assert True

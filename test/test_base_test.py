@@ -9,7 +9,7 @@ from batterytester.core.helpers.constants import ATOM_STATUS_EXECUTING, \
 from batterytester.core.helpers.helpers import TestSetupException
 from batterytester.core.helpers.message_data import Data
 from test.fake_components import FakeActor, FakeDataHandler, FatalDataHandler, \
-    FatalSensorAsyncListenForData
+    FatalSensorAsyncListenForData, FatalSensorProcess
 from test.seqeuences import get_empty_sequence, get_sequence, \
     get_unknown_exception_sequence, get_fatal_exception_sequence, \
     get_non_fatal_exception_sequence, get_open_response_sequence
@@ -208,6 +208,8 @@ def test_fatal_atom_warmup_data_handler():
 
 
 def test_fatal_sensor():
+    """Testing a sensor which is unable to read
+    incoming sensor data."""
     test = BaseTest(test_name='test', loop_count=1)
     test.get_sequence = get_sequence
     test.add_actor(FakeActor())
@@ -219,9 +221,26 @@ def test_fatal_sensor():
 
     test.start_test()
     subjects = [
-        subj.TEST_WARMUP,
-        subj.LOOP_WARMUP,
-        subj.ATOM_WARMUP,
+        subj.TEST_FATAL
+    ]
+
+    for idx, subject in enumerate(subjects):
+        assert subject == datahandler.calls[idx]
+
+
+def test_fatal_sensor_on_process():
+    """Testing a sensor which is unable to process incoming raw data"""
+    test = BaseTest(test_name='test', loop_count=1)
+    test.get_sequence = get_sequence
+    test.add_actor(FakeActor())
+
+    datahandler = FakeDataHandler()
+    test.add_data_handlers(datahandler)
+
+    test.add_sensors(FatalSensorProcess())
+
+    test.start_test()
+    subjects = [
         subj.TEST_FATAL
     ]
 

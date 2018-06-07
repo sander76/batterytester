@@ -25,12 +25,13 @@ class SensorConnector:
 class AsyncSensorConnector(SensorConnector):
     def __init__(self, bus):
         super().__init__(bus)
+
+    async def setup(self, test_name: str, bus):
         self.bus.add_async_task(self.async_listen_for_data())
 
-        self.bus.add_closing_task(self.close_method())
-
-    async def close_method(self):
+    async def shutdown(self, bus):
         pass
+        # await self.close_method()
 
     @asyncio.coroutine
     def async_listen_for_data(self, *args):
@@ -55,6 +56,7 @@ class AsyncSensorConnector(SensorConnector):
 
 
 class ThreadedSensorConnector(SensorConnector):
+    # todo: Can we remove this?
     def __init__(
             self,
             bus):

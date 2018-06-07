@@ -195,17 +195,31 @@ class FatalDataHandler(FakeDataHandler):
 
 class FatalSensorConnector1(AsyncSensorConnector):
     """Raises exception while listening for data"""
+
     async def async_listen_for_data(self, *args):
         raise FatalTestFailException()
 
 
 class FatalSensorParser(IncomingParser):
-    pass
+    def process(self, raw_incoming):
+        raise Exception("Processing problem")
 
 
 class FatalSensorAsyncListenForData(Sensor):
     """A sensor which raises an exception while listening for
     sensor data."""
+
     async def setup(self, test_name: str, bus: Bus):
         self._connector = FatalSensorConnector1(bus)
         self._sensor_data_parser = FatalSensorParser(bus)
+        await super().setup(test_name, bus)
+
+
+class FatalSensorProcess(Sensor):
+    """A sensor which raises an exception while processing
+    incoming raw sensor data."""
+
+    async def setup(self, test_name: str, bus: Bus):
+        self._connector = FakeSensorConnector(bus)
+        self._sensor_data_parser = FatalSensorParser(bus)
+        await super().setup(test_name, bus)

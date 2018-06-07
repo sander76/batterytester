@@ -46,6 +46,6 @@ class LedGateSensor(Sensor):
         self._sensor_data_parser = BooleanParser(bus, self.sensor_prefix)
         await super().setup(test_name, bus)
 
-    async def shutdown(self, bus: Bus):
-        await super().shutdown(bus)
-        await self._connector.close_method()
+    # async def shutdown(self, bus: Bus):
+    #     await super().shutdown(bus)
+    #     await self._connector.close_method()

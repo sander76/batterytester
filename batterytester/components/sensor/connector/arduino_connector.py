@@ -30,13 +30,28 @@ class ArduinoConnector(AsyncSensorConnector):
         if self.s.is_open:
             self.s.write('{i}')
 
-    async def close_method(self):
+    # async def close_method(self):
+    #     """Close the serial port. This gets called after the main test
+    #     has stopped.
+    #
+    #     Closing the serial port will raise a Serial Exception in the
+    #     threaded serial listener effectively stopping
+    #     the wrapping async task"""
+    #     LOGGER.debug("Closing serial connection")
+    #     self.s.cancel_read()
+    #     self.s.close()
+
+    async def setup(self, test_name: str, bus):
+        self._connect()
+        await super().setup(test_name, bus)
+
+    async def shutdown(self, bus):
         """Close the serial port. This gets called after the main test
         has stopped.
-
         Closing the serial port will raise a Serial Exception in the
         threaded serial listener effectively stopping
         the wrapping async task"""
+
         LOGGER.debug("Closing serial connection")
         self.s.cancel_read()
         self.s.close()
@@ -54,7 +69,7 @@ class ArduinoConnector(AsyncSensorConnector):
     def _listen_for_data(self):
         # todo: test this method for raising an error and whether the
         # system picks this up.
-        self._connect()
+        # self._connect()
         while self.bus.running:
             try:
                 data = self.s.readline()
