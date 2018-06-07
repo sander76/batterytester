@@ -5,17 +5,8 @@ import pytest
 from batterytester.components.datahandlers.influx import Influx
 from batterytester.components.datahandlers.messaging import Messaging
 from batterytester.core.base_test import BaseTest
-from test.fake_components import FakeBaseTest, FakeVoltsAmpsSensor, FakeActor
-
-
-def AsyncMock(*args, **kwargs):
-    m = MagicMock(*args, **kwargs)
-
-    async def mock_coro(*args, **kwargs):
-        return m(*args, **kwargs)
-
-    mock_coro.mock = m
-    return mock_coro
+from test.fake_components import FakeBaseTest, FakeVoltsAmpsSensor, FakeActor, \
+    AsyncMock
 
 
 @pytest.fixture

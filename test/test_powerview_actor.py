@@ -5,8 +5,7 @@ from batterytester.components.actors import PowerViewActor
 from batterytester.components.actors.base_actor import ACTOR_TYPE_POWER_VIEW
 from batterytester.core.atom.atom import Atom
 
-from test.conftest import AsyncMock
-from test.fake_components import FakeBaseTest
+from test.fake_components import FakeBaseTest, AsyncMock
 
 
 @pytest.fixture

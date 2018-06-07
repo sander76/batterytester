@@ -14,7 +14,7 @@ from batterytester.core.helpers.constants import ATOM_STATUS_EXECUTING, \
 from batterytester.core.helpers.helpers import NonFatalTestFailException, \
     get_current_timestamp, FatalTestFailException
 from batterytester.core.helpers.message_data import LoopData, AtomStatus, \
-    AtomResult, Data, TestData, TestFinished
+    TestData, TestFinished, ActorResponse
 
 LOGGER = logging.getLogger(__name__)
 
@@ -129,9 +129,13 @@ class BaseTest:
     async def perform_test(self):
         """The test to be performed"""
         self.bus.notify(subj.ATOM_STATUS, self._perform_test_data())
+        # todo: move to the below event instead of the above one.
+        # self.bus.notify(subj.ACTOR_EXECUTED, self._perform_test_data())
 
-        await self._active_atom.execute()
-
+        _result = await self._active_atom.execute()
+        if _result:
+            self.bus.notify(subj.ACTOR_RESPONSE_RECEIVED,
+                            ActorResponse(_result))
         self.bus.notify(
             subj.ATOM_STATUS, AtomStatus(ATOM_STATUS_COLLECTING))
 

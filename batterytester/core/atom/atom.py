@@ -87,6 +87,7 @@ class Atom:
                 _result = await self._command()
             if self._result_key:
                 self._stored_atom_results[self._result_key] = _result
+            return _result
         # except AtomExecuteError as err:
         #     # todo: somehow define whether execution is fatal or not.
         #     raise NonFatalTestFailException(

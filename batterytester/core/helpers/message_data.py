@@ -23,6 +23,7 @@ STATUS_UNKOWN = 'unknown'
 STATUS_FINISHED = 'finished'
 STATUS_STARTING = 'starting'
 
+
 class Data:
     def __init__(self, value: typing.Any = 'unknown', type_=TYPE_STR):
         self.value = value
@@ -88,6 +89,7 @@ def message_serializable(val):
     _val['subj'] = val.subj
     return _val
 
+
 # todo: rename subj to event to match name and functionality
 
 class BaseTestData(Message):
@@ -105,7 +107,7 @@ class ProcessData(Message):
 
     def __init__(self):
         super().__init__()
-        self.subj=PROCESS_INFO
+        self.subj = PROCESS_INFO
         self._process_name = Data()
         self._process_id = Data(type_=TYPE_INT)
         self._status = Data(STATUS_UNKOWN, TYPE_STATUS)
@@ -195,6 +197,12 @@ class AtomStatus(Message):
         super().__init__()
         self.status = Data(status)
         self.status_updated = Data(get_current_timestamp(), type_=TYPE_TIME)
+
+
+class ActorResponse(Message):
+    def __init__(self, response):
+        super().__init__()
+        self.response = Data(response, type_=TYPE_JSON)
 
 
 class AtomResult(Message):

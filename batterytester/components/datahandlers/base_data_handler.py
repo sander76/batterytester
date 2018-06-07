@@ -68,7 +68,22 @@ class BaseDataHandler(metaclass=ABCMeta):
 
     @abstractmethod
     def get_subscriptions(self):
+        """Return a tuple of tuples with each tuple
+        containing and event name and the corresponding method
+        to call when the event occurs.
+
+        example:
+
+        return (
+            (subj.ATOM_WARMUP, self._atom_warmup_event),
+            (subj.SENSOR_DATA, self._handle_sensor),
+        )
+
+        def _atom_warmup_event(self, subject, data: AtomData):
+            pass
+        """
         pass
+
 
 
 class FileBasedDataHandler(BaseDataHandler):

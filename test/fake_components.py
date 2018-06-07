@@ -3,10 +3,12 @@ from asyncio import CancelledError
 from random import random
 from unittest.mock import MagicMock, Mock
 
+import batterytester.core.helpers.message_subjects as subj
 from batterytester.components.actors.base_actor import BaseActor
 from batterytester.components.datahandlers.base_data_handler import \
     BaseDataHandler
 from batterytester.components.sensor.connector import AsyncSensorConnector
+from batterytester.components.sensor.incoming_parser import IncomingParser
 from batterytester.components.sensor.incoming_parser.boolean_parser import \
     BooleanParser
 from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import \
@@ -16,6 +18,16 @@ from batterytester.core.base_test import BaseTest
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.helpers import FatalTestFailException, \
     NonFatalTestFailException
+
+
+def AsyncMock(*args, **kwargs):
+    m = MagicMock(*args, **kwargs)
+
+    async def mock_coro(*args, **kwargs):
+        return m(*args, **kwargs)
+
+    mock_coro.mock = m
+    return mock_coro
 
 
 class FakeActor(BaseActor):
@@ -30,12 +42,16 @@ class FakeActor(BaseActor):
         self._shutdown = Mock()
 
     async def open(self, *args, **kwargs):
-        self.open_mock(*args, *kwargs)
+        self.open_mock(*args, **kwargs)
         print("open {}".format(self.test_name))
 
     async def close(self, *args, **kwargs):
         self.close_mock(*args, **kwargs)
         print("close {}".format(self.test_name))
+
+    async def open_with_reponse(self, *args, **kwargs):
+        self.open_mock(*args, **kwargs)
+        return {"response": "test"}
 
     async def raise_unknown_exception(self, *args, **kwargs):
         raise Exception("Fake exception raised.")
@@ -135,4 +151,61 @@ class FakeBaseTest(BaseTest):
 
 
 class FakeDataHandler(BaseDataHandler):
+    def __init__(self):
+        super().__init__()
+        self.calls = []
+        self.setup = AsyncMock()
+        self.shutdown = AsyncMock()
+
+    def get_subscriptions(self):
+        return (
+            (subj.TEST_FINISHED, self.notify),
+            (subj.TEST_RESULT, self.notify),
+            (subj.TEST_WARMUP, self.notify),
+            (subj.ACTOR_EXECUTED, self.notify),
+            (subj.ACTOR_RESPONSE_RECEIVED, self.notify),
+            (subj.ATOM_FINISHED, self.notify),
+            (subj.ATOM_WARMUP, self.notify),
+            (subj.ATOM_STATUS, self.notify),
+            (subj.ATOM_RESULT, self.notify),
+            (subj.RESULT_SUMMARY, self.notify),
+            (subj.LOOP_WARMUP, self.notify),
+            (subj.LOOP_FINISHED, self.notify),
+            (subj.SENSOR_DATA, self.notify),
+            (subj.TEST_FATAL, self.notify),
+        )
+
+    def notify(self, subject, data):
+        self.calls.append(subject)
+
+    async def setup(self, test_name: str, bus: Bus):
+        pass
+
+
+class FatalDataHandler(FakeDataHandler):
+    def __init__(self, fail_subj=None):
+        super().__init__()
+        self.fail_subj = fail_subj
+
+    def notify(self, subject, data):
+        super().notify(subject, data)
+        if subject == self.fail_subj:
+            raise FatalTestFailException("{} failed.".format(subject))
+
+
+class FatalSensorConnector1(AsyncSensorConnector):
+    """Raises exception while listening for data"""
+    async def async_listen_for_data(self, *args):
+        raise FatalTestFailException()
+
+
+class FatalSensorParser(IncomingParser):
     pass
+
+
+class FatalSensorAsyncListenForData(Sensor):
+    """A sensor which raises an exception while listening for
+    sensor data."""
+    async def setup(self, test_name: str, bus: Bus):
+        self._connector = FatalSensorConnector1(bus)
+        self._sensor_data_parser = FatalSensorParser(bus)

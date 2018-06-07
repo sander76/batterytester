@@ -52,6 +52,8 @@ class ArduinoConnector(AsyncSensorConnector):
                 raise FatalTestFailException("Error connecting to serial port")
 
     def _listen_for_data(self):
+        # todo: test this method for raising an error and whether the
+        # system picks this up.
         self._connect()
         while self.bus.running:
             try:

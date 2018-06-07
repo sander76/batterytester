@@ -2,15 +2,17 @@
 # order.
 import logging
 
+from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers import message_subjects as subj
 from batterytester.core.helpers.constants import ATOM_STATUS_EXECUTING, \
     ATOM_STATUS_COLLECTING
 from batterytester.core.helpers.helpers import TestSetupException
 from batterytester.core.helpers.message_data import Data
-from test.fake_components import FakeActor
+from test.fake_components import FakeActor, FakeDataHandler, FatalDataHandler, \
+    FatalSensorAsyncListenForData
 from test.seqeuences import get_empty_sequence, get_sequence, \
     get_unknown_exception_sequence, get_fatal_exception_sequence, \
-    get_non_fatal_exception_sequence
+    get_non_fatal_exception_sequence, get_open_response_sequence
 
 logging.basicConfig(level=logging.INFO)
 
@@ -68,8 +70,7 @@ def test_notifications_sequence(base_test):
 
 
 def test_notifications_test_fail(base_test):
-    # todo: this test actor raises an unknown exception. A known exception should
-    # be tested too. like : NonFatalTestFailException and FatalTestFailException
+    """Test Notifications when an actor raises an unknown exception."""
     base_test.get_sequence = get_unknown_exception_sequence
     base_test.add_actor(FakeActor())
     base_test.start_test()
@@ -88,6 +89,7 @@ def test_notifications_test_fail(base_test):
 
 
 def test_notifications_fatal_test_fail(base_test):
+    """Test notifications when an actor raises a fatal test exception."""
     base_test.get_sequence = get_fatal_exception_sequence
     base_test.add_actor(FakeActor())
     base_test.start_test()
@@ -106,6 +108,7 @@ def test_notifications_fatal_test_fail(base_test):
 
 
 def test_notifications_non_fatal_test_fail(base_test):
+    """Test a not fatal actor exception"""
     base_test.get_sequence = get_non_fatal_exception_sequence
     base_test.add_actor(FakeActor())
     base_test.start_test()
@@ -125,13 +128,110 @@ def test_notifications_non_fatal_test_fail(base_test):
         assert args[0] == _subj
 
 
-# todo: test fatal data handler
+def test_notification_actor_response(base_test: BaseTest):
+    """Test where an actor returns a response"""
+    base_test.get_sequence = get_open_response_sequence
+    base_test.add_actor(FakeActor())
+    base_test.start_test()
 
-# FakeDataHandler()
+    subjects = [
+        subj.TEST_WARMUP,
+        subj.LOOP_WARMUP,
+        subj.ATOM_WARMUP,
+        subj.ATOM_STATUS,
+        subj.ACTOR_RESPONSE_RECEIVED,
+        subj.ATOM_STATUS,
+        subj.LOOP_FINISHED,
+        subj.TEST_FINISHED
+    ]
+
+    for idx, _subj in enumerate(subjects):
+        args, kwargs = base_test.bus.notify.call_args_list[idx]
+        assert args[0] == _subj
+
+
+def test_alternative_data_handler():
+    test = BaseTest(test_name='test', loop_count=1)
+    test.get_sequence = get_empty_sequence
+    datahandler = FakeDataHandler()
+    test.add_data_handlers(datahandler)
+    test.start_test()
+
+    subjects = [
+        subj.TEST_WARMUP,
+        subj.LOOP_WARMUP,
+        subj.LOOP_FINISHED,
+        subj.TEST_FINISHED]
+
+    for idx, subject in enumerate(subjects):
+        assert subject == datahandler.calls[idx]
+
+
+def test_fatal_data_handler():
+    # todo: test fatal data handler
+
+    test = BaseTest(test_name='test', loop_count=1)
+    test.get_sequence = get_empty_sequence
+    datahandler = FatalDataHandler(subj.TEST_WARMUP)
+    test.add_data_handlers(datahandler)
+    test.start_test()
+
+    subjects = [
+        subj.TEST_WARMUP,
+        subj.TEST_FATAL]
+
+    for idx, subject in enumerate(subjects):
+        assert subject == datahandler.calls[idx]
+
+
+def test_fatal_atom_warmup_data_handler():
+    # todo: Add more events where a datahandler failure can
+    # happen.
+
+    test = BaseTest(test_name='test', loop_count=1)
+    test.get_sequence = get_sequence
+    test.add_actor(FakeActor())
+
+    datahandler = FatalDataHandler(subj.ATOM_WARMUP)
+    test.add_data_handlers(datahandler)
+    test.start_test()
+
+    subjects = [
+        subj.TEST_WARMUP,
+        subj.LOOP_WARMUP,
+        subj.ATOM_WARMUP,
+        subj.TEST_FATAL
+    ]
+
+    for idx, subject in enumerate(subjects):
+        assert subject == datahandler.calls[idx]
+
+
+def test_fatal_sensor():
+    test = BaseTest(test_name='test', loop_count=1)
+    test.get_sequence = get_sequence
+    test.add_actor(FakeActor())
+
+    datahandler = FakeDataHandler()
+    test.add_data_handlers(datahandler)
+
+    test.add_sensors(FatalSensorAsyncListenForData())
+
+    test.start_test()
+    subjects = [
+        subj.TEST_WARMUP,
+        subj.LOOP_WARMUP,
+        subj.ATOM_WARMUP,
+        subj.TEST_FATAL
+    ]
+
+    for idx, subject in enumerate(subjects):
+        assert subject == datahandler.calls[idx]
 
 
 # todo: test fatal sensor
 
+# todo: fatal test setup exception
 
 def test_setup_methods(base_test):
     """Test whether the setup and shutdown methods are called on an actor."""
@@ -139,6 +239,8 @@ def test_setup_methods(base_test):
     actor = FakeActor()
     base_test.add_actor(actor)
     base_test.start_test()
+
+    datahandler = FakeDataHandler
 
     actor._setup.assert_called_once_with(
         base_test.test_name, base_test.bus)

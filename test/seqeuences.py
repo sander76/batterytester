@@ -53,3 +53,16 @@ def get_sequence(_actors):
         ),
     )
     return _val
+
+
+def get_open_response_sequence(_actors):
+    example_actor = actor_tools._get_actor(_actors, 'fake_actor')
+
+    _val = (
+        atoms.Atom(
+            name='open with response',
+            command=example_actor.open_with_reponse,
+            duration=1
+        ),
+    )
+    return _val
