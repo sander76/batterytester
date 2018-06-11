@@ -1,7 +1,7 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
-from serial import Serial, SerialException
+from serial import SerialException, Serial
 
 from batterytester.components.sensor.connector import AsyncSensorConnector
 from batterytester.core.helpers.helpers import FatalTestFailException
@@ -20,10 +20,10 @@ class ArduinoConnector(AsyncSensorConnector):
             serial_speed,
             try_delay=10):
         super().__init__(bus)
-        self.s = Serial()
+        # self.s = Serial()
         self.serial_port = serial_port
-        self.s.port = serial_port
-        self.s.baudrate = serial_speed
+        self.serial_speed = serial_speed
+        self.s = None  # the serial port
         self.trydelay = try_delay
 
     def get_version(self):
@@ -57,19 +57,16 @@ class ArduinoConnector(AsyncSensorConnector):
         self.s.close()
 
     def _connect(self):
-        if not self.s.is_open:
-            try:
-                LOGGER.debug(
-                    "Connecting to serial port {}.".format(self.serial_port))
-                self.s.open()
-            except SerialException as err:
-                LOGGER.error(err)
-                raise FatalTestFailException("Error connecting to serial port")
+        try:
+            LOGGER.debug(
+                "Connecting to serial port {}.".format(self.serial_port))
+            self.s = Serial(
+                port=self.serial_port, baudrate=self.serial_speed)
+        except SerialException as err:
+            LOGGER.error(err)
+            raise FatalTestFailException(err)
 
     def _listen_for_data(self):
-        # todo: test this method for raising an error and whether the
-        # system picks this up.
-        # self._connect()
         while self.bus.running:
             try:
                 data = self.s.readline()
@@ -80,11 +77,15 @@ class ArduinoConnector(AsyncSensorConnector):
 
                 LOGGER.error("error reading from serial port")
                 raise FatalTestFailException("Problem reading serial port.")
+            except Exception as err:
+                LOGGER.error(err)
+                raise FatalTestFailException("Unknown problem: {}".format(err))
 
     def check_command(self, data):
         command = data[1]
         if command == 105:  # 'i' ascii character
             LOGGER.info("sensor identity {}".format(data))
+            # todo: add this info to an event. Like Test info ?
             # report version
             pass
         elif command == 115:  # 's' ascii character

@@ -25,7 +25,9 @@ class BusState(Enum):
 class Bus:
     def __init__(self, loop=None):
         self.tasks = []
+        # todo: closing task can be removed ?
         self.closing_task = []
+        # todo: this one too ?
         self.threaded_tasks = []
         self.test_runner_task = None
         self.callbacks = []
@@ -81,8 +83,6 @@ class Bus:
             if val:
                 print(val)
         except Exception as err:
-            # todo: During cancellation this task can be run multiple times.
-            # This needs to be prevented.
             LOGGER.error(err)
             self.notify(subj.TEST_FATAL, FatalData(err))
             """An exception is raised. Meaning one of the long running 
@@ -102,9 +102,9 @@ class Bus:
             _task.add_done_callback(self.task_finished_callback)
             self.tasks.append(_task)
 
-    def add_closing_task(self, coro):
-        """Adds all coroutines to a list for later scheduling"""
-        self.closing_task.append(coro)
+    # def add_closing_task(self, coro):
+    #     """Adds all coroutines to a list for later scheduling"""
+    #     self.closing_task.append(coro)
 
     def add_threaded_task(self, threaded_task: Thread):
         self.threaded_tasks.append(threaded_task)

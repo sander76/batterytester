@@ -19,7 +19,7 @@ test.add_actor(
 
 # Add sensors to the test.
 test.add_sensors(
-    sensors.LedGateSensor(serial_port='COM6')
+    sensors.LedGateSensor(serial_port='COM4')
 )
 
 # Add data handlers to the test.

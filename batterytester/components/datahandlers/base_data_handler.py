@@ -85,7 +85,6 @@ class BaseDataHandler(metaclass=ABCMeta):
         pass
 
 
-
 class FileBasedDataHandler(BaseDataHandler):
     def __init__(self, report_name, output_path):
         """
