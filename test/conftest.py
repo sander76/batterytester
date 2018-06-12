@@ -5,8 +5,15 @@ import pytest
 from batterytester.components.datahandlers.influx import Influx
 from batterytester.components.datahandlers.messaging import Messaging
 from batterytester.core.base_test import BaseTest
+from batterytester.core.helpers.message_data import Data, TYPE_TIME
 from test.fake_components import FakeBaseTest, FakeVoltsAmpsSensor, FakeActor, \
     AsyncMock
+
+
+@pytest.fixture
+def fake_time_stamp():
+    ts = Data(123456789, type_=TYPE_TIME)
+    return ts
 
 
 @pytest.fixture

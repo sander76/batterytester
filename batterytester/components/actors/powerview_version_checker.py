@@ -11,6 +11,11 @@ from batterytester.core.helpers.helpers import AtomExecuteError
 
 LOGGER = logging.getLogger(__name__)
 
+PROCESSOR_VERSION = 'version'
+OLD_PROCESSOR_VERSION = 'old_version'
+RADIO_VERSION = 'radio_version'
+OLD_RADIO_VERSION = 'old_radio_version'
+
 
 class PowerViewVersionChecker(BaseActor):
     actor_type = ACTOR_TYPE_POWERVIEW_VERSION_CHECKER
@@ -21,18 +26,43 @@ class PowerViewVersionChecker(BaseActor):
         """
         self.hub_ip = hub_ip
         self.request = None
-        self.hub_entry_point = None
-        self.current_radio_version = None
-        self.main_processor_version = None
+        self.hub = None
+        self.radio_version = None
+        self.processor_version = None
 
     async def setup(self, test_name: str, bus: Bus):
         self.request = AioRequest(self.hub_ip, loop=bus.loop,
                                   websession=bus.session)
-        self.hub_entry_point = Hub(self.request)
+        self.hub = Hub(self.request)
 
     async def get_version(self):
         try:
-            await self.hub_entry_point.query_firmware()
+            await self.hub.query_firmware()
+            ver = self._check_version()
+
+            if ver is not None:
+                return ver
         except PvApiConnectionError as err:
             raise AtomExecuteError(
                 'Unable to connect to PowerView hub. {}'.format(err))
+
+    def _check_version(self):
+        _resp = None
+        if self.processor_version is None:
+            _resp = self._make_response()
+        elif (not self.radio_version == self.hub.radio_version or
+              not self.processor_version == self.hub.main_processor_version):
+            _resp = self._make_response(include_old=True)
+
+        self.processor_version = self.hub.main_processor_version
+        self.radio_version = self.hub.radio_version
+
+        return _resp
+
+    def _make_response(self, include_old=False):
+        _ver = {PROCESSOR_VERSION: str(self.hub.main_processor_version),
+                RADIO_VERSION: str(self.hub.radio_version)}
+        if include_old:
+            _ver[OLD_PROCESSOR_VERSION] = str(self.processor_version)
+            _ver[OLD_RADIO_VERSION] = str(self.radio_version)
+        return _ver

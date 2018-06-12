@@ -24,6 +24,8 @@ STATUS_FINISHED = 'finished'
 STATUS_STARTING = 'starting'
 
 
+# todo: Add source to message. This can be used to later filter out messages depending on sender.
+
 class Data:
     def __init__(self, value: typing.Any = 'unknown', type_=TYPE_STR):
         self.value = value
@@ -200,9 +202,10 @@ class AtomStatus(Message):
 
 
 class ActorResponse(Message):
-    def __init__(self, response):
+    def __init__(self, response: dict):
         super().__init__()
         self.response = Data(response, type_=TYPE_JSON)
+        self.time = Data(get_current_timestamp(), type_=TYPE_TIME)
 
 
 class AtomResult(Message):

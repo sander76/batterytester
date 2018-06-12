@@ -1,21 +1,13 @@
 """Websocket server for inter process communication"""
 
-import asyncio
-import json
-import logging
-from json import JSONDecodeError
-
 from pprint import pprint
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.components.datahandlers.base_data_handler import \
     BaseDataHandler
-from batterytester.core.helpers.helpers import FatalTestFailException, \
-    TestSetupException
-from batterytester.core.helpers.message_data import to_serializable, \
-    FatalData, TestFinished, TestData, AtomData, \
-    AtomStatus, AtomResult, TestSummary, Message, LoopData
-from batterytester.server.server import URL_TEST, MSG_TYPE_STOP_TEST
+from batterytester.core.helpers.message_data import FatalData, TestFinished, \
+    TestData, AtomData, \
+    AtomStatus, AtomResult, LoopData, ActorResponse
 
 
 class ConsoleDataHandler(BaseDataHandler):
@@ -30,11 +22,16 @@ class ConsoleDataHandler(BaseDataHandler):
             (subj.LOOP_WARMUP, self.loop_warmup),
             (subj.ATOM_WARMUP, self._atom_warmup),
             (subj.ATOM_RESULT, self.atom_result),
-            (subj.SENSOR_DATA, self.test_data)
+            (subj.SENSOR_DATA, self.test_data),
+            (subj.ACTOR_RESPONSE_RECEIVED, self.response_received),
         )
 
-    def to_console(self,data):
+    def to_console(self, data):
         pprint(data)
+
+    def response_received(self, subject, data: ActorResponse):
+        self.to_console("ACTOR RESPONSE DATA")
+        self.to_console(data.to_dict())
 
     def loop_warmup(self, subject, data: LoopData):
         self.to_console("LOOP WARMUP")
@@ -46,7 +43,7 @@ class ConsoleDataHandler(BaseDataHandler):
         self.to_console(data.to_dict())
 
     def test_warmup(self, subject, data: TestData):
-        #LOGGER.debug("warmup test: {} data: {}".format(subject, data))
+        # LOGGER.debug("warmup test: {} data: {}".format(subject, data))
         self.to_console("TEST WARMUP")
         self.to_console(data.to_dict())
 
@@ -71,8 +68,6 @@ class ConsoleDataHandler(BaseDataHandler):
         self.to_console("ATOM STATUS")
         self.to_console(data.to_dict())
 
-
     async def setup(self, test_name, bus):
         self._bus = bus
-        self.test_name=test_name
-
+        self.test_name = test_name
