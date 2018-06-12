@@ -80,18 +80,12 @@ class Atom:
         try:
             if self._args:
                 self._check_args()
-                # todo: The result should be interpreted
-                # whether feedback is correct.
                 _result = await self._command(**self._args)
             else:
                 _result = await self._command()
             if self._result_key:
                 self._stored_atom_results[self._result_key] = _result
             return _result
-        # except AtomExecuteError as err:
-        #     # todo: somehow define whether execution is fatal or not.
-        #     raise NonFatalTestFailException(
-        #         "Problem executing Atom {}".format(err))
         # todo: move the below exceptions to their actors. The actors should
         # raise an Fatal or NonFatal TestFailException on fail.
         except (

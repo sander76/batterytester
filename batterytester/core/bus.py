@@ -25,23 +25,14 @@ class BusState(Enum):
 class Bus:
     def __init__(self, loop=None):
         self.tasks = []
-        # todo: closing task can be removed ?
-        self.closing_task = []
-        # todo: this one too ?
-        self.threaded_tasks = []
         self.test_runner_task = None
-        self.callbacks = []
         self.running = True
         self.loop = loop or asyncio.get_event_loop()
         self.session = aiohttp.ClientSession(loop=self.loop)
         self.exit_message = None
-        # self.notifier = BaseNotifier()
-        # self.message_bus = Messaging(self.loop)
-
         self._data_handlers = []
         self.actors = {}
         self.sensors = []
-
         self.subscriptions = {}
         self._exception = None
         self._state = BusState.undefined
@@ -102,15 +93,11 @@ class Bus:
             _task.add_done_callback(self.task_finished_callback)
             self.tasks.append(_task)
 
-    # def add_closing_task(self, coro):
-    #     """Adds all coroutines to a list for later scheduling"""
-    #     self.closing_task.append(coro)
+    # def add_threaded_task(self, threaded_task: Thread):
+    #     self.threaded_tasks.append(threaded_task)
 
-    def add_threaded_task(self, threaded_task: Thread):
-        self.threaded_tasks.append(threaded_task)
-
-    def add_callback(self, callback):
-        self.callbacks.append(callback)
+    # def add_callback(self, callback):
+    #     self.callbacks.append(callback)
 
     async def start_main_test(self, test_runner, test_name):
         self._state = BusState.setting_up
@@ -131,10 +118,6 @@ class Bus:
             await self.test_runner_task
 
     def _start_test(self, test_runner, test_name):
-        for callback in self.callbacks:
-            callback()
-        for task in self.threaded_tasks:
-            task.start()
         try:
             self.loop.run_until_complete(
                 self.start_main_test(test_runner, test_name))
@@ -154,16 +137,12 @@ class Bus:
             self.notify(subj.TEST_FATAL, FatalData(err))
         finally:
             self.loop.run_until_complete(self.stop_test())
-            # todo: double check whether all tasks finished
-            # checking all_tasks like below.
-            # all_tasks = asyncio.Task.all_tasks(self.loop)
-            # self.loop.close()
 
         return self.exit_message
 
     async def stop_test(self, message=None):
         # wait a little to have all tasks finish gracefully.
-        # self.notify(subj.TEST_FINISHED, TestFinished())
+
         await asyncio.sleep(4)
         LOGGER.info("stopping test")
 
@@ -183,18 +162,6 @@ class Bus:
 
         self.running = False
 
-        # todo: making this obsolete in favour of calling shutdown methods
-        # in each component.
-        for _task in self.closing_task:
-            try:
-                async with timeout(10):
-                    await _task
-            except TimeoutError:
-                LOGGER.error("problem finishing task: %s", _task)
-            except Exception as err:
-                LOGGER.error(
-                    "problem during execution of closing task: {}".format(err))
-
         await self.session.close()
 
         # todo: throttle this as it may run forever if a task cannot be closed.
@@ -208,5 +175,5 @@ class Bus:
                 else:
                     _task.cancel()
                     all_finished = False
-            await asyncio.sleep(1)
-        pass
+            if not all_finished:
+                await asyncio.sleep(1)

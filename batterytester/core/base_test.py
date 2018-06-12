@@ -42,7 +42,6 @@ class BaseTest:
             self.sensor_data_queue = asyncio.Queue(loop=self.bus.loop)
             self.bus.add_async_task((self._messager()))
         for _sensor in sensors:
-            # todo: move the sensor_data_queue to the bus.
             _sensor.sensor_data_queue = self.sensor_data_queue
 
             self.bus.sensors.append(_sensor)

@@ -1,5 +1,3 @@
-# todo: base test should test whether all notifications are called in the right
-# order.
 import logging
 
 from batterytester.core.base_test import BaseTest
@@ -247,10 +245,6 @@ def test_fatal_sensor_on_process():
     for idx, subject in enumerate(subjects):
         assert subject == datahandler.calls[idx]
 
-
-# todo: test fatal sensor
-
-# todo: fatal test setup exception
 
 def test_setup_methods(base_test):
     """Test whether the setup and shutdown methods are called on an actor."""

@@ -155,7 +155,6 @@ class ProcessData(Message):
 class TestFinished(BaseTestData):
     def __init__(self):
         super().__init__()
-        # todo: add total runtime.
         self.status = Data(STATUS_FINISHED, TYPE_STATUS)
         self.time_finished = Data(get_current_timestamp(), type_=TYPE_TIME)
         self.reason = Data(value='End of test reached.')
