@@ -150,13 +150,25 @@ class BaseTest:
             _atom_result = self._active_atom.reference_compare()
             self.bus.notify(subj.ATOM_RESULT, _atom_result)
 
+    def _get_current_loop(self):
+        """Return loop number depending on loopcount config."""
+
+        if self._loopcount > 0:
+            for _loop in range(self._loopcount):
+                yield _loop
+        else:
+            _loop = 0
+            while True:
+                yield _loop
+                _loop += 1
+
     async def async_test(self):
         LOGGER.info("STARTING async_test")
         self.bus.notify(subj.TEST_WARMUP,
                         TestData(self.test_name, self._loopcount))
         await self.test_warmup()
 
-        for _current_loop in range(self._loopcount):
+        for _current_loop in self._get_current_loop():
             self._active_loop = _current_loop
             # performing actions on test subject to get into the proper
             # starting state.

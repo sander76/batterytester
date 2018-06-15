@@ -15,6 +15,26 @@ from test.seqeuences import get_empty_sequence, get_sequence, \
 logging.basicConfig(level=logging.INFO)
 
 
+def test_bound_loop():
+    base_test = BaseTest(test_name='test', loop_count=2)
+    loops = []
+    for _loop in base_test._get_current_loop():
+        loops.append(_loop)
+    assert len(loops) == 2
+
+
+def test_infinite_loop():
+    base_test = BaseTest(test_name='test', loop_count=-1)
+    loops = []
+    counter = 0
+    for _loop in base_test._get_current_loop():
+        loops.append(_loop)
+        counter += 1
+        if counter == 10:
+            break
+    assert len(loops) == 10
+
+
 def test_no_actor(base_test):
     """Using an actor which is not added to the test.
     Must raise a TestSetupException."""
@@ -128,6 +148,7 @@ def test_notifications_non_fatal_test_fail(base_test):
 
 def test_notification_actor_response(base_test: BaseTest):
     """Test where an actor returns a response"""
+
     base_test.get_sequence = get_open_response_sequence
     base_test.add_actor(FakeActor())
     base_test.start_test()
