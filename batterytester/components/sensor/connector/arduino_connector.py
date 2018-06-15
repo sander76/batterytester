@@ -35,13 +35,14 @@ class ArduinoConnector(AsyncSensorConnector):
         await super().setup(test_name, bus)
 
     async def shutdown(self, bus):
-        """Close the serial port. This gets called after the main test
-        has stopped.
+        """Close the serial port.
+
+        This gets called after the main test has stopped.
         Closing the serial port will raise a Serial Exception in the
         threaded serial listener effectively stopping
         the wrapping async task"""
 
-        LOGGER.debug("Closing serial connection")
+        LOGGER.info("Closing serial connection")
         self.s.cancel_read()
         self.s.close()
 

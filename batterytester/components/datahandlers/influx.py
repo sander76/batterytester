@@ -17,6 +17,8 @@ from batterytester.core.helpers.message_data import AtomData
 LOGGER = logging.getLogger(__name__)
 
 
+# todo: handle actor response data.
+
 class InfluxLineProtocol:
     """https://docs.influxdata.com/influxdb/v1.5/
     write_protocols/line_protocol_tutorial/"""
@@ -148,6 +150,12 @@ class Influx(BaseDataHandler):
             self._flush()
 
     def _atom_warmup_event(self, subject, data: AtomData):
+        """
+        Respond to warmup event.
+        This data is stored as an event or so called annotation.
+        For more info on storing and displaying annotations.
+        """
+
         self._tags['loop'] = data.loop.value  # data[KEY_ATOM_LOOP][KEY_VALUE]
         self._tags['idx'] = data.idx.value  # data[KEY_ATOM_INDEX][KEY_VALUE]
 

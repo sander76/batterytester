@@ -42,3 +42,7 @@ def test_check_version(checker, version2):
     _ref_ver = checker._make_response(include_old=True)
     _ver = checker._check_version()
     assert _ref_ver == _ver
+
+    ver = Version(2, 3, 4)
+    ver1 = Version(2, 3, 4)
+    assert ver == ver1

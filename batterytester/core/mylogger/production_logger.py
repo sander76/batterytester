@@ -3,8 +3,6 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
-
-
 def setup_logging(log_folder=None):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)

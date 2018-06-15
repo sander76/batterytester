@@ -125,7 +125,6 @@ class Server:
 
         self.process_task = asyncio.ensure_future(self.manage_process())
 
-
     async def manage_process(self):
         try:
             while not self.test_process.stdout.at_eof():
@@ -244,6 +243,7 @@ class Server:
         return ws
 
     async def _parse_incoming_test_data(self, data, raw):
+        # todo: add summary to cached data.
         await self.send_to_client(raw)
 
         try:

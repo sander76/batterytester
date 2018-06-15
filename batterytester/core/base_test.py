@@ -1,3 +1,5 @@
+"""Basetest main entrypoint for every test."""
+
 import asyncio
 import logging
 from asyncio import CancelledError
@@ -20,6 +22,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class BaseTest:
+    """Main test."""
+
     def __init__(
             self, *,
             test_name: str,
@@ -48,23 +52,22 @@ class BaseTest:
 
     def add_data_handlers(self, *args: BaseDataHandler):
         """Add data handlers to the test."""
-
         for _handler in args:
             self.bus.register_data_handler(_handler, self.test_name)
 
     def add_actor(self, *actors: BaseActor):
         """Add actors to the test."""
-
         # todo: have the option to include multiple actors of the same type
-
         for _actor in actors:
             self.bus.actors[_actor.actor_type] = _actor
 
     def add_sequence(self, sequence):
+        """Add test sequence to the test."""
         self.get_sequence = sequence
 
     @property
     def active_atom(self) -> ReferenceAtom:
+        """Active atom."""
         return self._active_atom
 
     def start_test(self):
@@ -78,6 +81,7 @@ class BaseTest:
     def handle_sensor_data(self, sensor_data: dict):
         """Handle sensor data by sending it to the active atom or store
         it in a database.
+
         Cannot be a blocking io call. Needs to return immediately
         """
         self.bus.notify(subj.SENSOR_DATA, sensor_data)

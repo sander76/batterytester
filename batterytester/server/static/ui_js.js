@@ -364,7 +364,6 @@ function parseSensor(data) {
         // Sensor data
         parseSensorData(data)
     } else if (subj === 'atom_warmup') {
-        // Atom data.
         parseAtomInfo(data)
     } else if (subj === 'test_warmup') {
         // this.clearData()
