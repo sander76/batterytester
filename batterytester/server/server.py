@@ -307,6 +307,15 @@ class Server:
         # await self.app.cleanup()
 
 
+def get_loop():
+    if sys.platform == 'win32':
+        loop = asyncio.ProactorEventLoop()
+        asyncio.set_event_loop(loop)
+    else:
+        loop = asyncio.get_event_loop()
+    return loop
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     parser = ArgumentParser()
@@ -323,11 +332,8 @@ if __name__ == '__main__':
 
     setup_logging(LOGGER, _log_folder)
 
-    if sys.platform == 'win32':
-        loop = asyncio.ProactorEventLoop()
-        asyncio.set_event_loop(loop)
-    else:
-        loop = asyncio.get_event_loop()
+    loop=get_loop()
+
     server = Server(
         config_folder=_config_folder,
         loop_=loop)
