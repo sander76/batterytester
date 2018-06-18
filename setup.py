@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='batterytester',
-    version='1.3.5',
+    version='1.3.6',
     packages=find_packages(exclude='test'),
     url='',
     license='',

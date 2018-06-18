@@ -11,7 +11,7 @@ from batterytester.components.datahandlers.base_data_handler import \
     BaseDataHandler
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.message_data import TestData, TestFinished, \
-    ActorResponse
+    ActorResponse, AtomResult
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +37,6 @@ class Telegram(BaseDataHandler):
         self._test_name = clean_for_markdown(test_name)
         self.bot = Bot(self._token)
 
-        # self.slack = SlackAPI(token=self._token, session=self._session)
-
     async def shutdown(self, bus: Bus):
 
         if self.bot.session:
@@ -48,13 +46,21 @@ class Telegram(BaseDataHandler):
         return (
             (subj.TEST_WARMUP, self._test_start),
             (subj.TEST_FINISHED, self._test_finished),
-            (subj.ACTOR_RESPONSE_RECEIVED, self._actor_response_received)
+            (subj.ACTOR_RESPONSE_RECEIVED, self._actor_response_received),
+            (subj.ATOM_RESULT, self._atom_result)
         )
 
     def _to_time(self, value: int):
         return '{}'.format((datetime.fromtimestamp(value)).strftime(
             "%H:%M:%S, %b %d, %Y ")
         )
+
+    def _atom_result(self, subject, data: AtomResult):
+        """Handle atom result data"""
+
+        if not data.passed.value:
+            _info = data.reason.value
+            self._send_message(self._make_message(_info, data.time.value))
 
     def _test_start(self, subject, data: TestData):
         _message = "*{}*\n\n{}\n{}".format(

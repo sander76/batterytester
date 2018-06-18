@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import pytest
 
 from batterytester.components.datahandlers import Influx
@@ -57,7 +59,7 @@ def test_influx_line_protocol1_nofields(fake_measurement1):
 
 
 def test_line_protocol_fields():
-    field = {'test': 'test'}
+    field = OrderedDict({'test': 'test'})
     result = line_protocol_fields(field)
     assert result == 'test="test"'
 

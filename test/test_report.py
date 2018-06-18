@@ -12,13 +12,13 @@ TEST_FOLDER = 'testfolder'
 @pytest.fixture()
 def test_path():
     try:
-        rmtree(Path(TEST_FOLDER))
+        rmtree(str(Path(TEST_FOLDER)))
         # Path.rmdir(Path(TEST_FOLDER))
     except FileNotFoundError:
         pass
     yield Path.cwd().joinpath(TEST_FOLDER)
     try:
-        rmtree(Path(TEST_FOLDER))
+        rmtree(str(Path(TEST_FOLDER)))
     except FileNotFoundError:
         pass
 

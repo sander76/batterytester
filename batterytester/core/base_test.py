@@ -12,11 +12,11 @@ from batterytester.core.atom.reference_atom import ReferenceAtom
 from batterytester.core.bus import Bus
 from batterytester.core.helpers import message_subjects as subj
 from batterytester.core.helpers.constants import ATOM_STATUS_EXECUTING, \
-    ATOM_STATUS_COLLECTING, ATTR_RESULT, KEY_VALUE, REASON
+    ATOM_STATUS_COLLECTING
 from batterytester.core.helpers.helpers import NonFatalTestFailException, \
     get_current_timestamp, FatalTestFailException
 from batterytester.core.helpers.message_data import LoopData, AtomStatus, \
-    TestData, TestFinished, ActorResponse
+    TestData, TestFinished, ActorResponse, AtomResult
 
 LOGGER = logging.getLogger(__name__)
 
@@ -187,8 +187,7 @@ class BaseTest:
                     await self.perform_test()
                 except NonFatalTestFailException as err:
                     self.bus.notify(subj.ATOM_RESULT,
-                                    {ATTR_RESULT: {KEY_VALUE: False},
-                                     REASON: {KEY_VALUE: err}})
+                                    AtomResult(passed=False, reason=err))
 
             self.bus.notify(subj.LOOP_FINISHED, get_current_timestamp())
         self.bus.notify(subj.TEST_FINISHED, TestFinished())

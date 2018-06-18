@@ -2,10 +2,8 @@ import asyncio
 import logging
 from asyncio import CancelledError
 from enum import Enum
-from threading import Thread
 
 import aiohttp
-from async_timeout import timeout
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.helpers.helpers import FatalTestFailException, \
@@ -85,19 +83,14 @@ class Bus:
             self._state = BusState.shutting_down
 
     def add_async_task(self, coro):
-        """Add an async task. The callback will be used to check
-        whether these tasks do not exit prematurely. If so, the complete
-        test will be stopped."""
+        """Add an async task.
+
+        The callback will be used to check whether these tasks do not
+        exit prematurely. If so, the complete test will be stopped."""
         if not self._state == BusState.shutting_down:
             _task = self.loop.create_task(coro)
             _task.add_done_callback(self.task_finished_callback)
             self.tasks.append(_task)
-
-    # def add_threaded_task(self, threaded_task: Thread):
-    #     self.threaded_tasks.append(threaded_task)
-
-    # def add_callback(self, callback):
-    #     self.callbacks.append(callback)
 
     async def start_main_test(self, test_runner, test_name):
         self._state = BusState.setting_up
@@ -133,7 +126,7 @@ class Bus:
         except KeyboardInterrupt:
             LOGGER.info("Test stopped due to keyboard interrupt.")
         except Exception as err:
-            LOGGER.error(err)
+            LOGGER.exception(err)
             self.notify(subj.TEST_FATAL, FatalData(err))
         finally:
             self.loop.run_until_complete(self.stop_test())
@@ -163,7 +156,9 @@ class Bus:
         self.running = False
 
         await self.session.close()
+        await self._finish_all_tasks()
 
+    async def _finish_all_tasks(self):
         # todo: throttle this as it may run forever if a task cannot be closed.
         all_finished = False
         while not all_finished:

@@ -61,6 +61,7 @@ class ListData:
 class Message:
     def __init__(self):
         self.subj = ''
+        self.time = Data(get_current_timestamp(), type_=TYPE_TIME)
 
     def to_json(self):
         return json.dumps(self, default=to_serializable)
@@ -204,7 +205,6 @@ class ActorResponse(Message):
     def __init__(self, response: dict):
         super().__init__()
         self.response = Data(response, type_=TYPE_JSON)
-        self.time = Data(get_current_timestamp(), type_=TYPE_TIME)
 
 
 class AtomResult(Message):

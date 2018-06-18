@@ -1,16 +1,18 @@
 import logging
+from unittest.mock import Mock
 
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers import message_subjects as subj
 from batterytester.core.helpers.constants import ATOM_STATUS_EXECUTING, \
     ATOM_STATUS_COLLECTING
 from batterytester.core.helpers.helpers import TestSetupException
-from batterytester.core.helpers.message_data import Data
+from batterytester.core.helpers.message_data import Data, TestData
 from test.fake_components import FakeActor, FakeDataHandler, FatalDataHandler, \
     FatalSensorAsyncListenForData, FatalSensorProcess
 from test.seqeuences import get_empty_sequence, get_sequence, \
     get_unknown_exception_sequence, get_fatal_exception_sequence, \
-    get_non_fatal_exception_sequence, get_open_response_sequence
+    get_non_fatal_exception_sequence, get_open_response_sequence, \
+    get_reference_sequence
 
 logging.basicConfig(level=logging.INFO)
 
@@ -265,6 +267,29 @@ def test_fatal_sensor_on_process():
 
     for idx, subject in enumerate(subjects):
         assert subject == datahandler.calls[idx]
+
+
+def test_non_fatal_actor_boolean_reference_atom():
+    test = BaseTest(test_name='test', loop_count=1)
+
+    test.get_sequence = get_reference_sequence
+
+    test.add_actor(FakeActor())
+
+    _notify = Mock()
+    test.bus.notify = _notify
+
+    test.start_test()
+
+    subjects = [
+        (subj.TEST_WARMUP, TestData),
+    ]
+
+    for idx, _call in enumerate(_notify.mock_calls):
+        _subj = _call[1][0]
+        _data = _call[1][1]
+        assert _subj == subjects[idx][0]
+        assert isinstance(_data, subjects[idx][1])
 
 
 def test_setup_methods(base_test):

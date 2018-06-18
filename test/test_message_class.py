@@ -15,7 +15,8 @@ def test_internal_to_json():
     m = Message()
     _js = m.to_json()
     _dict = json.loads(_js)
-    assert _dict == {'subj': ''}
+    assert 'subj' in _dict
+    assert 'time' in _dict
 
 
 def test_fatal():

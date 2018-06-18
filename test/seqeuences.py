@@ -66,3 +66,18 @@ def get_open_response_sequence(_actors):
         ),
     )
     return _val
+
+
+def get_reference_sequence(_actors):
+    example_actor = actor_tools._get_actor(_actors, 'fake_actor')
+
+    _val = (
+        atoms.BooleanReferenceAtom(
+            name='non fatal exception',
+            command=example_actor.raise_non_fatal_test_exception,
+            duration=1,
+            reference={"a": False}
+
+        ),
+    )
+    return _val
