@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import os
 import sys
 from argparse import ArgumentParser
 from pathlib import Path
@@ -45,8 +46,18 @@ URL_ALL_TESTS = '/all_tests'
 DEFAULT_CONFIG_PATH = '/home/pi/test_configs'
 
 
+def set_current_working_folder():
+    pth = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(pth)
+
+
 class Server:
     def __init__(self, config_folder=None, loop_=None):
+        """Test server
+
+        :param config_folder: Full path to the configuration test files.
+        :param loop_: async event loop.
+        """
         self.client_sockets = []  # connected ui clients
         self.test_ws = None  # Socket connection to the actual running test.
         self.config_folder = config_folder
@@ -57,6 +68,7 @@ class Server:
         self.test_cache = {}
         self.test_process = None
         self.process_data = ProcessData()
+        set_current_working_folder()
 
     @property
     def test_is_running(self):
@@ -66,9 +78,11 @@ class Server:
 
     def _add_routes(self):
         # User interface(s) connects here.
-        self.app.router.add_get(URL_INTERFACE, self.client_handler)
+        self.app.router.add_get(URL_INTERFACE,
+                                self.client_ws_connection_handler)
         # Test connects here.
-        self.app.router.add_get(URL_TEST, self.test_handler)
+        self.app.router.add_get(URL_TEST, self.test_connection_handler)
+
         self.app.router.add_static('/static/', path='static', name='static')
         self.app.router.add_post(URL_TEST_START, self.test_start_handler)
         self.app.router.add_post(URL_TEST_STOP, self.stop_test_handler)
@@ -100,7 +114,7 @@ class Server:
             await self._start_test_process(p)
 
             self.process_data.process_name = data['test']
-            await self.send_to_client(self.process_data.to_json())
+            await self.ws_send_to_clients(self.process_data.to_json())
         return web.Response()
 
         # todo: handle feedback over websocket.
@@ -109,7 +123,7 @@ class Server:
         self.clear_cache()
         self.process_data.status = STATUS_STARTING
         self.process_data.subj = PROCESS_STARTED
-        await self.send_to_client(self.process_data.to_json())
+        await self.ws_send_to_clients(self.process_data.to_json())
 
         self.test_process = await asyncio.create_subprocess_exec(
             sys.executable, p,
@@ -128,18 +142,14 @@ class Server:
             while not self.test_process.stdout.at_eof():
                 line = await self.test_process.stdout.readline()
                 self.process_data.add_message(line.decode('utf-8'))
-                await self.send_to_client(self.process_data.to_json())
-            # log, other = await self.test_process.communicate()
+                await self.ws_send_to_clients(self.process_data.to_json())
             code = await self.test_process.wait()
 
-            # unicode_log = log.decode('utf-8')
             LOGGER.debug('exit code: {}'.format(code))
-            # LOGGER.debug(unicode_log)
 
             self.process_data.return_code = code
-            # self.process_data.add_message(unicode_log)
             self.process_data.status = STATUS_FINISHED
-            await self.send_to_client(
+            await self.ws_send_to_clients(
                 self.process_data.to_json()
             )
 
@@ -152,8 +162,6 @@ class Server:
     async def stop_test_handler(self, request):
         # todo: if no websocket connection somehow. Just kill the process.
         await self.stop_test()
-        # data = await request.text()
-        # resp = await self.send_to_tester(data)
         return web.json_response({"running": False})
 
     async def get_status_handler(self, request):
@@ -191,10 +199,10 @@ class Server:
         _data = self.test_cache.get(subj.TEST_WARMUP)
         if _data:
             _data['status'] = Data('tester disconnected')
-            await self.send_to_client(
+            await self.ws_send_to_clients(
                 json.dumps(_data, default=to_serializable))
 
-    async def test_handler(self, request):
+    async def test_connection_handler(self, request):
         """Handle incoming data from the running test."""
         self.test_ws = web.WebSocketResponse()
         await self.test_ws.prepare(request)
@@ -214,8 +222,8 @@ class Server:
 
         return self.test_ws
 
-    async def client_handler(self, request):
-        """Handle connection to the connected user interfaces."""
+    async def client_ws_connection_handler(self, request):
+        """Handle websocket connection to the connected user interfaces."""
         ws = web.WebSocketResponse()
         await ws.prepare(request)
 
@@ -229,7 +237,7 @@ class Server:
                     if _type == URL_CLOSE:
                         await ws.close()
                     elif _type == MSG_TYPE_ALL_TESTS:
-                        await self.send_to_client(
+                        await self.ws_send_to_clients(
                             json.dumps(self.list_configs()))
 
                 elif msg.type in (aiohttp.WSMsgType.CLOSE,
@@ -241,7 +249,7 @@ class Server:
         return ws
 
     async def _parse_incoming_test_data(self, data, raw):
-        await self.send_to_client(raw)
+        await self.ws_send_to_clients(raw)
 
         try:
             _subj = data[KEY_SUBJECT]
@@ -259,7 +267,7 @@ class Server:
                   _subj == subj.ATOM_STATUS or
                   _subj == subj.ATOM_RESULT or
                   _subj == subj.ATOM_FINISHED):
-
+                # todo: add testsummary to cache.
                 self._update_test_cache(data, subj.ATOM_WARMUP)
             elif _subj == subj.SENSOR_DATA:
                 self._update_test_cache(data, subj.SENSOR_DATA)
@@ -274,7 +282,7 @@ class Server:
         self.test_cache = {}
         self.process_data = ProcessData()
 
-    async def send_to_client(self, raw):
+    async def ws_send_to_clients(self, raw):
         res = await asyncio.gather(
             *(_ws.send_str(raw) for _ws in self.client_sockets))
         for _res in res:
@@ -332,7 +340,7 @@ if __name__ == '__main__':
 
     setup_logging(LOGGER, _log_folder)
 
-    loop=get_loop()
+    loop = get_loop()
 
     server = Server(
         config_folder=_config_folder,
