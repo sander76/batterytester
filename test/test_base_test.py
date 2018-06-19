@@ -1,14 +1,15 @@
 import logging
 from unittest.mock import Mock
 
+import batterytester.core.helpers.message_data as md
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers import message_subjects as subj
 from batterytester.core.helpers.constants import ATOM_STATUS_EXECUTING, \
     ATOM_STATUS_COLLECTING
 from batterytester.core.helpers.helpers import TestSetupException
-from batterytester.core.helpers.message_data import Data, TestData
-from test.fake_components import FakeActor, FakeDataHandler, FatalDataHandler, \
-    FatalSensorAsyncListenForData, FatalSensorProcess
+
+from test.fake_components import FakeActor, FakeDataHandler, \
+    FatalDataHandler, FatalSensorAsyncListenForData, FatalSensorProcess
 from test.seqeuences import get_empty_sequence, get_sequence, \
     get_unknown_exception_sequence, get_fatal_exception_sequence, \
     get_non_fatal_exception_sequence, get_open_response_sequence, \
@@ -85,8 +86,8 @@ def test_notifications_sequence(base_test):
     atom_status1 = base_test.bus.notify.call_args_list[3][0][1]
     atom_status2 = base_test.bus.notify.call_args_list[4][0][1]
 
-    assert atom_status1.status == Data(ATOM_STATUS_EXECUTING)
-    assert atom_status2.status == Data(ATOM_STATUS_COLLECTING)
+    assert atom_status1.status == md.Data(ATOM_STATUS_EXECUTING)
+    assert atom_status2.status == md.Data(ATOM_STATUS_COLLECTING)
 
 
 def test_notifications_test_fail(base_test):
@@ -103,6 +104,7 @@ def test_notifications_test_fail(base_test):
         subj.TEST_FATAL
     ]
 
+    assert len(base_test.bus.notify.call_args_list) == len(subjects)
     for idx, _subj in enumerate(subjects):
         args, kwargs = base_test.bus.notify.call_args_list[idx]
         assert args[0] == _subj
@@ -122,6 +124,7 @@ def test_notifications_fatal_test_fail(base_test):
         subj.TEST_FATAL
     ]
 
+    assert len(base_test.bus.notify.call_args_list) == len(subjects)
     for idx, _subj in enumerate(subjects):
         args, kwargs = base_test.bus.notify.call_args_list[idx]
         assert args[0] == _subj
@@ -143,6 +146,7 @@ def test_notifications_non_fatal_test_fail(base_test):
         subj.TEST_FINISHED
     ]
 
+    assert len(base_test.bus.notify.call_args_list) == len(subjects)
     for idx, _subj in enumerate(subjects):
         args, kwargs = base_test.bus.notify.call_args_list[idx]
         assert args[0] == _subj
@@ -166,6 +170,7 @@ def test_notification_actor_response(base_test: BaseTest):
         subj.TEST_FINISHED
     ]
 
+    assert len(base_test.bus.notify.call_args_list) == len(subjects)
     for idx, _subj in enumerate(subjects):
         args, kwargs = base_test.bus.notify.call_args_list[idx]
         assert args[0] == _subj
@@ -184,6 +189,7 @@ def test_alternative_data_handler():
         subj.LOOP_FINISHED,
         subj.TEST_FINISHED]
 
+    assert len(datahandler.calls) == len(subjects)
     for idx, subject in enumerate(subjects):
         assert subject == datahandler.calls[idx]
 
@@ -201,6 +207,7 @@ def test_fatal_data_handler():
         subj.TEST_WARMUP,
         subj.TEST_FATAL]
 
+    assert len(datahandler.calls) == len(subjects)
     for idx, subject in enumerate(subjects):
         assert subject == datahandler.calls[idx]
 
@@ -224,6 +231,7 @@ def test_fatal_atom_warmup_data_handler():
         subj.TEST_FATAL
     ]
 
+    assert len(datahandler.calls) == len(subjects)
     for idx, subject in enumerate(subjects):
         assert subject == datahandler.calls[idx]
 
@@ -245,6 +253,7 @@ def test_fatal_sensor():
         subj.TEST_FATAL
     ]
 
+    assert len(datahandler.calls) == len(subjects)
     for idx, subject in enumerate(subjects):
         assert subject == datahandler.calls[idx]
 
@@ -265,6 +274,7 @@ def test_fatal_sensor_on_process():
         subj.TEST_FATAL
     ]
 
+    assert len(datahandler.calls) == len(subjects)
     for idx, subject in enumerate(subjects):
         assert subject == datahandler.calls[idx]
 
@@ -282,7 +292,13 @@ def test_non_fatal_actor_boolean_reference_atom():
     test.start_test()
 
     subjects = [
-        (subj.TEST_WARMUP, TestData),
+        (subj.TEST_WARMUP, md.TestData),
+        (subj.LOOP_WARMUP, md.LoopData),
+        (subj.ATOM_WARMUP, md.AtomData),
+        (subj.ATOM_STATUS, md.AtomStatus),
+        (subj.ATOM_RESULT, md.AtomResult),
+        (subj.LOOP_FINISHED, md.LoopFinished),
+        (subj.TEST_FINISHED, md.TestFinished)
     ]
 
     for idx, _call in enumerate(_notify.mock_calls):

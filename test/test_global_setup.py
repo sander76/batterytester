@@ -124,7 +124,8 @@ def test_setup1(fake_tester_1):
     assert len(_atom1.sensor_data) > 0
     _fake_actor = fake_tester_1.bus.actors[FakeActor.actor_type]
 
-    _fake_actor.open_mock.assert_called_once()
+    assert len(_fake_actor.open_mock.mock_calls) ==1
+    #_fake_actor.open_mock.assert_called_once()
     _fake_actor.close_mock.assert_called_once_with(arg1=1)
 
 
@@ -152,7 +153,8 @@ def test_mix_atoms(fake_tester_4):
     assert _fake_actor.close_mock.call_count == 1
 
     _reference_atom = fake_tester_4._test_sequence[1]
-    _reference_atom.reference_compare.assert_called_once()
+    assert len(_reference_atom.reference_compare.mock_calls) ==1
+
 
 
 # def test_influx(fake_test: FakeBaseTest, fake_actor, fake_sensor, fake_influx):

@@ -16,7 +16,7 @@ from batterytester.core.helpers.constants import ATOM_STATUS_EXECUTING, \
 from batterytester.core.helpers.helpers import NonFatalTestFailException, \
     get_current_timestamp, FatalTestFailException
 from batterytester.core.helpers.message_data import LoopData, AtomStatus, \
-    TestData, TestFinished, ActorResponse, AtomResult
+    TestData, TestFinished, ActorResponse, AtomResult, LoopFinished
 
 LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,6 @@ class BaseTest:
 
     def add_actor(self, *actors: BaseActor):
         """Add actors to the test."""
-        # todo: have the option to include multiple actors of the same type
         for _actor in actors:
             self.bus.actors[_actor.actor_type] = _actor
 
@@ -126,12 +125,9 @@ class BaseTest:
             )
         self._test_sequence = _seq
 
-    def _perform_test_data(self):
-        return AtomStatus(ATOM_STATUS_EXECUTING)
-
     async def perform_test(self):
         """The test to be performed"""
-        self.bus.notify(subj.ATOM_STATUS, self._perform_test_data())
+        self.bus.notify(subj.ATOM_STATUS, AtomStatus(ATOM_STATUS_EXECUTING))
         # todo: move to the below event instead of the above one.
         # self.bus.notify(subj.ACTOR_EXECUTED, self._perform_test_data())
 
@@ -189,7 +185,7 @@ class BaseTest:
                     self.bus.notify(subj.ATOM_RESULT,
                                     AtomResult(passed=False, reason=err))
 
-            self.bus.notify(subj.LOOP_FINISHED, get_current_timestamp())
+            self.bus.notify(subj.LOOP_FINISHED, LoopFinished())
         self.bus.notify(subj.TEST_FINISHED, TestFinished())
 
     def _atom_warmup_data(self):

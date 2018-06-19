@@ -82,11 +82,11 @@ class Server:
                                 self.client_ws_connection_handler)
         # Test connects here.
         self.app.router.add_get(URL_TEST, self.test_connection_handler)
-
         self.app.router.add_static('/static/', path='static', name='static')
         self.app.router.add_post(URL_TEST_START, self.test_start_handler)
         self.app.router.add_post(URL_TEST_STOP, self.stop_test_handler)
         self.app.router.add_get('/get_status', self.get_status_handler)
+        self.app.router.add_get('/get_tests', self.get_tests_handler)
 
     def start_server(self):
         """Create a web server"""
@@ -103,7 +103,11 @@ class Server:
                             p.glob('*.py')]
         return data
 
+    async def get_tests_handler(self, request):
+        return web.json_response(self.list_configs())
+
     async def test_start_handler(self, request):
+        LOGGER.debug('Start test handler')
         data = await request.json()
         p = str(Path(self.config_folder).joinpath(data['test']))
 
@@ -116,8 +120,6 @@ class Server:
             self.process_data.process_name = data['test']
             await self.ws_send_to_clients(self.process_data.to_json())
         return web.Response()
-
-        # todo: handle feedback over websocket.
 
     async def _start_test_process(self, p):
         self.clear_cache()
@@ -233,13 +235,9 @@ class Server:
                 if msg.type == aiohttp.WSMsgType.TEXT:
 
                     _data = json.loads(msg.data)
-                    _type = _data['type']
-                    if _type == URL_CLOSE:
-                        await ws.close()
-                    elif _type == MSG_TYPE_ALL_TESTS:
-                        await self.ws_send_to_clients(
-                            json.dumps(self.list_configs()))
-
+                    # _type = _data['type']
+                    # if _type == URL_CLOSE:
+                    #     await ws.close()
                 elif msg.type in (aiohttp.WSMsgType.CLOSE,
                                   aiohttp.WSMsgType.CLOSING,
                                   aiohttp.WSMsgType.CLOSED):
@@ -267,8 +265,10 @@ class Server:
                   _subj == subj.ATOM_STATUS or
                   _subj == subj.ATOM_RESULT or
                   _subj == subj.ATOM_FINISHED):
-                # todo: add testsummary to cache.
+
                 self._update_test_cache(data, subj.ATOM_WARMUP)
+            elif _subj == subj.RESULT_SUMMARY:
+                self._update_test_cache(data, subj.RESULT_SUMMARY)
             elif _subj == subj.SENSOR_DATA:
                 self._update_test_cache(data, subj.SENSOR_DATA)
 
@@ -296,7 +296,6 @@ class Server:
     async def start(self):
         """Initialize this data handler"""
         self._add_routes()
-        # self.handler = self.app.make_handler()
         self.runner = web.AppRunner(self.app)
 
         await self.runner.setup()

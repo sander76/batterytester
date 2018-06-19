@@ -23,7 +23,7 @@ def fake_measurement1():
 
 @pytest.fixture
 def fake_tag():
-    return {'tag1': 'abc', 'tag2': 10}
+    return OrderedDict([('tag1', 'abc'), ('tag2', 10)])
 
 
 @pytest.fixture
@@ -123,7 +123,8 @@ def test_shutdown(fake_influx: Influx, base_test: BaseTest, fake_measurement1):
     assert len(fake_influx.data) == 1
     base_test.start_test()
 
-    fake_influx._send.mock.assert_called_once()
+    assert len(fake_influx._send.mock.mock_calls) == 1
+    # fake_influx._send.mock.assert_called_once()
     assert len(fake_influx.data) == 0
 
 
@@ -138,7 +139,8 @@ def test_shutdown_test_error(
     assert len(fake_influx.data) == 1
 
     base_test.start_test()
-    fake_influx._send.mock.assert_called_once()
+
+    assert len(fake_influx._send.mock.mock_calls) == 1
     assert len(fake_influx.data) == 0
 
 # todo: test when connection with database server is lost.

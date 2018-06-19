@@ -36,12 +36,5 @@ def get_pv_sequence(actors):
     return _val
 
 
-def test_influx(fake_test: FakeBaseTest, fake_powerview_actor):
-    fake_test.add_actor(fake_powerview_actor)
 
-    fake_test.get_sequence = get_pv_sequence
-    fake_test.start_test()
-
-    fake_powerview_actor.open_shade.mock.assert_called()
-    fake_powerview_actor.close_shade.mock.assert_called()
 

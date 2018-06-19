@@ -47,7 +47,6 @@ class BooleanReferenceAtom(ReferenceAtom):
                         str(_sensor_data), str(self.reference_data)))
                     return _atom_result
             except KeyError:
-                #todo: make this a list data type ?
                 _atom_result.passed = Data(False, type_=TYPE_BOOL)
                 _atom_result.reason = Data("""
                 Provided reference sensor data not present in actual sensor

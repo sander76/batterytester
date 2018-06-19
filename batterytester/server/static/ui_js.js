@@ -69,23 +69,31 @@ function openSocket(url) {
     }
 }
 
-function getStatus() {
+function httpRequest(method, url, data, callback) {
+    // Url must start with an '/'
     var xhr = new XMLHttpRequest()
-    xhr.open('GET', baseUrl + '/get_status', true)
+    xhr.open(method, baseUrl + url, true)
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
 
-    xhr.send(null)
+    xhr.send(data)
 
     xhr.onreadystatechange = function () {
         if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
             var msg = JSON.parse(xhr.responseText)
-            for (const key in msg) {
-                if (msg.hasOwnProperty(key)) {
-                    parseSensor(msg[key])
-                }
+            callback(msg)
+        }
+    }
+}
+
+function getStatus() {
+    function parse(msg) {
+        for (const key in msg) {
+            if (msg.hasOwnProperty(key)) {
+                parseSensor(msg[key])
             }
         }
     }
+    httpRequest('GET', '/get_status', null, parse)
 }
 
 function setConnectionStatus(statusKey) {
@@ -201,9 +209,19 @@ function startTest(e) {
 }
 
 function queryAllTests(e) {
-    ws.send(JSON.stringify({
-        'type': 'all_tests'
-    }))
+    function parseAllTests(data) {
+        allTests.options.length = 0
+        var tests = data['data']
+        for (var i = 0; i < tests.length; i++) {
+            var option = document.createElement('option')
+            option.value = option.text = tests[i]
+            allTests.add(option)
+        }
+    }
+    httpRequest('GET', '/get_tests', null, parseAllTests)
+    // ws.send(JSON.stringify({
+    //     'type': 'all_tests'
+    // }))
 }
 
 function jsonInterpreter(value) {
@@ -219,16 +237,6 @@ function timeInterpreter(value) {
     // return date.toISOString()
 
     return [date.getHours(), date.getMinutes(), date.getSeconds()].join(':') + ' (' + date.toDateString() + ')'
-}
-
-function parseAllTests(data) {
-    allTests.options.length = 0
-    var tests = data['data']
-    for (var i = 0; i < tests.length; i++) {
-        var option = document.createElement('option')
-        option.value = option.text = tests[i]
-        allTests.add(option)
-    }
 }
 
 function createListItem(value) {
@@ -366,8 +374,6 @@ function parseSensor(data) {
     } else if (subj === 'atom_warmup') {
         parseAtomInfo(data)
     } else if (subj === 'test_warmup') {
-        // this.clearData()
-        // Test data.
         parseTestInfo(data)
     } else if (subj === 'atom_status') {
         parseAtomInfo(data)
@@ -375,8 +381,6 @@ function parseSensor(data) {
         parseSummaryInfo(data)
     } else if (subj === 'test_finished') {
         parseTestInfo(data)
-    } else if (subj === 'all_tests') {
-        parseAllTests(data)
     } else if (subj === 'test_fatal') {
         parseTestInfo(data)
     } else if (subj === 'process_info') {

@@ -27,7 +27,6 @@ test.add_sensors(
 
 # Add data handlers to the test.
 test.add_data_handlers(
-    #todo: a "test fatal" event is emitted. but test is not fatal.
     ConsoleDataHandler()
 )
 

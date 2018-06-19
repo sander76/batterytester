@@ -3,11 +3,13 @@ import typing
 from functools import singledispatch
 from typing import List
 
+import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.helpers.constants import KEY_ATOM_INDEX, \
     KEY_ATOM_LOOP, KEY_ATOM_NAME, REASON
 from batterytester.core.helpers.helpers import get_current_timestamp
-from batterytester.core.helpers.message_subjects import RESULT_SUMMARY, \
-    PROCESS_INFO
+
+# from batterytester.core.helpers.message_subjects import RESULT_SUMMARY, \
+#     PROCESS_INFO
 
 TYPE_STR = 'str'
 TYPE_TIME = 'time'
@@ -60,7 +62,7 @@ class ListData:
 
 class Message:
     def __init__(self):
-        self.subj = ''
+        self.subj = 'unknown'
         self.time = Data(get_current_timestamp(), type_=TYPE_TIME)
 
     def to_json(self):
@@ -93,24 +95,18 @@ def message_serializable(val):
     return _val
 
 
-# todo: rename subj to event to match name and functionality
-
 class BaseTestData(Message):
     def __init__(self):
         super().__init__()
         self.time_finished = Data("unknown", type_=TYPE_TIME)
-        self.status = Data("unknown")
-
-
-# class ProcessStarted(Message):
-#     subj = PROCESS_STARTED
+        self.status = Data(STATUS_UNKOWN, TYPE_STATUS)
 
 
 class ProcessData(Message):
 
     def __init__(self):
         super().__init__()
-        self.subj = PROCESS_INFO
+        self.subj = subj.PROCESS_INFO
         self._process_name = Data()
         self._process_id = Data(type_=TYPE_INT)
         self._status = Data(STATUS_UNKOWN, TYPE_STATUS)
@@ -156,6 +152,7 @@ class ProcessData(Message):
 class TestFinished(BaseTestData):
     def __init__(self):
         super().__init__()
+        self.subj = subj.TEST_FINISHED
         self.status = Data(STATUS_FINISHED, TYPE_STATUS)
         self.time_finished = Data(get_current_timestamp(), type_=TYPE_TIME)
         self.reason = Data(value='End of test reached.')
@@ -164,6 +161,7 @@ class TestFinished(BaseTestData):
 class FatalData(TestFinished):
     def __init__(self, reason):
         super().__init__()
+        self.subj = subj.TEST_FATAL
         self.reason = Data(value=reason)
 
 
@@ -194,6 +192,12 @@ class LoopData(BaseTestData):
         self.atoms = atoms
 
 
+class LoopFinished(Message):
+    def __init__(self):
+        super().__init__()
+        self.subj = subj.LOOP_FINISHED
+
+
 class AtomStatus(Message):
     def __init__(self, status):
         super().__init__()
@@ -217,7 +221,7 @@ class AtomResult(Message):
 class TestSummary(Message):
     def __init__(self):
         super().__init__()
-        self.subj = RESULT_SUMMARY
+        self.subj = subj.RESULT_SUMMARY
         self.passed = Data(0, type_=TYPE_INT)
         self.failed = Data(0, type_=TYPE_INT)
         self.failed_ids = Data([], type_=TYPE_JSON)
