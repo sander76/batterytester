@@ -8,6 +8,8 @@ from batterytester.components.actors.base_actor import BaseActor
 from batterytester.components.datahandlers.base_data_handler import \
     BaseDataHandler
 from batterytester.components.sensor.connector import AsyncSensorConnector
+from batterytester.components.sensor.connector.random_volt_amps_connector import \
+    RandomVoltAmpsConnector
 from batterytester.components.sensor.incoming_parser import IncomingParser
 from batterytester.components.sensor.incoming_parser.boolean_parser import \
     BooleanParser
@@ -132,7 +134,7 @@ class FakeBoundSensorConnector(AsyncSensorConnector):
 
 class FakeVoltsAmpsSensor(Sensor):
     async def setup(self, test_name: str, bus: Bus):
-        self._connector = FakeSensorConnector(bus)
+        self._connector = RandomVoltAmpsConnector(bus)
         self._sensor_data_parser = VoltAmpsIrParser(bus)
         return await super().setup(test_name, bus)
 

@@ -19,8 +19,11 @@ replace = re.compile('[_*`]')
 
 
 def clean_for_markdown(string):
-    _new = re.sub(replace, ' ', string)
-    return _new
+    try:
+        _new = re.sub(replace, ' ', string)
+        return _new
+    except TypeError:
+        return ''
 
 
 class Telegram(BaseDataHandler):

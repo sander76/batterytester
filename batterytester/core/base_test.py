@@ -183,7 +183,7 @@ class BaseTest:
                     await self.perform_test()
                 except NonFatalTestFailException as err:
                     self.bus.notify(subj.ATOM_RESULT,
-                                    AtomResult(passed=False, reason=err))
+                                    AtomResult(passed=False, reason=str(err)))
 
             self.bus.notify(subj.LOOP_FINISHED, LoopFinished())
         self.bus.notify(subj.TEST_FINISHED, TestFinished())

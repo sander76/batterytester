@@ -80,6 +80,7 @@ class ArduinoConnector(AsyncSensorConnector):
             pass
         elif command == 115:  # 's' ascii character
             # sensor data
+            #todo: add a timestamp here. to be sure time is correct.
             self.bus.loop.call_soon_threadsafe(
                 self.raw_sensor_data_queue.put_nowait, data[3:-2])
 

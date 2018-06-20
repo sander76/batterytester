@@ -15,12 +15,12 @@ def get_sequence1(actors):
     _seq = (
         Atom(name='open',
              command=fake_actor.open,
-             duration=1
+             duration=3
              ),
         Atom(name='close',
              command=fake_actor.close,
              arguments={'arg1': 1},
-             duration=1),
+             duration=3),
     )
     return _seq
 
@@ -124,7 +124,7 @@ def test_setup1(fake_tester_1):
     assert len(_atom1.sensor_data) > 0
     _fake_actor = fake_tester_1.bus.actors[FakeActor.actor_type]
 
-    assert len(_fake_actor.open_mock.mock_calls) ==1
+    assert len(_fake_actor.open_mock.mock_calls) == 1
     #_fake_actor.open_mock.assert_called_once()
     _fake_actor.close_mock.assert_called_once_with(arg1=1)
 

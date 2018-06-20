@@ -6,7 +6,6 @@ from batterytester.components.sensor.connector import AsyncSensorConnector
 from batterytester.core.bus import Bus
 
 
-
 class RandomVoltAmpsConnector(AsyncSensorConnector):
     """Connector which randomly generates data each x seconds."""
 
@@ -20,7 +19,7 @@ class RandomVoltAmpsConnector(AsyncSensorConnector):
             while True:
                 _volts = random()
                 _amps = random()
-                _message = ('v;{};{}\n'.format(_volts, _amps)).encode()
+                _message = ('v:{}:a:{}'.format(_volts, _amps)).encode()
                 await self.raw_sensor_data_queue.put(_message)
                 await asyncio.sleep(self._delay)
         except CancelledError:

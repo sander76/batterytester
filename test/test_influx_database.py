@@ -22,6 +22,13 @@ def fake_measurement1():
 
 
 @pytest.fixture
+def fake_measurement2():
+    meas = get_measurement('vi', OrderedDict([('volts', 1.2), ('amps', 2.3)]))
+    meas[ATTR_TIMESTAMP][ATTR_VALUES] = 12345678
+    return meas
+
+
+@pytest.fixture
 def fake_tag():
     return OrderedDict([('tag1', 'abc'), ('tag2', 10)])
 
@@ -56,6 +63,17 @@ def test_influx_line_protocol1_nofields(fake_measurement1):
     assert inf._measurement == SLUGGED
     _measurement = inf.create_measurement()
     assert _measurement == '{},value=10 12345678000000000'.format(SLUGGED)
+
+
+def test_influx_line_protocol_nested_values(fake_measurement2):
+    inf = InfluxLineProtocol(
+        MEASUREMENT,
+        fake_measurement2[ATTR_TIMESTAMP][ATTR_VALUES],
+        fields=fake_measurement2[ATTR_VALUES][ATTR_VALUES]
+    )
+    _measurement = inf.create_measurement()
+    assert _measurement == '{} volts=1.2,amps=2.3 12345678000000000'.format(
+        SLUGGED)
 
 
 def test_line_protocol_fields():

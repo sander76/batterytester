@@ -10,7 +10,6 @@ class FakeVoltsAmpsSensor(Sensor):
     """Fake Volts Amps sensor
 
     For testing purposes. Emits random generated voltage and amps data.
-
     """
 
     def __init__(self, sensor_prefix=None, delay=1):

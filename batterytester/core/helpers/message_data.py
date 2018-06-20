@@ -212,7 +212,7 @@ class ActorResponse(Message):
 
 
 class AtomResult(Message):
-    def __init__(self, passed: bool, reason=''):
+    def __init__(self, passed: bool, reason: str = ''):
         super().__init__()
         self.passed = Data(passed)
         self.reason = Data(reason)

@@ -39,6 +39,7 @@ def test_clean_for_markdown():
 
 
 def test_telegram_atom_result_received(tg):
+    """Check if only failed tests are communicated."""
     _res = AtomResult(passed=False,
                       reason="Failed to communicate with PowerView hub: Cannot connect to host 192.168.1.11:80 ssl:None [Connect call failed ('192.168.1.11', 80)]")
 

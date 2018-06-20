@@ -25,7 +25,7 @@ test.add_sensors(
 
 # Add data handlers to the test.
 test.add_data_handlers(
-    datahandlers.Messaging()
+    datahandlers.ConsoleDataHandler()
 )
 
 
