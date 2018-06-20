@@ -1,13 +1,14 @@
 """Checks for the PowerView hub version"""
 import logging
 
-from aiopvapi.helpers.aiorequest import AioRequest, PvApiConnectionError
+from aiopvapi.helpers.aiorequest import AioRequest, PvApiConnectionError, \
+    PvApiError
 from aiopvapi.hub import Hub
 
 from batterytester.components.actors.base_actor import BaseActor, \
     ACTOR_TYPE_POWERVIEW_VERSION_CHECKER
 from batterytester.core.bus import Bus
-from batterytester.core.helpers.helpers import AtomExecuteError
+from batterytester.core.helpers.helpers import NonFatalTestFailException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +43,8 @@ class PowerViewVersionChecker(BaseActor):
 
             if ver is not None:
                 return ver
-        except PvApiConnectionError as err:
-            raise AtomExecuteError(
+        except (PvApiConnectionError, PvApiError) as err:
+            raise NonFatalTestFailException(
                 'Unable to connect to PowerView hub. {}'.format(err))
 
     def _check_version(self):

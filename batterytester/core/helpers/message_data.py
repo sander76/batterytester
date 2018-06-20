@@ -162,7 +162,7 @@ class FatalData(TestFinished):
     def __init__(self, reason):
         super().__init__()
         self.subj = subj.TEST_FATAL
-        self.reason = Data(value=reason)
+        self.reason = Data(value=str(reason))
 
 
 class TestData(BaseTestData):
@@ -215,7 +215,7 @@ class AtomResult(Message):
     def __init__(self, passed: bool, reason: str = ''):
         super().__init__()
         self.passed = Data(passed)
-        self.reason = Data(reason)
+        self.reason = Data(value=str(reason))
 
 
 class TestSummary(Message):

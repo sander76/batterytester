@@ -11,7 +11,7 @@ from batterytester.components.datahandlers.base_data_handler import \
     BaseDataHandler
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.message_data import TestData, TestFinished, \
-    ActorResponse, AtomResult
+    ActorResponse, AtomResult, FatalData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,8 @@ class Telegram(BaseDataHandler):
             (subj.TEST_WARMUP, self._test_start),
             (subj.TEST_FINISHED, self._test_finished),
             (subj.ACTOR_RESPONSE_RECEIVED, self._actor_response_received),
-            (subj.ATOM_RESULT, self._atom_result)
+            (subj.ATOM_RESULT, self._atom_result),
+            (subj.TEST_FATAL, self._test_fatal)
         )
 
     def _to_time(self, value: int):
@@ -87,6 +88,10 @@ class Telegram(BaseDataHandler):
         _resp = '\n'.join("{}: {}".format(key, value) for key, value in
                           data.response.value.items())
         self._send_message(self._make_message(_resp, data.time.value))
+
+    def _test_fatal(self, subject, data: FatalData):
+        _info = data.reason.value
+        self._send_message(self._make_message(_info, data.time_finished.value))
 
     def _test_finished(self, subject, data: TestFinished):
         _message = "*{}*\n\n{}\n{}".format(

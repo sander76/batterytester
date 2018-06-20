@@ -126,7 +126,7 @@ class Bus:
         except KeyboardInterrupt:
             LOGGER.info("Test stopped due to keyboard interrupt.")
         except Exception as err:
-            LOGGER.exception(err)
+            LOGGER.exception("UNKNOWN EXCEPTION: {}".format(err))
             self.notify(subj.TEST_FATAL, FatalData(err))
         finally:
             self.loop.run_until_complete(self.stop_test())
