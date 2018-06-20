@@ -131,24 +131,30 @@ class BaseTest:
         # todo: move to the below event instead of the above one.
         # self.bus.notify(subj.ACTOR_EXECUTED, self._perform_test_data())
 
-        _result = await self._active_atom.execute()
-        if _result:
-            self.bus.notify(subj.ACTOR_RESPONSE_RECEIVED,
-                            ActorResponse(_result))
-        self.bus.notify(
-            subj.ATOM_STATUS, AtomStatus(ATOM_STATUS_COLLECTING))
+        try:
+            _result = await self._active_atom.execute()
+        except NonFatalTestFailException as err:
+            self.bus.notify(subj.ATOM_RESULT,
+                            AtomResult(passed=False, reason=str(err)))
+            await asyncio.sleep(self._active_atom.duration)
+        else:
+            if _result:
+                self.bus.notify(subj.ACTOR_RESPONSE_RECEIVED,
+                                ActorResponse(_result))
+            self.bus.notify(
+                subj.ATOM_STATUS, AtomStatus(ATOM_STATUS_COLLECTING))
 
-        # sleeping the defined duration to gather sensor
-        # data which is coming in as a result of the execution
-        # command
-        await asyncio.sleep(self._active_atom.duration)
+            # sleeping the defined duration to gather sensor
+            # data which is coming in as a result of the execution
+            # command
+            await asyncio.sleep(self._active_atom.duration)
 
-        if not self._learning_mode and isinstance(self._active_atom,
-                                                  ReferenceAtom):
-            # Actual testing mode. reference data
-            # and testing data can be compared.
-            _atom_result = self._active_atom.reference_compare()
-            self.bus.notify(subj.ATOM_RESULT, _atom_result)
+            if not self._learning_mode and isinstance(self._active_atom,
+                                                      ReferenceAtom):
+                # Actual testing mode. reference data
+                # and testing data can be compared.
+                _atom_result = self._active_atom.reference_compare()
+                self.bus.notify(subj.ATOM_RESULT, _atom_result)
 
     def _get_current_loop(self):
         """Return loop number depending on loopcount config."""
