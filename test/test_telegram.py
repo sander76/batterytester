@@ -6,8 +6,9 @@ import pytest
 from batterytester.components.datahandlers import Telegram
 from batterytester.components.datahandlers.telegram import clean_for_markdown
 from batterytester.core.bus import Bus
-from batterytester.core.helpers.message_data import ActorResponse, AtomResult
-from test.private_keys import telegram_token, telegram_sander
+from batterytester.core.helpers.message_data import ActorResponse, AtomResult, \
+    FatalData
+from test.private_keys import telegram_token, chat_id
 
 
 @pytest.fixture
@@ -24,10 +25,24 @@ def response(fake_time_stamp):
     return resp
 
 
+@pytest.fixture
+def fatal_data(fake_time_stamp):
+    ft = FatalData('fatal reason unknown.')
+    ft.time = fake_time_stamp
+    ft.time_finished=fake_time_stamp
+    return ft
+
+
 def test_telegram_response_received(tg, response):
     _message = '*None*\n\nt est: 123\ntest1: 456\n22:33:09, Nov 29, 1973 '
     tg._actor_response_received('nosubj', response)
 
+    tg._send_message.assert_called_once_with(_message)
+
+
+def test_telegram_test_fata(tg, fatal_data):
+    _message = '*None*\n\nfatal reason unknown.\n22:33:09, Nov 29, 1973 '
+    tg._test_fatal('nosubj', fatal_data)
     tg._send_message.assert_called_once_with(_message)
 
 
@@ -53,7 +68,7 @@ def test_telegram_atom_result_received(tg):
 
 
 def test_message_quality():
-    telegram = Telegram(token=telegram_token, chat_id=telegram_sander)
+    telegram = Telegram(token=telegram_token, chat_id=chat_id)
     bus = Bus()
 
     # def add_task(coro):
