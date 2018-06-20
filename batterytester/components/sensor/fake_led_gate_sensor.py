@@ -36,7 +36,3 @@ class FakeLedGateSensor(Sensor):
             bus=bus, delay=self._delay)
         self._sensor_data_parser = BooleanParser(bus, self.sensor_prefix)
         await super().setup(test_name, bus)
-
-    async def shutdown(self, bus: Bus):
-        await super().shutdown(bus)
-        await self._connector.close_method()

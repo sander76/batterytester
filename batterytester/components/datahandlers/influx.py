@@ -19,6 +19,22 @@ LOGGER = logging.getLogger(__name__)
 
 # todo: handle actor response data.
 
+def nesting(data: dict):
+    def un_nest(key_prefix, dct: dict):
+        for key in dct:
+            if isinstance(dct[key], dict):
+                un_nest(key_prefix + '_' + key, dct[key])
+            else:
+                data[key_prefix + '_' + key] = dct[key]
+
+    for key in list(data):
+        if isinstance(data[key], dict):
+            un_nest(key, data[key])
+            data.pop(key)
+
+    return data
+
+
 class InfluxLineProtocol:
     """https://docs.influxdata.com/influxdb/v1.5/
     write_protocols/line_protocol_tutorial/"""
@@ -43,11 +59,11 @@ class InfluxLineProtocol:
     def creator(self):
         if self._tags:
             yield '{},{}'.format(self._measurement,
-                                 line_protocol_fields(self._tags))
+                                 line_protocol_fields(nesting(self._tags)))
         else:
             yield self._measurement
         if self._fields:
-            yield line_protocol_fields(self._fields)
+            yield line_protocol_fields(nesting(self._fields))
         yield str(to_nanoseconds(self._timestamp))
 
 

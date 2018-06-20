@@ -1,10 +1,11 @@
 from collections import OrderedDict
+from unittest.mock import Mock
 
 import pytest
 
 from batterytester.components.datahandlers import Influx
 from batterytester.components.datahandlers.influx import get_time_stamp, \
-    InfluxLineProtocol, line_protocol_fields
+    InfluxLineProtocol, line_protocol_fields, nesting
 from batterytester.components.sensor.incoming_parser import get_measurement
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers.constants import ATTR_VALUES, ATTR_TIMESTAMP, \
@@ -66,14 +67,18 @@ def test_influx_line_protocol1_nofields(fake_measurement1):
 
 
 def test_influx_line_protocol_nested_values(fake_measurement2):
-    inf = InfluxLineProtocol(
-        MEASUREMENT,
-        fake_measurement2[ATTR_TIMESTAMP][ATTR_VALUES],
-        fields=fake_measurement2[ATTR_VALUES][ATTR_VALUES]
-    )
-    _measurement = inf.create_measurement()
-    assert _measurement == '{} volts=1.2,amps=2.3 12345678000000000'.format(
-        SLUGGED)
+    db = Influx()
+    db.measurement = 'test-measurement'
+    db.add_to_buffer = Mock()
+    db._handle_sensor('nosubj', fake_measurement2)
+
+    meas = db.add_to_buffer.call_args[0][0]
+    assert meas._fields == {'vi': fake_measurement2[ATTR_VALUES][ATTR_VALUES]}
+
+    to_line_protocol = meas.create_measurement()
+    # _measurement = inf.create_measurement()
+    assert 'vi_volts=1.2' in to_line_protocol
+    assert 'vi_amps=2.3' in to_line_protocol
 
 
 def test_line_protocol_fields():
@@ -160,5 +165,32 @@ def test_shutdown_test_error(
 
     assert len(fake_influx._send.mock.mock_calls) == 1
     assert len(fake_influx.data) == 0
+
+
+def test_nesting():
+    nested = {'a':1,'b':2}
+    result = {'a':1,'b':2}
+    new = nesting(nested)
+    for key, value in result.items():
+        assert new[key] == value
+
+    nested = {'a': 1, 'b': {'a': 2}}
+    result = {'a': 1, 'b_a': 2}
+
+    new = nesting(nested)
+    for key, value in result.items():
+        assert new[key] == value
+
+    nested = {'a': 1, 'b': {'a': 2, 'b': 5}}
+    result = {'a': 1, 'b_a': 2, 'b_b': 5}
+    new = nesting(nested)
+    for key, value in result.items():
+        assert new[key] == value
+
+    nested = {'a': 1, 'b': {'a': 2, 'b': {'b': 5}}}
+    result = {'a': 1, 'b_a': 2, 'b_b_b': 5}
+    new = nesting(nested)
+    for key, value in result.items():
+        assert new[key] == value
 
 # todo: test when connection with database server is lost.

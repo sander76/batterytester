@@ -1,4 +1,5 @@
 import logging
+from asyncio import CancelledError
 from concurrent.futures import ThreadPoolExecutor
 
 from serial import SerialException, Serial
@@ -25,6 +26,7 @@ class ArduinoConnector(AsyncSensorConnector):
         self.serial_speed = serial_speed
         self.s = None  # the serial port
         self.trydelay = try_delay
+        self.shutting_down = False
 
     def get_version(self):
         if self.s.is_open:
@@ -43,6 +45,7 @@ class ArduinoConnector(AsyncSensorConnector):
         the wrapping async task"""
 
         LOGGER.info("Closing serial connection")
+        self.shutting_down = True
         self.s.cancel_read()
         self.s.close()
 
@@ -61,15 +64,21 @@ class ArduinoConnector(AsyncSensorConnector):
             try:
                 data = self.s.readline()
                 self.check_command(data)
-            except SerialException:
+            except (SerialException, IndexError):
                 if self.s.is_open:
                     self.s.close()
+                if self.shutting_down:
+                    LOGGER.info("Serial connection closed.")
+                    break
+                else:
+                    LOGGER.error("error reading from serial port")
+                    raise FatalTestFailException(
+                        "Problem reading serial port.")
 
-                LOGGER.error("error reading from serial port")
-                raise FatalTestFailException("Problem reading serial port.")
             except Exception as err:
-                LOGGER.error(err)
-                raise FatalTestFailException("Unknown problem: {}".format(err))
+                raise FatalTestFailException(
+                    "Unknown problem: {}".format(err))
+
 
     def check_command(self, data):
         command = data[1]
@@ -80,12 +89,15 @@ class ArduinoConnector(AsyncSensorConnector):
             pass
         elif command == 115:  # 's' ascii character
             # sensor data
-            #todo: add a timestamp here. to be sure time is correct.
+            # todo: add a timestamp here. to be sure time is correct.
             self.bus.loop.call_soon_threadsafe(
                 self.raw_sensor_data_queue.put_nowait, data[3:-2])
 
     async def async_listen_for_data(self, *args):
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            res = await self.bus.loop.run_in_executor(
-                executor, self._listen_for_data)
-            return res
+        try:
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                res = await self.bus.loop.run_in_executor(
+                    executor, self._listen_for_data)
+                return res
+        except CancelledError:
+            LOGGER.info("Closing serial task")
