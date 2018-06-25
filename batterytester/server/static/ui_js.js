@@ -61,6 +61,7 @@ function openSocket(url) {
         init()
     }
     ws.onclose = function (event) {
+        console.log('websocket connection closed.')
         setConnectionStatus(connectStatusDisconnected)
     }
     ws.onmessage = function (event) {

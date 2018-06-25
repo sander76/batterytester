@@ -11,7 +11,7 @@ from batterytester.core.base_test import BaseTest
 # of loops to run.
 from batterytester.core.mylogger.production_logger import setup_logging
 
-test = BaseTest(test_name='empty test', loop_count=1)
+test = BaseTest(test_name='empty test', loop_count=100)
 
 # Add actors to the test.
 test.add_actor(
@@ -20,12 +20,12 @@ test.add_actor(
 
 # Add sensors to the test.
 test.add_sensors(
-    sensors.FakeVoltsAmpsSensor()
+    sensors.FakeVoltsAmpsSensor(delay=5)
 )
 
 # Add data handlers to the test.
 test.add_data_handlers(
-    datahandlers.ConsoleDataHandler()
+    datahandlers.Messaging()
 )
 
 
@@ -39,11 +39,11 @@ def get_sequence(_actors):
         atoms.Atom(
             name='close shade',
             command=example_actor.close,
-            duration=1
+            duration=10
         ),
         atoms.Atom(
             name='open shade',
-            duration=1,
+            duration=10,
             command=example_actor.open
         )
     )

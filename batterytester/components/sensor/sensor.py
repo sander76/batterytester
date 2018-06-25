@@ -39,7 +39,8 @@ class Sensor(metaclass=ABCMeta):
         :param bus: the bus.
         :return:
         """
-        await self._connector.shutdown(bus)
+        if self._connector:
+            await self._connector.shutdown(bus)
 
     async def _parser(self):
         """Long running task. Checks the raw data queue, parses it and

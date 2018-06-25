@@ -87,6 +87,8 @@ class Server:
         self.app.router.add_post(URL_TEST_STOP, self.stop_test_handler)
         self.app.router.add_get('/get_status', self.get_status_handler)
         self.app.router.add_get('/get_tests', self.get_tests_handler)
+        self.app.router.add_post('/system_shutdown',
+                                 self.system_shutdown_handler)
 
     def start_server(self):
         """Create a web server"""
@@ -105,6 +107,9 @@ class Server:
 
     async def get_tests_handler(self, request):
         return web.json_response(self.list_configs())
+
+    async def system_shutdown_handler(self, request):
+        os.system("sudo shutdown now -h")
 
     async def test_start_handler(self, request):
         LOGGER.debug('Start test handler')
@@ -149,11 +154,14 @@ class Server:
 
             LOGGER.debug('exit code: {}'.format(code))
 
-            self.process_data.return_code = code
+            self.process_data.return_code = int(code)
             self.process_data.status = STATUS_FINISHED
-            await self.ws_send_to_clients(
-                self.process_data.to_json()
-            )
+            try:
+                await self.ws_send_to_clients(
+                    self.process_data.to_json()
+                )
+            except Exception as err:
+                LOGGER.exception(err)
 
         except Exception as err:
             LOGGER.exception(err)
@@ -168,6 +176,7 @@ class Server:
 
     async def get_status_handler(self, request):
         self.test_cache['process_info'] = self.process_data.to_dict()
+        LOGGER.info("test cache: %s", self.test_cache)
         return web.json_response(self.test_cache)
 
     async def stop_test(self):
@@ -180,7 +189,10 @@ class Server:
                             json.dumps({'type': MSG_TYPE_STOP_TEST}))
                 except asyncio.TimeoutError:
                     LOGGER.warning("Graceful shutdown failed.")
+
+                    # todo: this code
                     self.close_tester_connection()
+
                     await self.stop_test()
             else:
                 LOGGER.warning("killing the process.")
@@ -235,14 +247,14 @@ class Server:
                 if msg.type == aiohttp.WSMsgType.TEXT:
 
                     _data = json.loads(msg.data)
-                    # _type = _data['type']
-                    # if _type == URL_CLOSE:
-                    #     await ws.close()
+
                 elif msg.type in (aiohttp.WSMsgType.CLOSE,
                                   aiohttp.WSMsgType.CLOSING,
                                   aiohttp.WSMsgType.CLOSED):
-                    await ws.close()
+                    if not ws.closed:
+                        await ws.close()
         finally:
+            LOGGER.info("Closing websocket client.")
             self.client_sockets.remove(ws)
         return ws
 
@@ -283,10 +295,23 @@ class Server:
         self.process_data = ProcessData()
 
     async def ws_send_to_clients(self, raw):
-        res = await asyncio.gather(
-            *(_ws.send_str(raw) for _ws in self.client_sockets))
-        for _res in res:
-            LOGGER.debug(_res)
+        # todo: catch connection errors.
+        for _ws in self.client_sockets:
+            try:
+                await _ws.send_str(raw)
+            except ConnectionResetError:
+                await self.close_connection(_ws)
+
+    async def close_connection(self, ws):
+        try:
+            await ws.close()
+        except Exception as err:
+            LOGGER.error(err)
+
+        # res = await asyncio.gather(
+        #     *(_ws.send_str(raw) for _ws in self.client_sockets))
+        # for _res in res:
+        #     LOGGER.debug(_res)
 
     async def shutdown(self):
         for ws in self.client_sockets:
@@ -306,12 +331,8 @@ class Server:
         await self.server.start()
 
     async def stop_data_handler(self):
-        # self.server.close()
-        # await self.server.wait_closed()
         await self.shutdown()
         await self.runner.cleanup()
-        # await self.handler.shutdown(60.0)
-        # await self.app.cleanup()
 
 
 def get_loop():

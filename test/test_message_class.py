@@ -1,7 +1,8 @@
 import json
 
 from batterytester.core.helpers.message_data import Data, to_serializable, \
-    FatalData, Message, ProcessData
+    FatalData, Message, ProcessData, STATUS_RUNNING
+from batterytester.core.helpers.message_subjects import PROCESS_INFO
 
 
 def test_simple():
@@ -38,3 +39,15 @@ def test_process_data():
     _js = process.to_json()
     _dict = json.loads(_js)
     assert _dict['_process_name']['v'] == process_name
+
+
+def test_process_data_to_dict():
+    process = ProcessData()
+    process.process_name = 'test_name'
+    process.process_id = 123344
+    process.return_code = 1234
+    process.status = STATUS_RUNNING
+    process.subj = PROCESS_INFO
+    process.add_message("testing testing")
+    a = process.to_dict()
+    pass

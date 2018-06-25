@@ -17,14 +17,16 @@ class ExampleActor(BaseActor):
 
         *Actor command*
         """
-        print("open {}".format(self.test_name))
+        pass
+        #print("open {}".format(self.test_name))
 
     async def close(self):
         """Print close command.
 
         *Actor command*
         """
-        print("close {}".format(self.test_name))
+        pass
+        #print("close {}".format(self.test_name))
 
     async def setup(self, test_name: str, bus: Bus):
         self.test_name = test_name
