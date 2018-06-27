@@ -177,6 +177,7 @@ class Server:
     async def get_status_handler(self, request):
         self.test_cache['process_info'] = self.process_data.to_dict()
         LOGGER.info("test cache: %s", self.test_cache)
+
         return web.json_response(self.test_cache)
 
     async def stop_test(self):
@@ -239,26 +240,37 @@ class Server:
     async def client_ws_connection_handler(self, request):
         """Handle websocket connection to the connected user interfaces."""
         ws = web.WebSocketResponse()
+
         await ws.prepare(request)
 
         self.client_sockets.append(ws)
+        LOGGER.debug("Websocket clients connected: %s",
+                     len(self.client_sockets))
         try:
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
-
-                    _data = json.loads(msg.data)
-
-                elif msg.type in (aiohttp.WSMsgType.CLOSE,
-                                  aiohttp.WSMsgType.CLOSING,
-                                  aiohttp.WSMsgType.CLOSED):
-                    if not ws.closed:
-                        await ws.close()
+                    LOGGER.debug("Incoming message %s", msg.data)
+                else:
+                    return ws
+            return ws
         finally:
-            LOGGER.info("Closing websocket client.")
-            self.client_sockets.remove(ws)
-        return ws
+            LOGGER.debug("Removing websocket client.")
+            if not ws.closed:
+                await ws.close()
+
+            # Currently there is a bug in aiohttp
+            # making all websocket responses equal. So python just removes any
+            # response from the list. Not the closed one.
+            for idx, _client in enumerate(self.client_sockets):
+                if _client.closed:
+                    del self.client_sockets[idx]
+
+            # if bug removed use this:
+            # self.client_sockets.remove(ws)
 
     async def _parse_incoming_test_data(self, data, raw):
+        """Interpret incoming test data."""
+        LOGGER.debug("parsing incoming test data")
         await self.ws_send_to_clients(raw)
 
         try:
@@ -297,21 +309,14 @@ class Server:
     async def ws_send_to_clients(self, raw):
         # todo: catch connection errors.
         for _ws in self.client_sockets:
-            try:
-                await _ws.send_str(raw)
-            except ConnectionResetError:
-                await self.close_connection(_ws)
+            await _ws.send_str(raw)
 
     async def close_connection(self, ws):
+        """Close the websocket connection."""
         try:
             await ws.close()
         except Exception as err:
             LOGGER.error(err)
-
-        # res = await asyncio.gather(
-        #     *(_ws.send_str(raw) for _ws in self.client_sockets))
-        # for _res in res:
-        #     LOGGER.debug(_res)
 
     async def shutdown(self):
         for ws in self.client_sockets:

@@ -43,9 +43,9 @@ class PowerViewVersionChecker(BaseActor):
 
             if ver is not None:
                 return ver
-        except (PvApiConnectionError, PvApiError) as err:
+        except (PvApiConnectionError, PvApiError):
             raise NonFatalTestFailException(
-                'Unable to connect to PowerView hub. {}'.format(err))
+                'Unable to connect to PowerView hub.')
 
     def _check_version(self):
         _resp = None

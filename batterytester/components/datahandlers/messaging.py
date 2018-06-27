@@ -135,12 +135,6 @@ class Messaging(BaseDataHandler):
             LOGGER.exception(err)
             self._connection_state = ConnectionState.RESETTING
             asyncio.ensure_future(self._ws_close())
-            #self._ws_reader_cancel()
-
-    # def _ws_reader_cancel(self):
-    #     self.ws_connection.close()
-    #     if self._ws_connection_handler:
-    #         self._ws_connection_handler.cancel()
 
     async def setup(self, test_name, bus):
         self._bus = bus
