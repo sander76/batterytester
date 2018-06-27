@@ -28,7 +28,7 @@ STATUS_STARTING = 'starting'
 
 # todo: Add source to message. This can be used to later filter out messages depending on sender.
 
-class Data(json):
+class Data:
     def __init__(self, value: typing.Any = 'unknown', type_=TYPE_STR):
         self.value = value
         self.type = type_

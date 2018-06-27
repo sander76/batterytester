@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-import logging
+import logging.config
 import os
 import sys
 from argparse import ArgumentParser
@@ -18,7 +18,6 @@ from batterytester.core.helpers.message_data import to_serializable, \
     Data, ProcessData, STATUS_FINISHED, STATUS_RUNNING, STATUS_STARTING
 from batterytester.core.helpers.message_subjects import PROCESS_STARTED, \
     PROCESS_INFO
-from batterytester.server.logger import setup_logging
 
 ATTR_MESSAGE_BUS_ADDRESS = '0.0.0.0'
 ATTR_MESSAGE_BUS_PORT = 8567
@@ -44,6 +43,7 @@ URL_TEST_START = '/test_start'
 URL_ALL_TESTS = '/all_tests'
 
 DEFAULT_CONFIG_PATH = '/home/pi/test_configs'
+DEFAULT_LOGGING_PATH = '/home/pi/test_configs/logs'
 
 
 def set_current_working_folder():
@@ -349,26 +349,40 @@ def get_loop():
     return loop
 
 
+def load_config(config_file: str) -> dict:
+    with open(config_file, 'r') as fl:
+        dct = json.load(fl)
+    return dct
+
+
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
     parser = ArgumentParser()
-    parser.add_argument('--config_path',
-                        help="path where config files are located.",
-                        default=DEFAULT_CONFIG_PATH)
-    parser.add_argument('--log_folder',
-                        help="log file location",
-                        )
-
+    parser.add_argument('--config_file', default='dev_config.json')
     args = parser.parse_args()
-    _config_folder = args.config_path
-    _log_folder = args.log_folder
+    _config = load_config(args.config_file)
 
-    setup_logging(LOGGER, _log_folder)
+    logging.config.dictConfig(_config["server_logging"])
 
+    # logging.basicConfig(level=logging.DEBUG)
+    # parser = ArgumentParser()
+    # parser.add_argument('--config_path',
+    #                     help="path where config files are located.",
+    #                     default=DEFAULT_CONFIG_PATH)
+    # parser.add_argument('--log_folder',
+    #                     help="log file location",
+    #                     default=DEFAULT_LOGGING_PATH
+    #                     )
+    #
+    # args = parser.parse_args()
+    # _config_folder = args.config_path
+    # _log_folder = args.log_folder
+    #
+    # setup_logging(level=logging.INFO, log_folder=_log_folder)
+    #
     loop = get_loop()
 
     server = Server(
-        config_folder=_config_folder,
+        config_folder=_config["test_configs"],
         loop_=loop)
     server.start_server()
     try:
