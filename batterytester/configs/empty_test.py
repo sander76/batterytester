@@ -9,7 +9,11 @@ from batterytester.core.base_test import BaseTest
 
 # Define a test. Give it a proper name and define the amount
 # of loops to run.
+from batterytester.core.helpers.helpers import load_config_file, \
+    set_test_config
 from batterytester.core.mylogger.production_logger import setup_logging
+
+set_test_config("../dev_config.json")
 
 test = BaseTest(test_name='empty test', loop_count=100)
 

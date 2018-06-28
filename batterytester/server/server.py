@@ -357,28 +357,13 @@ def load_config(config_file: str) -> dict:
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--config_file', default='dev_config.json')
+    parser.add_argument('--config_file', default='../dev_config.json')
     args = parser.parse_args()
     _config = load_config(args.config_file)
 
     logging.config.dictConfig(_config["server_logging"])
 
-    # logging.basicConfig(level=logging.DEBUG)
-    # parser = ArgumentParser()
-    # parser.add_argument('--config_path',
-    #                     help="path where config files are located.",
-    #                     default=DEFAULT_CONFIG_PATH)
-    # parser.add_argument('--log_folder',
-    #                     help="log file location",
-    #                     default=DEFAULT_LOGGING_PATH
-    #                     )
-    #
-    # args = parser.parse_args()
-    # _config_folder = args.config_path
-    # _log_folder = args.log_folder
-    #
-    # setup_logging(level=logging.INFO, log_folder=_log_folder)
-    #
+
     loop = get_loop()
 
     server = Server(

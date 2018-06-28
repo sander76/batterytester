@@ -10,6 +10,9 @@ from batterytester.components.datahandlers.console_data_handler import \
     ConsoleDataHandler
 from batterytester.components.sensor.arduino_sensor_test import ArduinoSensor
 from batterytester.core.base_test import BaseTest
+from batterytester.core.helpers.helpers import set_test_config
+
+set_test_config("../dev_config.json")
 
 # Define a test. Give it a proper name and define the amount
 # of loops to run.

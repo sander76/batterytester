@@ -1,5 +1,7 @@
 import datetime
+import json
 import logging
+import logging.config
 import os
 from time import time, strftime, localtime
 
@@ -65,3 +67,25 @@ def check_output_location(test_location):
     if not os.path.exists(test_location):
         os.makedirs(test_location)
     return True
+
+
+def load_config_file(config_file: str) -> dict:
+    """Load config dict from json file.
+
+    :param config_file: full path to the json file.
+    :return: a dict.
+    """
+
+    with open(config_file, 'r') as fl:
+        dct = json.load(fl)
+    return dct
+
+
+def set_test_config(config_file: str):
+    """Load logging config from json file.
+
+    :param config_file: full path to the json file.
+    """
+    dct = load_config_file(config_file)
+
+    logging.config.dictConfig(dct["test_logging"])

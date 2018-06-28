@@ -78,6 +78,7 @@ class Bus:
             tasks has encountered an error. Cancelling the main task and
             subsequently cancelling all other long running tasks."""
             if self._state == BusState.running:
+                LOGGER.info("Forced stopping the test.")
                 if self.test_runner_task:
                     self.test_runner_task.cancel()
             self._state = BusState.shutting_down
@@ -117,7 +118,6 @@ class Bus:
         except TestSetupException as err:
             LOGGER.error(err)
             self._exception = err
-            # sys.exit(1)
         except CancelledError:
             LOGGER.error("Main test loop cancelled.")
         except FatalTestFailException as err:
@@ -126,7 +126,7 @@ class Bus:
         except KeyboardInterrupt:
             LOGGER.info("Test stopped due to keyboard interrupt.")
         except Exception as err:
-            LOGGER.exception("UNKNOWN EXCEPTION: {}".format(err))
+            LOGGER.exception(err)
             self.notify(subj.TEST_FATAL, FatalData(err))
         finally:
             self.loop.run_until_complete(self.stop_test())

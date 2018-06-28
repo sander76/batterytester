@@ -8,6 +8,9 @@ from batterytester.components.sensor.fake_led_gate_sensor import \
     FakeLedGateSensor
 from batterytester.components.sensor.volts_amps_sensor import VoltsAmpsSensor
 from batterytester.core.base_test import BaseTest
+from batterytester.core.helpers.helpers import set_test_config
+
+set_test_config("../dev_config.json")
 
 test = BaseTest(test_name='new influx test', loop_count=2)
 

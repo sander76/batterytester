@@ -5,6 +5,10 @@ button.onclick = connect
 // connection status
 let connectionStatus = document.getElementById('status')
 
+// shutdown button
+let shutdownButton = document.getElementById('shutdown')
+shutdownButton.onclick = shutdown
+
 // stop test button
 let stopButton = document.getElementById('stop_test_button')
 stopButton.onclick = stopTest
@@ -176,6 +180,12 @@ function connect(e) {
     setConnectionStatus(connectStatusConnecting)
     openSocket(wsHost)
     getStatus()
+}
+
+function shutdown(e) {
+    if (window.confirm('This will cancel the running tests. \n\n Do you want to continue? ')) {
+        httpRequest('POST', '/system_shutdown', null, null)
+    }
 }
 
 function stopTest(e) {

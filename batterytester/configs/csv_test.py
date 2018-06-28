@@ -7,6 +7,9 @@ import batterytester.core.atom as atoms
 import batterytester.components.datahandlers as datahandlers
 import batterytester.components.sensor as sensors
 from batterytester.core.base_test import BaseTest
+from batterytester.core.helpers.helpers import set_test_config
+
+set_test_config("../dev_config.json")
 
 # Define a test. Give it a proper name and define the amount
 # of loops to run.

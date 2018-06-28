@@ -7,8 +7,10 @@ import batterytester.core.atom as atoms
 # All imports. Please leave alone.
 from batterytester.configs.secret import telegram_token, chat_id
 from batterytester.core.base_test import BaseTest
-import logging
-logging.basicConfig(level=logging.DEBUG)
+from batterytester.core.helpers.helpers import set_test_config
+
+set_test_config("../dev_config.json")
+
 # Define a test. Give it a proper name and define the amount
 # of loops to run.
 test = BaseTest(test_name='telegram test', loop_count=1)

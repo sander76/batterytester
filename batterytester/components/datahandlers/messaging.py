@@ -73,9 +73,10 @@ class Messaging(BaseDataHandler):
         )
 
     async def shutdown(self, bus):
+        LOGGER.info("Messaging shutdown signal received.")
         self._connection_state = ConnectionState.CLOSING
         await self._ws_close()
-        #self._ws_reader_cancel()
+        # self._ws_reader_cancel()
 
     def loop_warmup(self, subject, data: LoopData):
         data.subj = subject
@@ -142,12 +143,7 @@ class Messaging(BaseDataHandler):
             self._host, self._port, URL_TEST)
         self._connection_state = ConnectionState.CONNECTING
         await self._ws_connect()
-        self.handle_connection()
-
-    def handle_connection(self):
         self._bus.add_async_task(self.ws_loop())
-        # self._ws_connection_handler = asyncio.ensure_future(self.ws_loop())
-        # self._ws_connection_handler.add_done_callback(self.ws_loop_finished)
 
     async def parser(self, msg):
         try:
@@ -161,7 +157,8 @@ class Messaging(BaseDataHandler):
 
     async def _ws_close(self):
         LOGGER.info(
-            "1. Connection state: {}".format(self._connection_state.value))
+            "Closing websocket connection. Connection state: {}".format(
+                self._connection_state.value))
         try:
             await self.ws_connection.close()
         except Exception as err:
@@ -175,40 +172,39 @@ class Messaging(BaseDataHandler):
                 self._bus.session.ws_connect(self._server_address),
                 timeout=10)
             self._connection_state = ConnectionState.CONNECTED
+
         except asyncio.TimeoutError:
+            self._connection_state = ConnectionState.RESETTING
             raise TestSetupException(
                 "Connection to the server timed out: {}".format(
                     self._server_address))
+
         except ClientConnectionError:
+            self._connection_state = ConnectionState.RESETTING
             raise TestSetupException(
-                "Unable to connect to: {}".format(self._server_address)
-            )
+                "Unable to connect to: {}".format(self._server_address))
+
         except Exception as err:
+            self._connection_state = ConnectionState.RESETTING
             LOGGER.exception(err)
             raise TestSetupException(
                 "Unknown error occurred: {}".format(self._server_address)
             )
 
     async def _ws_listen(self):
-        #while not self.ws_connection.closed:
-
-        #    try:
         try:
             async for msg in self.ws_connection:
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     await self.parser(msg)
-                elif msg.type == aiohttp.WSMsgType.CLOSED:
-                    break
-                elif msg.type == aiohttp.WSMsgType.CLOSING:
-                    break
-                elif msg.type == aiohttp.WSMsgType.CLOSE:
+                elif msg.type in (
+                        aiohttp.WSMsgType.CLOSED,
+                        aiohttp.WSMsgType.CLOSING,
+                        aiohttp.WSMsgType.CLOSE):
                     break
                 elif msg.type == aiohttp.WSMsgType.ERROR:
                     break
         except client_exceptions.ClientError as err:
             LOGGER.error("Unable to connect: %s", err)
-        except Exception as err:
-            LOGGER.exception(err)
         self._connection_state = ConnectionState.RESETTING
 
     async def ws_loop(self):
@@ -219,6 +215,7 @@ class Messaging(BaseDataHandler):
                 if self._connection_state == self._connection_state.CLOSING:
                     await self._ws_close()
                     break
+
                 if self._connection_state == ConnectionState.RESETTING:
                     await self._ws_close()
                     self._connection_state = ConnectionState.CONNECTING
@@ -228,20 +225,14 @@ class Messaging(BaseDataHandler):
                         await self._ws_connect()
                     except TestSetupException as err:
                         LOGGER.error(err)
-                        _connect_attempts += 1
-                        await asyncio.sleep(1)
+
                 if self._connection_state == ConnectionState.CONNECTED:
                     await self._ws_listen()
-                    await asyncio.sleep(1)
+
+                _connect_attempts += 1
+                await asyncio.sleep(1)
+
             raise FatalTestFailException(
                 "Unable to connect to message server.")
         except asyncio.CancelledError:
             LOGGER.info("Closing ws reader.")
-
-    def ws_loop_finished(self, future):
-        try:
-            future.result()
-        except asyncio.CancelledError:
-            LOGGER.info("Handle connection")
-            self.handle_connection()
-        LOGGER.info("Finishing server reader")

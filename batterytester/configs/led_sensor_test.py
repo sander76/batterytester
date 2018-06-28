@@ -7,6 +7,9 @@ from batterytester.core.atom.atom import Atom
 from batterytester.components.datahandlers.messaging import Messaging
 from batterytester.components.sensor import LedGateSensor
 from batterytester.core.base_test import BaseTest
+from batterytester.core.helpers.helpers import set_test_config
+
+set_test_config("../dev_config.json")
 
 test = BaseTest(test_name='base test', loop_count=2)
 
