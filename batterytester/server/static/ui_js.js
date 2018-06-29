@@ -252,7 +252,8 @@ function timeInterpreter(value) {
 
 function createListItem(value) {
     var _itm = document.createElement('div')
-    _itm.innerHTML = value
+    _itm.className = ('process_info_item')
+    _itm.innerHTML = '<pre>' + value + '</pre>'
     return _itm
 }
 
@@ -264,6 +265,7 @@ function parseProcessInfo(data) {
             } else if (value.v === statusTestStopped) {
                 replaceClass(_node, ['bg-success'], 'bg-error')
             }
+            _node.innerHTML = parseValueType(value)
         } else if (value.type === 'strlist') {
             while (_node.lastChild) {
                 _node.removeChild(_node.lastChild)
@@ -271,8 +273,9 @@ function parseProcessInfo(data) {
             value.v.forEach(function (val, index) {
                 _node.appendChild(createListItem(val))
             })
+        } else {
+            _node.innerHTML = parseValueType(value)
         }
-        _node.innerHTML = parseValueType(value)
     }
     objectIterator(containerProcessInfo, data, parser)
 }
@@ -366,12 +369,15 @@ function createSensorDataContainer(data) {
 
     _main.className = 'columns ' + getSensorClassName(data['n'])
     var _prop = document.createElement('div')
-    _prop.className = 'column col-4'
+    _prop.className = 'column col-4 col-sm-12'
     _prop.innerHTML = data['n']
     _main.appendChild(_prop)
 
-    _main.appendChild(createValueContainer('col-4', 'value'))
-    _main.appendChild(createValueContainer('col-4', 'time'))
+    var _values = document.createElement('div')
+    _values.className = 'column col-8 col-sm-12'
+    _main.appendChild(_values)
+    _values.appendChild(createValueContainer('col-12', 'time'))
+    _values.appendChild(createValueContainer('col-12', 'value'))
 
     return _main
 }

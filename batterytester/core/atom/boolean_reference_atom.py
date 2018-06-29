@@ -40,20 +40,15 @@ class BooleanReferenceAtom(ReferenceAtom):
             try:
                 if not _sensor_data[key] == value:
                     _atom_result.passed = Data(False, type_=TYPE_BOOL)
-                    _atom_result.reason = Data("""
-                    Reference values don't match.
-                    ref: {}
-                    sensor: {}""".format(
-                        str(_sensor_data), str(self.reference_data)))
+                    _atom_result.reason = Data(
+                        "Ref values don't match. ref: {} sensor: {}""".format(
+                            str(_sensor_data), str(self.reference_data)))
                     return _atom_result
             except KeyError:
                 _atom_result.passed = Data(False, type_=TYPE_BOOL)
-                _atom_result.reason = Data("""
-                Provided reference sensor data not present in actual sensor
-                feedback.
-                ref: {}
-                sensor: {}""".format(
-                    str(_sensor_data), str(self.reference_data))
+                _atom_result.reason = Data(
+                    "Ref sensor data not available in sensor feedback. ref: {} sensor: {}""".format(
+                        str(_sensor_data), str(self.reference_data))
                 )
 
         return _atom_result
