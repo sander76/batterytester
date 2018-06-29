@@ -10,9 +10,6 @@ from batterytester.core.helpers.helpers import FatalTestFailException
 
 LOGGER = logging.getLogger(__name__)
 
-
-# todo: incoming volt/amps data is in different format than boolean sensor data. Sanitize this !
-
 class VoltAmpsIrParser(IncomingParser):
     """Volts amps parser
 

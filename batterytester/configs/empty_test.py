@@ -9,9 +9,7 @@ from batterytester.core.base_test import BaseTest
 
 # Define a test. Give it a proper name and define the amount
 # of loops to run.
-from batterytester.core.helpers.helpers import load_config_file, \
-    set_test_config
-from batterytester.core.mylogger.production_logger import setup_logging
+from batterytester.core.helpers.helpers import set_test_config
 
 set_test_config("../dev_config.json")
 
@@ -40,10 +38,11 @@ def get_sequence(_actors):
     example_actor = actor_tools.get_example_actor(_actors)
 
     _val = (
-        atoms.Atom(
+        atoms.BooleanReferenceAtom(
             name='close shade',
             command=example_actor.close,
-            duration=10
+            duration=10,
+            reference={'a': False}
         ),
         atoms.Atom(
             name='open shade',
@@ -54,7 +53,6 @@ def get_sequence(_actors):
     return _val
 
 
-setup_logging(log_folder='c:\\temp\\log')
 
 test.get_sequence = get_sequence
 

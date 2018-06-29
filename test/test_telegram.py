@@ -71,11 +71,6 @@ def test_message_quality():
     telegram = Telegram(token=telegram_token, chat_id=chat_id)
     bus = Bus()
 
-    # def add_task(coro):
-    #     return coro
-
-    # bus.add_async_task = add_task
-
     async def test_setup():
         await telegram.setup('this is a test', bus)
 

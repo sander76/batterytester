@@ -236,7 +236,7 @@ function queryAllTests(e) {
 }
 
 function jsonInterpreter(value) {
-    return JSON.stringify(value, undefined, 4)
+    return '<pre class="code" data-lang="JSON"><code>' + JSON.stringify(value, undefined, 4) + '</code></pre>'
 }
 
 function timeInterpreter(value) {

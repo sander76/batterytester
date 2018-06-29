@@ -115,7 +115,6 @@ class BaseTest:
 
         self.bus.notify(subj.LOOP_WARMUP,
                         LoopData([_atom.get_atom_data() for _atom in _seq]))
-        # todo: checkout this and see whether it can change.
         _stored_atom_results = {}
         for _idx, _atom in enumerate(_seq):
             _atom.prepare_test_atom(

@@ -170,7 +170,6 @@ class Server:
             self.test_process = None
 
     async def stop_test_handler(self, request):
-        # todo: if no websocket connection somehow. Just kill the process.
         await self.stop_test()
         return web.json_response({"running": False})
 
