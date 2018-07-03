@@ -12,7 +12,7 @@ from batterytester.core.bus import Bus
 from batterytester.core.helpers.constants import ATTR_TIMESTAMP, KEY_VALUE, \
     ATTR_VALUES, ATTR_SENSOR_NAME
 from batterytester.core.helpers.helpers import FatalTestFailException
-from batterytester.core.helpers.message_data import AtomData
+from batterytester.core.helpers.message_data import AtomData, TestData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,19 +85,6 @@ def line_protocol_fields(tags: dict):
                      key_value_generator(tags.items())))
 
 
-# def line_protocol_tags(tags: dict):
-#     """Create influx measurement tags.
-#
-#     Incoming is dict with key:value pairs."""
-#     if tags:
-#         _val = ',{}'.format(','.join(
-#             ('{}={}'.format(key, value) for key, value in tags.items())))
-#         return _val
-#     # if atom:
-#     #     return ',idx={},loop={}'.format(atom.idx, atom.loop)
-#     return ''
-
-
 def get_time_stamp(data):
     """Incoming is a float in seconds.
 
@@ -156,6 +143,7 @@ class Influx(BaseDataHandler):
     def get_subscriptions(self):
         return (
             (subj.ATOM_WARMUP, self._atom_warmup_event),
+            (subj.TEST_WARMUP, self._test_warmup_event),
             (subj.SENSOR_DATA, self._handle_sensor),
         )
 
@@ -163,7 +151,7 @@ class Influx(BaseDataHandler):
         """Add influx line data to buffer and check size"""
         self.data.append(data)
         if len(self.data) >= self.buffer_size:
-            self._flush()
+            self.bus.add_async_task(self._flush())
 
     def _atom_warmup_event(self, subject, data: AtomData):
         """
@@ -185,6 +173,20 @@ class Influx(BaseDataHandler):
                     'tags': annotation_tags}
         )
         self.add_to_buffer(_influx)
+
+    def _test_warmup_event(self, subject, data: TestData):
+        """Handle test warmup data"""
+
+        annotation_tags = 'loops {}'.format(data.loop_count)
+        _influx = InfluxLineProtocol(
+            self.measurement,
+            data.started.value,
+            fields={'title': 'TEST START',
+                    'text': data.test_name,
+                    'tags': annotation_tags}
+        )
+        self.add_to_buffer(_influx)
+        self.bus.add_async_task(self._flush())
 
     def _handle_sensor(self, subject, data):
         influx = InfluxLineProtocol(
@@ -208,7 +210,7 @@ class Influx(BaseDataHandler):
 
         if _data:
             self.data = []
-            self.bus.add_async_task(self._send(_data))
+            return self._send(_data)
 
     async def _send(self, data):
         resp = None
@@ -222,7 +224,7 @@ class Influx(BaseDataHandler):
                 raise FatalTestFailException(
                     "Wrong influx response code {}".format(resp.status))
         except (asyncio.TimeoutError, ClientError) as err:
-            LOGGER.error(err)
+            LOGGER.exception(err)
             raise FatalTestFailException("Error sending data to database")
         except Exception as err:
             LOGGER.exception(err)
