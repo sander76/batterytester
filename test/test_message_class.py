@@ -53,10 +53,3 @@ def test_process_data_to_dict():
     pass
 
 
-def test_data():
-    process = ProcessData()
-    js = json.dumps(process.to_dict())
-    process.process_name = None
-    val = process.to_dict()
-    js = json.dumps(val)
-    assert val == 0

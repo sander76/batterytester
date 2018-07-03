@@ -67,7 +67,6 @@ class Bus:
         self.subscriptions[subject] = method
 
     def task_finished_callback(self, future):
-        ex = future.exception()
         try:
             val = future.result()
             if val:
@@ -138,7 +137,8 @@ class Bus:
     async def stop_test(self, message=None):
         # wait a little to have all tasks finish gracefully.
         LOGGER.info("stopping test")
-        await asyncio.sleep(4)
+
+        await asyncio.sleep(1)
 
         if self.test_runner_task:
             if not self.test_runner_task.done():
@@ -156,13 +156,22 @@ class Bus:
 
         self.running = False
 
-        await self.session.close()
         await self._finish_all_tasks()
 
+        await self.session.close()
+
     async def _finish_all_tasks(self):
+        tries = 10
+        current_try = 0
         # todo: throttle this as it may run forever if a task cannot be closed.
+
         all_finished = False
         while not all_finished:
+            current_try += 1
+            if current_try > tries:
+                # giving up cancelling gracefully
+                break
+
             all_finished = True
             for _task in self.tasks:
                 if _task.done() or _task.cancelled():
@@ -171,5 +180,6 @@ class Bus:
                 else:
                     _task.cancel()
                     all_finished = False
+
             if not all_finished:
                 await asyncio.sleep(1)

@@ -1,4 +1,5 @@
 """Telegram. Notifies status updates on Telegram"""
+import asyncio
 import logging
 import re
 from asyncio import CancelledError
@@ -34,6 +35,7 @@ class Telegram(BaseDataHandler):
         self._bus = None
         self._test_name = None
         self.bot = None
+        self.sending = False
 
     async def setup(self, test_name: str, bus: Bus):
         self._bus = bus
@@ -41,7 +43,15 @@ class Telegram(BaseDataHandler):
         self.bot = Bot(self._token)
 
     async def shutdown(self, bus: Bus):
-
+        LOGGER.info("Shutting down telegram.")
+        tries = 10
+        current_try = 0
+        while current_try < tries:
+            if self.sending:
+                await asyncio.sleep(1)
+            else:
+                break
+            current_try += 1
         if self.bot.session:
             await self.bot.session.close()
 
@@ -90,11 +100,12 @@ class Telegram(BaseDataHandler):
         self._send_message(self._make_message(_resp, data.time.value))
 
     def _test_fatal(self, subject, data: FatalData):
+        LOGGER.info("Test fatal received.")
         _info = data.reason.value
         self._send_message(self._make_message(_info, data.time_finished.value))
 
     def _test_finished(self, subject, data: TestFinished):
-        LOGGER.info("test finished received.")
+        LOGGER.info("Test finished received.")
         _message = "*{}*\n\n{}\n{}".format(
             self._test_name,
             'FINISHED',
@@ -106,11 +117,14 @@ class Telegram(BaseDataHandler):
         async def send():
             LOGGER.info("Sending telegram message.")
             try:
+                self.sending = True
                 await self.bot.send_message(
                     self._chat_id, message, parse_mode=parse_mode)
             except CancelledError:
                 LOGGER.warning('send message task cancelled')
             except BotApiError as err:
                 LOGGER.error(err)
+            finally:
+                self.sending = False
 
         self._bus.add_async_task(send())

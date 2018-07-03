@@ -217,7 +217,7 @@ class Influx(BaseDataHandler):
         resp = None
         try:
             LOGGER.debug("Flushing")
-            with async_timeout.timeout(5, loop=self.bus.loop):
+            with async_timeout.timeout(10, loop=self.bus.loop):
                 LOGGER.debug("Writing data to database")
                 resp = await self.bus.session.post(self.url,
                                                    data=data)
