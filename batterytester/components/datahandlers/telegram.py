@@ -94,6 +94,7 @@ class Telegram(BaseDataHandler):
         self._send_message(self._make_message(_info, data.time_finished.value))
 
     def _test_finished(self, subject, data: TestFinished):
+        LOGGER.info("test finished received.")
         _message = "*{}*\n\n{}\n{}".format(
             self._test_name,
             'FINISHED',
@@ -103,6 +104,7 @@ class Telegram(BaseDataHandler):
 
     def _send_message(self, message, parse_mode='Markdown'):
         async def send():
+            LOGGER.info("Sending telegram message.")
             try:
                 await self.bot.send_message(
                     self._chat_id, message, parse_mode=parse_mode)

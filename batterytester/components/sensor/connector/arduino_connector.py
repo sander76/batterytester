@@ -47,7 +47,14 @@ class ArduinoConnector(AsyncSensorConnector):
         LOGGER.info("Closing serial connection")
         self.shutting_down = True
         self.s.cancel_read()
-        self.s.close()
+        self._close()
+
+    def _close(self):
+        if self.s.is_open:
+            try:
+                self.s.close()
+            except (OSError, SerialException) as err:
+                LOGGER.error(err)
 
     def _connect(self):
         try:
@@ -65,8 +72,7 @@ class ArduinoConnector(AsyncSensorConnector):
                 data = self.s.readline()
                 self.check_command(data)
             except (SerialException, IndexError):
-                if self.s.is_open:
-                    self.s.close()
+                self._close()
                 if self.shutting_down:
                     LOGGER.info("Serial connection closed.")
                     break
@@ -78,7 +84,6 @@ class ArduinoConnector(AsyncSensorConnector):
             except Exception as err:
                 raise FatalTestFailException(
                     "Unknown problem: {}".format(err))
-
 
     def check_command(self, data):
         command = data[1]

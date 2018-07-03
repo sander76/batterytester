@@ -28,6 +28,7 @@ test.add_sensors(
 # Add data handlers to the test.
 test.add_data_handlers(
     # datahandlers.Report()
+    datahandlers.Messaging(),
     datahandlers.Telegram(token=telegram_token, chat_id=chat_id)
     # test_frame.datahandler_slack()
 )

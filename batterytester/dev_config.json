@@ -14,22 +14,12 @@
         "level": "DEBUG",
         "formatter": "simple",
         "stream": "ext://sys.stdout"
-      },
-      "info_file_handler": {
-        "class": "logging.handlers.RotatingFileHandler",
-        "level": "INFO",
-        "formatter": "simple",
-        "filename": "logs/test_info.log",
-        "maxBytes": 100024,
-        "backupCount": 50,
-        "encoding": "utf8"
       }
     },
     "root": {
       "level": "DEBUG",
       "handlers": [
-        "console",
-        "info_file_handler"
+        "console"
       ]
     }
   },

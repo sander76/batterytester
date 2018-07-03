@@ -121,7 +121,6 @@ class Server:
                 text="There is another test running. Stop that one first.")
         else:
             await self._start_test_process(p)
-
             self.process_data.process_name = data['test']
             await self.ws_send_to_clients(self.process_data.to_json())
         return web.Response()
