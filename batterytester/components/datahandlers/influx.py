@@ -151,7 +151,7 @@ class Influx(BaseDataHandler):
         """Add influx line data to buffer and check size"""
         self.data.append(data)
         if len(self.data) >= self.buffer_size:
-            self.bus.add_async_task(self._flush())
+            self._flush()
 
     def _atom_warmup_event(self, subject, data: AtomData):
         """
@@ -177,16 +177,17 @@ class Influx(BaseDataHandler):
     def _test_warmup_event(self, subject, data: TestData):
         """Handle test warmup data"""
 
-        annotation_tags = 'loops {}'.format(data.loop_count)
+        annotation_tags = 'loops {}'.format(data.loop_count.value)
+
         _influx = InfluxLineProtocol(
             self.measurement,
             data.started.value,
             fields={'title': 'TEST START',
-                    'text': data.test_name,
+                    'text': data.test_name.value,
                     'tags': annotation_tags}
         )
         self.add_to_buffer(_influx)
-        self.bus.add_async_task(self._flush())
+        self._flush()
 
     def _handle_sensor(self, subject, data):
         influx = InfluxLineProtocol(
@@ -210,7 +211,7 @@ class Influx(BaseDataHandler):
 
         if _data:
             self.data = []
-            return self._send(_data)
+            self.bus.add_async_task(self._send(_data))
 
     async def _send(self, data):
         resp = None
@@ -226,8 +227,6 @@ class Influx(BaseDataHandler):
         except (asyncio.TimeoutError, ClientError) as err:
             LOGGER.exception(err)
             raise FatalTestFailException("Error sending data to database")
-        except Exception as err:
-            LOGGER.exception(err)
         finally:
             if resp is not None:
                 await resp.release()

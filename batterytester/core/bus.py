@@ -67,12 +67,13 @@ class Bus:
         self.subscriptions[subject] = method
 
     def task_finished_callback(self, future):
+        ex = future.exception()
         try:
             val = future.result()
             if val:
                 print(val)
         except Exception as err:
-            LOGGER.error(err)
+            LOGGER.error("A background task has an error: {}".format(err))
             self.notify(subj.TEST_FATAL, FatalData(err))
             """An exception is raised. Meaning one of the long running 
             tasks has encountered an error. Cancelling the main task and
@@ -81,6 +82,7 @@ class Bus:
                 LOGGER.info("Forced stopping the test.")
                 if self.test_runner_task:
                     self.test_runner_task.cancel()
+            LOGGER.info("Bus state to shutting down.")
             self._state = BusState.shutting_down
 
     def add_async_task(self, coro):
