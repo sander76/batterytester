@@ -50,7 +50,8 @@ class InfluxLineProtocol:
     write_protocols/line_protocol_tutorial/"""
 
     def __init__(
-        self, measurement, time_stamp, tags: dict = None, fields: dict = None
+            self, measurement, time_stamp, tags: dict = None,
+            fields: dict = None
     ):
         """
 
@@ -128,7 +129,8 @@ def to_nanoseconds(timestamp):
 
 def get_annotation_tags(data: dict):
     return ",".join(
-        ("{} {}".format(key, value) for key, value in data.items())
+        ("{} {}".format(slugify(key), slugify(value)) for key, value in
+         data.items())
     )
 
 
@@ -179,12 +181,17 @@ class Influx(BaseDataHandler):
         """Handle actor response data."""
         _annotation_tags = get_annotation_tags(data.response.value)
 
+        try:
+            _text = self._tags['atom_name'].value
+        except KeyError:
+            _text = "unkown"
+
         _influx = InfluxLineProtocol(
             self.measurement,
             data.time.value,
             fields={
                 "title": subject,
-                "text": self._tags.get("atom_name", "unknown"),
+                "text": _text,
                 "tags": _annotation_tags,
             },
         )
