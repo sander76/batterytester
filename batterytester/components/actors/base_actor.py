@@ -2,13 +2,13 @@ from abc import ABCMeta, abstractmethod
 
 from batterytester.core.bus import Bus
 
-ACTOR_TYPE_BASE = 'base_actor'
-ACTOR_TYPE_EXAMPLE = 'example_actor'
-ACTOR_TYPE_POWER_VIEW = 'powerview_actor'
+ACTOR_TYPE_BASE = "base_actor"
+ACTOR_TYPE_EXAMPLE = "example_actor"
+ACTOR_TYPE_POWER_VIEW = "powerview_actor"
 """PowerView actor."""
-ACTOR_TYPE_RELAY_ACTOR = 'relay_actor'
+ACTOR_TYPE_RELAY_ACTOR = "relay_actor"
 """Relay actor."""
-ACTOR_TYPE_POWERVIEW_VERSION_CHECKER = 'pv_version_checker'
+ACTOR_TYPE_POWERVIEW_VERSION_CHECKER = "pv_version_checker"
 
 
 class BaseActor(metaclass=ABCMeta):

@@ -1,6 +1,8 @@
 """Example actor"""
-from batterytester.components.actors.base_actor import BaseActor, \
-    ACTOR_TYPE_EXAMPLE
+from batterytester.components.actors.base_actor import (
+    BaseActor,
+    ACTOR_TYPE_EXAMPLE,
+)
 from batterytester.core.bus import Bus
 
 
@@ -18,7 +20,7 @@ class ExampleActor(BaseActor):
         *Actor command*
         """
         pass
-        #print("open {}".format(self.test_name))
+        # print("open {}".format(self.test_name))
 
     async def close(self):
         """Print close command.
@@ -26,7 +28,7 @@ class ExampleActor(BaseActor):
         *Actor command*
         """
         pass
-        #print("close {}".format(self.test_name))
+        # print("close {}".format(self.test_name))
 
     async def setup(self, test_name: str, bus: Bus):
         self.test_name = test_name

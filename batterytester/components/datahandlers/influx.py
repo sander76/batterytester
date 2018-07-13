@@ -50,8 +50,7 @@ class InfluxLineProtocol:
     write_protocols/line_protocol_tutorial/"""
 
     def __init__(
-            self, measurement, time_stamp, tags: dict = None,
-            fields: dict = None
+        self, measurement, time_stamp, tags: dict = None, fields: dict = None
     ):
         """
 
@@ -129,19 +128,31 @@ def to_nanoseconds(timestamp):
 
 def get_annotation_tags(data: dict):
     return ",".join(
-        ("{} {}".format(slugify(key), slugify(value)) for key, value in
-         data.items())
+        (
+            "{} {}".format(slugify(key), slugify(value))
+            for key, value in data.items()
+        )
     )
 
 
 class Influx(BaseDataHandler):
     """Writes data to an InfluxDB database."""
 
-    def __init__(self, *, host=None, database="menc", buffer_size=5):
+    def __init__(
+        self,
+        *,
+        host=None,
+        database="menc",
+        buffer_size=5,
+        subscription_filters=None
+    ):
         """
         :param host: ip address of the influx database
         :param database: The database to write data to.
         :param buffer_size: buffer length before call to influx api is made.
+        :param subscription_filters: Filter subject subscriptions.
+
+        For example: influx = Influx(subscription_filters=subj.ACTOR_RESPONSE_RECEIVED)
         """
         super().__init__()
         self.host = host
@@ -151,6 +162,14 @@ class Influx(BaseDataHandler):
         self.measurement = None  # actually the name of the test.
         self.buffer_size = buffer_size
         self._tags = {}
+
+        self.subscription_filters = subscription_filters
+        self.subscriptions = (
+            (subj.ATOM_WARMUP, self._atom_warmup_event),
+            (subj.TEST_WARMUP, self._test_warmup_event),
+            (subj.SENSOR_DATA, self._handle_sensor),
+            (subj.ACTOR_RESPONSE_RECEIVED, self._actor_response_received),
+        )
 
     async def setup(self, test_name, bus):
         self.bus = bus
@@ -164,12 +183,16 @@ class Influx(BaseDataHandler):
             await self._send(_data)
 
     def get_subscriptions(self):
-        return (
-            (subj.ATOM_WARMUP, self._atom_warmup_event),
-            (subj.TEST_WARMUP, self._test_warmup_event),
-            (subj.SENSOR_DATA, self._handle_sensor),
-            (subj.ACTOR_RESPONSE_RECEIVED, self._actor_response_received),
-        )
+        if self.subscription_filters:
+            subs = (
+                sub
+                for sub in self.subscriptions
+                if sub[0] in self.subscription_filters
+            )
+
+            return subs
+
+        return self.subscriptions
 
     def add_to_buffer(self, data: InfluxLineProtocol):
         """Add influx line data to buffer and check size"""
@@ -182,18 +205,14 @@ class Influx(BaseDataHandler):
         _annotation_tags = get_annotation_tags(data.response.value)
 
         try:
-            _text = self._tags['atom_name'].value
+            _text = self._tags["atom_name"].value
         except KeyError:
             _text = "unkown"
 
         _influx = InfluxLineProtocol(
             self.measurement,
             data.time.value,
-            fields={
-                "title": subject,
-                "text": _text,
-                "tags": _annotation_tags,
-            },
+            fields={"title": subject, "text": _text, "tags": _annotation_tags},
         )
         self.add_to_buffer(_influx)
 

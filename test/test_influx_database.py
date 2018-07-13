@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
+import batterytester.core.helpers.message_subjects as subj
 from batterytester.components.datahandlers import Influx
 from batterytester.components.datahandlers.influx import get_time_stamp, \
     InfluxLineProtocol, line_protocol_fields, nesting, get_annotation_tags
@@ -205,5 +206,20 @@ def test_nesting():
     new = nesting(nested)
     for key, value in result.items():
         assert new[key] == value
+
+
+def test_subscriptions():
+    inf = Influx()
+
+    subs = inf.get_subscriptions()
+
+    assert len(subs) == len(inf.subscriptions)
+    for sub in subs:
+        assert sub in inf.subscriptions
+
+    inf = Influx(subscription_filters=[subj.ACTOR_RESPONSE_RECEIVED])
+    subs = [sub for sub in inf.get_subscriptions()]
+    assert len(subs) == 1
+    assert subs[0][0] == subj.ACTOR_RESPONSE_RECEIVED
 
 # todo: test when connection with database server is lost.
