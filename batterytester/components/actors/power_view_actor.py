@@ -1,6 +1,6 @@
 """PowerView actor"""
 
-from aiopvapi.helpers.aiorequest import AioRequest
+from aiopvapi.helpers.aiorequest import AioRequest, PvApiError
 from aiopvapi.helpers.powerview_util import ResourceNotFoundException
 from aiopvapi.resources.room import Room
 from aiopvapi.resources.scene import Scene
@@ -10,8 +10,11 @@ from aiopvapi.scene_members import SceneMembers
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
 
-from batterytester.components.actors.base_actor import ACTOR_TYPE_POWER_VIEW, \
-    BaseActor
+from batterytester.components.actors.base_actor import (
+    ACTOR_TYPE_POWER_VIEW,
+    BaseActor,
+)
+from batterytester.core.helpers.helpers import NonFatalTestFailException
 
 
 class PowerViewActor(BaseActor):
@@ -37,59 +40,75 @@ class PowerViewActor(BaseActor):
 
     async def setup(self, test_name, bus):
         self.test_name = test_name
-        self.request = AioRequest(self.hub_ip, loop=bus.loop,
-                                  websession=bus.session)
+        self.request = AioRequest(
+            self.hub_ip, loop=bus.loop, websession=bus.session
+        )
         self._scenes_entry_point = Scenes(self.request)
         self._rooms_entry_point = Rooms(self.request)
         self._shades_entry_point = Shades(self.request)
         self._scene_members_entry_point = SceneMembers(self.request)
 
+        await self.get_scenes()
+        await self.get_shades()
+
     async def get_scenes(self):
         """Query the hub for a list of scene instances."""
-        self.scenes = await self._scenes_entry_point.get_instances()
+        try:
+            self.scenes = await self._scenes_entry_point.get_instances()
+        except PvApiError as err:
+            raise NonFatalTestFailException(err)
 
     async def create_scene(self, scene_name, room_id) -> Scene:
         """Create a scene and returns the scene object.
 
         :raises PvApiError when something is wrong with the hub.
         """
-        _raw = await self._scenes_entry_point.create_scene(
-            room_id, scene_name)
-        result = Scene(_raw, self.request)
-        self.scenes.append(result)
-        return result
+        try:
+            _raw = await self._scenes_entry_point.create_scene(
+                room_id, scene_name
+            )
+            result = Scene(_raw, self.request)
+            self.scenes.append(result)
+            return result
+        except PvApiError as err:
+            raise NonFatalTestFailException(err)
 
     async def get_shades(self):
         """Query the hub for a list of shade instances."""
-        self.shades = await self._shades_entry_point.get_instances()
+        try:
+            self.shades = await self._shades_entry_point.get_instances()
+        except PvApiError as err:
+            raise NonFatalTestFailException(err)
 
     async def get_scene(self, scene_id, from_cache=True) -> Scene:
-        """Get a scene resource instance.
+        """Get a scene resource instance."""
+        try:
+            if not from_cache:
+                await self.get_scenes()
+            for _scene in self.scenes:
+                if _scene.id == scene_id:
+                    return _scene
+        except PvApiError as err:
+            raise NonFatalTestFailException(err)
 
-        :raises a ResourceNotFoundException when no scene found.
-        :raises a PvApiError when something is wrong with the hub.
-        """
-        if not from_cache:
-            await self.get_scenes()
-        for _scene in self.scenes:
-            if _scene.id == scene_id:
-                return _scene
-        raise ResourceNotFoundException(
-            'Scene not found scene_id: {}'.format(scene_id))
+        raise NonFatalTestFailException(
+            "Scene not found scene_id: {}".format(scene_id)
+        )
 
     async def get_room(self, room_id, from_cache=True) -> Room:
-        """Get a scene resource instance.
+        """Get a scene resource instance."""
+        try:
+            if not from_cache:
+                await self.get_rooms()
+            for _room in self.rooms:
+                if _room.id == room_id:
+                    return _room
 
-        :raises a ResourceNotFoundException when no scene found.
-        :raises a PvApiError when something is wrong with the hub.
-        """
-        if not from_cache:
-            await self.get_rooms()
-        for _room in self.rooms:
-            if _room.id == room_id:
-                return _room
-        raise ResourceNotFoundException(
-            'Room not found. Id: {}'.format(room_id))
+        except PvApiError as err:
+            raise NonFatalTestFailException(err)
+        raise NonFatalTestFailException(
+            "Room not found. Id: {}".format(room_id)
+        )
 
     async def get_shade(self, shade_id, from_cache=True) -> BaseShade:
         """Get a shade instance based on shade id.
@@ -108,7 +127,8 @@ class PowerViewActor(BaseActor):
             if _shade.id == shade_id:
                 return _shade
         raise ResourceNotFoundException(
-            "Shade not found. Id: {}".format(shade_id))
+            "Shade not found. Id: {}".format(shade_id)
+        )
 
     async def get_rooms(self):
         """Query the hub for a list of room instances."""
@@ -135,9 +155,11 @@ class PowerViewActor(BaseActor):
         :param scene_id: Scene id.
         :return:
         """
-
-        _scene = await self.get_scene(scene_id)
-        await _scene.activate()
+        try:
+            _scene = await self.get_scene(scene_id)
+            await _scene.activate()
+        except PvApiError as err:
+            raise NonFatalTestFailException(err)
 
     async def delete_scene(self, scene_id: int):
         """Delete a scene
@@ -161,7 +183,8 @@ class PowerViewActor(BaseActor):
     async def remove_shade_from_scene(self, shade_id, scene_id):
         """Remove a shade from a scene"""
         await self._scene_members_entry_point.delete_shade_from_scene(
-            shade_id, scene_id)
+            shade_id, scene_id
+        )
 
     async def warmup(self):
         await self.get_scenes()

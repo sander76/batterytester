@@ -5,12 +5,13 @@ import pytest
 
 from batterytester.components.datahandlers import Influx
 from batterytester.components.datahandlers.influx import get_time_stamp, \
-    InfluxLineProtocol, line_protocol_fields, nesting
+    InfluxLineProtocol, line_protocol_fields, nesting, get_annotation_tags
 from batterytester.components.sensor.incoming_parser import get_measurement
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers.constants import ATTR_VALUES, ATTR_TIMESTAMP, \
     ATTR_SENSOR_NAME
-from batterytester.core.helpers.message_data import AtomData, Data
+from batterytester.core.helpers.message_data import AtomData, Data, \
+    ActorResponse
 from test.fake_components import FakeActor
 from test.seqeuences import get_empty_sequence, get_unknown_exception_sequence
 
@@ -79,6 +80,12 @@ def test_influx_line_protocol_nested_values(fake_measurement2):
     # _measurement = inf.create_measurement()
     assert 'vi_volts=1.2' in to_line_protocol
     assert 'vi_amps=2.3' in to_line_protocol
+
+
+def test_get_annotation_tags():
+    dct = OrderedDict({"test": 1, "test2": 2})
+    val = get_annotation_tags(dct)
+    assert val == 'test 1,test2 2'
 
 
 def test_line_protocol_fields():
@@ -151,6 +158,12 @@ def test_shutdown(fake_influx: Influx, base_test: BaseTest, fake_measurement1):
     assert len(fake_influx.data) == 0
 
 
+def test_response_received(fake_influx: Influx):
+    response = ActorResponse({"test": 1})
+    fake_influx._actor_response_received('no_subj', response)
+    assert len(fake_influx.data) == 1
+
+
 def test_shutdown_test_error(
         fake_influx: Influx, base_test: BaseTest, fake_measurement1):
     fake_influx._handle_sensor('no subj', fake_measurement1)
@@ -168,8 +181,8 @@ def test_shutdown_test_error(
 
 
 def test_nesting():
-    nested = {'a':1,'b':2}
-    result = {'a':1,'b':2}
+    nested = {'a': 1, 'b': 2}
+    result = {'a': 1, 'b': 2}
     new = nesting(nested)
     for key, value in result.items():
         assert new[key] == value
