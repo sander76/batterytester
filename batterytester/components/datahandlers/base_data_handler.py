@@ -1,6 +1,7 @@
 import logging
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
+from typing import Sequence, Optional
 
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.helpers import get_current_time_string
@@ -9,16 +10,17 @@ from batterytester.core.helpers.message_data import AtomData
 LOGGER = logging.getLogger(__name__)
 
 
-def create_report_file(test_name, report_name, output_path, extension='md'):
+def create_report_file(test_name, report_name, output_path, extension="md"):
     """Create a report file."""
     _base_filename = report_name or test_name
-    _filename = '{}_{}.{}'.format(_base_filename, get_current_time_string(),
-                                  extension)
+    _filename = "{}_{}.{}".format(
+        _base_filename, get_current_time_string(), extension
+    )
 
     _path = check_output_folder(output_path)
     # converting the Path object to string for Python 3.5 compatibility.
     _full = str(_path.joinpath(_filename))
-    open(_full, 'a').close()
+    open(_full, "a").close()
     return _full
 
 
@@ -34,13 +36,16 @@ def check_output_folder(output_path) -> Path:
 
 
 class BaseDataHandler(metaclass=ABCMeta):
-    def __init__(self):
+    subscriptions = ()
+
+    def __init__(self, subscription_filters: Optional[Sequence]):
         self._current_idx = None
         self._current_loop = None
         self.test_name = None
         self._atom_name = None
         self._bus = None
         self.ready = False
+        self.subscription_filters = subscription_filters
 
     @abstractmethod
     async def setup(self, test_name: str, bus: Bus):
@@ -66,7 +71,6 @@ class BaseDataHandler(metaclass=ABCMeta):
         self._current_loop = data.loop.value
         self._atom_name = data.atom_name.value
 
-    @abstractmethod
     def get_subscriptions(self):
         """Return a tuple of tuples with each tuple
         containing and event name and the corresponding method
@@ -82,11 +86,20 @@ class BaseDataHandler(metaclass=ABCMeta):
         def _atom_warmup_event(self, subject, data: AtomData):
             pass
         """
-        pass
+        if self.subscription_filters:
+            subs = (
+                sub
+                for sub in self.subscriptions
+                if sub[0] in self.subscription_filters
+            )
+
+            return subs
+
+        return self.subscriptions
 
 
 class FileBasedDataHandler(BaseDataHandler):
-    def __init__(self, report_name, output_path):
+    def __init__(self, report_name, output_path, subscription_filters):
         """
 
         :param report_name: Optional name of the report.
@@ -94,14 +107,11 @@ class FileBasedDataHandler(BaseDataHandler):
         :param output_path: Path to store the report file.
             Can be relative or absolute.
         """
-        super().__init__()
+        super().__init__(subscription_filters)
         self._filename = None
         self._report_name = report_name
         self._output_path = output_path
         self._report_data = []
-
-    def get_subscriptions(self):
-        pass
 
     async def setup(self, test_name, bus):
         self._filename = create_report_file(
@@ -113,8 +123,8 @@ class FileBasedDataHandler(BaseDataHandler):
 
     def _flush(self):
         """Writes buffer to file"""
-        with open(self._filename, 'a') as fl:
-            fl.write('\n'.join(self._report_data))
-            fl.write('\n')
+        with open(self._filename, "a") as fl:
+            fl.write("\n".join(self._report_data))
+            fl.write("\n")
         # reset the summary
         self._report_data = []

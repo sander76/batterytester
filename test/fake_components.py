@@ -154,7 +154,7 @@ class FakeBaseTest(BaseTest):
 
 class FakeDataHandler(BaseDataHandler):
     def __init__(self):
-        super().__init__()
+        super().__init__(subscription_filters=None)
         self.calls = []
         self.setup = AsyncMock()
         self.shutdown = AsyncMock()

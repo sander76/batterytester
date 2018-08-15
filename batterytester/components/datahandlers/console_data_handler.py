@@ -1,20 +1,27 @@
-"""Websocket server for inter process communication"""
-
 from pprint import pprint
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.components.datahandlers.base_data_handler import \
+from batterytester.components.datahandlers.base_data_handler import (
     BaseDataHandler
-from batterytester.core.helpers.message_data import FatalData, TestFinished, \
-    TestData, AtomData, \
-    AtomStatus, AtomResult, LoopData, ActorResponse
+)
+from batterytester.core.helpers.message_data import (
+    FatalData,
+    TestFinished,
+    TestData,
+    AtomData,
+    AtomStatus,
+    AtomResult,
+    LoopData,
+    ActorResponse,
+)
 
 
 class ConsoleDataHandler(BaseDataHandler):
     """Console messaging."""
 
-    def get_subscriptions(self):
-        return (
+    def __init__(self, subscription_filters=None):
+        super().__init__(subscription_filters)
+        self.subscriptions = (
             (subj.TEST_WARMUP, self.test_warmup),
             (subj.TEST_FATAL, self.test_fatal),
             (subj.TEST_FINISHED, self.test_finished),

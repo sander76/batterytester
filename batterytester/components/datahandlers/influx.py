@@ -129,7 +129,7 @@ def to_nanoseconds(timestamp):
 def get_annotation_tags(data: dict):
     return ",".join(
         (
-            "{} {}".format(slugify(key), slugify(value))
+            "{} {}".format(slugify(key), slugify(str(value)))
             for key, value in data.items()
         )
     )
@@ -154,7 +154,7 @@ class Influx(BaseDataHandler):
 
         For example: influx = Influx(subscription_filters=subj.ACTOR_RESPONSE_RECEIVED)
         """
-        super().__init__()
+        super().__init__(subscription_filters)
         self.host = host
         self.data = []
         self.bus = None
@@ -163,7 +163,6 @@ class Influx(BaseDataHandler):
         self.buffer_size = buffer_size
         self._tags = {}
 
-        self.subscription_filters = subscription_filters
         self.subscriptions = (
             (subj.ATOM_WARMUP, self._atom_warmup_event),
             (subj.TEST_WARMUP, self._test_warmup_event),
@@ -182,18 +181,6 @@ class Influx(BaseDataHandler):
             self.data = []
             await self._send(_data)
 
-    def get_subscriptions(self):
-        if self.subscription_filters:
-            subs = (
-                sub
-                for sub in self.subscriptions
-                if sub[0] in self.subscription_filters
-            )
-
-            return subs
-
-        return self.subscriptions
-
     def add_to_buffer(self, data: InfluxLineProtocol):
         """Add influx line data to buffer and check size"""
         self.data.append(data)
@@ -205,7 +192,7 @@ class Influx(BaseDataHandler):
         _annotation_tags = get_annotation_tags(data.response.value)
 
         try:
-            _text = self._tags["atom_name"].value
+            _text = self._tags["atom_name"]
         except KeyError:
             _text = "unkown"
 
@@ -225,7 +212,7 @@ class Influx(BaseDataHandler):
 
         self._tags["loop"] = data.loop.value
         self._tags["idx"] = data.idx.value
-        self._tags["atom_name"] = data.atom_name
+        self._tags["atom_name"] = data.atom_name.value
 
         annotation_tags = "loop {},index {}".format(
             data.loop.value, data.idx.value

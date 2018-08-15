@@ -10,24 +10,36 @@ import aiohttp
 from aiohttp import ClientConnectionError, client_exceptions
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.components.datahandlers.base_data_handler import \
+from batterytester.components.datahandlers.base_data_handler import (
     BaseDataHandler
-from batterytester.core.helpers.helpers import FatalTestFailException, \
-    TestSetupException
-from batterytester.core.helpers.message_data import to_serializable, \
-    FatalData, TestFinished, TestData, AtomData, \
-    AtomStatus, AtomResult, TestSummary, Message, LoopData
+)
+from batterytester.core.helpers.helpers import (
+    FatalTestFailException,
+    TestSetupException,
+)
+from batterytester.core.helpers.message_data import (
+    to_serializable,
+    FatalData,
+    TestFinished,
+    TestData,
+    AtomData,
+    AtomStatus,
+    AtomResult,
+    TestSummary,
+    Message,
+    LoopData,
+)
 from batterytester.server.server import URL_TEST, MSG_TYPE_STOP_TEST
 
-URL_CLOSE = 'close'
-URL_ATOM = 'atom'  # General info about the current atom.
+URL_CLOSE = "close"
+URL_ATOM = "atom"  # General info about the current atom.
 # URL_TEST = 'test'  # General test information.
 
 LOGGER = logging.getLogger(__name__)
 
-KEY_PASS = 'passed'
-KEY_FAIL = 'failed'
-ATTR_FAILED_IDS = 'failed_ids'
+KEY_PASS = "passed"
+KEY_FAIL = "failed"
+ATTR_FAILED_IDS = "failed_ids"
 
 
 class ConnectionState(Enum):
@@ -43,13 +55,15 @@ class Messaging(BaseDataHandler):
 
     Needs a running websocket server to connect and interact with."""
 
-    def __init__(self, *, host='127.0.0.1', port=8567):
+    def __init__(
+        self, *, host="127.0.0.1", port=8567, subscription_filters=None
+    ):
         """
 
         :param host: Web(socket) server address (182.167.24.3)
         :param port: Socket port.
         """
-        super().__init__()
+        super().__init__(subscription_filters)
         self.ws_connection = None
         self.session = None
         self.test_summary = TestSummary()
@@ -60,8 +74,7 @@ class Messaging(BaseDataHandler):
         self._connection_state = ConnectionState.UNDEFINED
         self._ws_connection_handler = None
 
-    def get_subscriptions(self):
-        return (
+        self.subscriptions = (
             (subj.TEST_WARMUP, self.test_warmup),
             (subj.TEST_FATAL, self.test_fatal),
             (subj.TEST_FINISHED, self.test_finished),
@@ -69,7 +82,7 @@ class Messaging(BaseDataHandler):
             (subj.LOOP_WARMUP, self.loop_warmup),
             (subj.ATOM_WARMUP, self._atom_warmup),
             (subj.ATOM_RESULT, self.atom_result),
-            (subj.SENSOR_DATA, self.test_data)
+            (subj.SENSOR_DATA, self.test_data),
         )
 
     async def shutdown(self, bus):
@@ -109,7 +122,8 @@ class Messaging(BaseDataHandler):
                 self._current_idx,
                 self._current_loop,
                 self._atom_name,
-                data.reason.value)
+                data.reason.value,
+            )
 
         self._send_to_ws(self.test_summary)
 
@@ -139,8 +153,9 @@ class Messaging(BaseDataHandler):
 
     async def setup(self, test_name, bus):
         self._bus = bus
-        self._server_address = 'http://{}:{}{}'.format(
-            self._host, self._port, URL_TEST)
+        self._server_address = "http://{}:{}{}".format(
+            self._host, self._port, URL_TEST
+        )
         self._connection_state = ConnectionState.CONNECTING
         await self._ws_connect()
         self._bus.add_async_task(self.ws_loop())
@@ -148,7 +163,7 @@ class Messaging(BaseDataHandler):
     async def parser(self, msg):
         try:
             _data = json.loads(msg.data)
-            _type = _data['type']
+            _type = _data["type"]
         except JSONDecodeError as err:
             LOGGER.error(err)
         else:
@@ -158,7 +173,9 @@ class Messaging(BaseDataHandler):
     async def _ws_close(self):
         LOGGER.info(
             "Closing websocket connection. Connection state: {}".format(
-                self._connection_state.value))
+                self._connection_state.value
+            )
+        )
         try:
             await self.ws_connection.close()
         except Exception as err:
@@ -169,20 +186,23 @@ class Messaging(BaseDataHandler):
     async def _ws_connect(self):
         try:
             self.ws_connection = await asyncio.wait_for(
-                self._bus.session.ws_connect(self._server_address),
-                timeout=10)
+                self._bus.session.ws_connect(self._server_address), timeout=10
+            )
             self._connection_state = ConnectionState.CONNECTED
 
         except asyncio.TimeoutError:
             self._connection_state = ConnectionState.RESETTING
             raise TestSetupException(
                 "Connection to the server timed out: {}".format(
-                    self._server_address))
+                    self._server_address
+                )
+            )
 
         except ClientConnectionError:
             self._connection_state = ConnectionState.RESETTING
             raise TestSetupException(
-                "Unable to connect to: {}".format(self._server_address))
+                "Unable to connect to: {}".format(self._server_address)
+            )
 
         except Exception as err:
             self._connection_state = ConnectionState.RESETTING
@@ -197,9 +217,10 @@ class Messaging(BaseDataHandler):
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     await self.parser(msg)
                 elif msg.type in (
-                        aiohttp.WSMsgType.CLOSED,
-                        aiohttp.WSMsgType.CLOSING,
-                        aiohttp.WSMsgType.CLOSE):
+                    aiohttp.WSMsgType.CLOSED,
+                    aiohttp.WSMsgType.CLOSING,
+                    aiohttp.WSMsgType.CLOSE,
+                ):
                     break
                 elif msg.type == aiohttp.WSMsgType.ERROR:
                     break
@@ -233,6 +254,7 @@ class Messaging(BaseDataHandler):
                 await asyncio.sleep(1)
 
             raise FatalTestFailException(
-                "Unable to connect to message server.")
+                "Unable to connect to message server."
+            )
         except asyncio.CancelledError:
             LOGGER.info("Closing ws reader.")
