@@ -2,14 +2,14 @@
 import logging
 
 from batterytester.components.sensor.incoming_parser import \
-    IncomingParserChunked, get_measurement, IncomingParser
+    get_measurement, IncomingParser
 from batterytester.core.helpers.helpers import FatalTestFailException
 
 LOGGER = logging.getLogger(__name__)
 
 
 class BooleanParser(IncomingParser):
-    """Parser which get binary data and evaluates"""
+    """Parser for boolean values"""
 
     def _interpret(self, chunk) -> dict:
         """Interpret incoming raw measurement.

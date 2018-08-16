@@ -73,6 +73,7 @@ class Bus:
                 print(val)
         except Exception as err:
             LOGGER.error("A background task has an error: {}".format(err))
+            LOGGER.exception(err)
             self.notify(subj.TEST_FATAL, FatalData(err))
             """An exception is raised. Meaning one of the long running 
             tasks has encountered an error. Cancelling the main task and

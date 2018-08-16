@@ -40,6 +40,8 @@ class NonFatalTestFailException(Exception):
 class FatalTestFailException(Exception):
     pass
 
+class SquidConnectException(FatalTestFailException):
+    pass
 
 class AtomExecuteError(Exception):
     pass

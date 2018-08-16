@@ -96,7 +96,7 @@ class BaseTest:
         """
         self.bus.notify(subj.SENSOR_DATA, sensor_data)
 
-        if self.active_atom:
+        if self.active_atom is not None:
             self.active_atom.add_sensor_data(sensor_data)
 
     def get_sequence(self, *args):

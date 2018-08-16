@@ -3,12 +3,21 @@
 When the sensor is open it will return True.
 if sensor is blocked it will return False.
 """
-from batterytester.components.sensor.connector.arduino_connector import \
-    ArduinoConnector
-from batterytester.components.sensor.incoming_parser.boolean_parser import \
+import asyncio
+
+from batterytester.components.sensor.connector.arduino_connector import (
+    ArduinoConnector,
+    SquidConnector,
+)
+from batterytester.components.sensor.incoming_parser.boolean_parser import (
     BooleanParser
+)
+from batterytester.components.sensor.incoming_parser.raw_data_parser import (
+    RawDataParser
+)
 from batterytester.components.sensor.sensor import Sensor
 from batterytester.core.bus import Bus
+from batterytester.core.helpers.helpers import SquidConnectException
 
 
 class LedGateSensor(Sensor):
@@ -26,8 +35,9 @@ class LedGateSensor(Sensor):
 
     """
 
-    def __init__(self, *, serial_port, serial_speed=115200,
-                 sensor_prefix=None):
+    def __init__(
+        self, *, serial_port, serial_speed=115200, sensor_prefix=None
+    ):
         """Initialize the led gate sensor
 
         :param serial_port: Serial port where sensor is connected to.
@@ -41,7 +51,7 @@ class LedGateSensor(Sensor):
 
     async def setup(self, test_name: str, bus: Bus):
         self._connector = ArduinoConnector(
-            bus=bus, serial_port=self.serialport,
-            serial_speed=self.serialspeed)
+            bus=bus, serial_port=self.serialport, serial_speed=self.serialspeed
+        )
         self._sensor_data_parser = BooleanParser(bus, self.sensor_prefix)
         await super().setup(test_name, bus)

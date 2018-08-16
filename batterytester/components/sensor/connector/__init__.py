@@ -33,8 +33,7 @@ class AsyncSensorConnector(SensorConnector):
         pass
         # await self.close_method()
 
-    @asyncio.coroutine
-    def async_listen_for_data(self, *args):
+    async def async_listen_for_data(self, *args):
         """Listens for incoming raw data and puts it into the
         raw_sensor_data_queue
 
