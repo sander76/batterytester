@@ -4,6 +4,8 @@ Incoming parser receives incoming sensor data and cleans it.
 
 from typing import Sequence, Generator
 
+from slugify import slugify
+
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.constants import KEY_VALUE, ATTR_TIMESTAMP, \
     KEY_SUBJECT, ATTR_SENSOR_NAME
@@ -24,7 +26,7 @@ class IncomingParser:
     def __init__(self, bus: Bus, separator=b'\n', sensor_prefix=None):
         self.bus = bus
         self.separator = separator
-        self.sensor_prefix = sensor_prefix
+        self.sensor_prefix = slugify(sensor_prefix)
 
     def _interpret(self, measurement) -> dict:
         """Interprets an incoming measurement and returns the result"""

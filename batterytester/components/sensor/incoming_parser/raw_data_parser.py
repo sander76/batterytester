@@ -1,5 +1,7 @@
 import logging
 
+from slugify import slugify
+
 from batterytester.components.sensor.incoming_parser import IncomingParser, \
     get_measurement
 from batterytester.core.helpers.helpers import FatalTestFailException
@@ -11,7 +13,7 @@ class RawDataParser(IncomingParser):
 
     def __init__(self, bus, sensor_prefix):
         super().__init__(bus, sensor_prefix=sensor_prefix)
-        self.prefix = sensor_prefix
+        #self.prefix = sensor_prefix
 
     def _interpret(self, chunk) -> dict:
         try:
@@ -24,9 +26,9 @@ class RawDataParser(IncomingParser):
             _it = iter(vals)
             data = {}
             for key, val in zip(_it, _it):
-                data[key.decode('utf-8')] = val.decode("utf-8")
+                data[key.decode('utf-8')] = slugify(val.decode("utf-8"))
 
-            return get_measurement(self.prefix, data)
+            return get_measurement(self.sensor_prefix, data)
 
         except Exception:
             LOGGER.error('Incorrect measurement format: %s', chunk)
