@@ -33,7 +33,7 @@ def test_false_interpret(fake_binary_parser):
 def test_sensor_name():
     parser = BooleanParser(None, sensor_prefix='test_sensor')
     val = parser._interpret(b'abcd:1')
-    assert val[ATTR_SENSOR_NAME] == 'test_sensor_abcd'
+    assert val[ATTR_SENSOR_NAME] == 'test-sensor_abcd'
     val = parser._interpret(b'def:0')
-    assert val[ATTR_SENSOR_NAME] == 'test_sensor_def'
+    assert val[ATTR_SENSOR_NAME] == 'test-sensor_def'
     assert val[ATTR_VALUES] == {'v': False}

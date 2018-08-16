@@ -2,7 +2,7 @@
 Incoming parser receives incoming sensor data and cleans it.
 """
 
-from typing import Sequence, Generator
+from typing import Sequence
 
 from slugify import slugify
 
@@ -26,7 +26,11 @@ class IncomingParser:
     def __init__(self, bus: Bus, separator=b'\n', sensor_prefix=None):
         self.bus = bus
         self.separator = separator
-        self.sensor_prefix = slugify(sensor_prefix)
+
+        if sensor_prefix is not None:
+            self.sensor_prefix = slugify(str(sensor_prefix))
+        else:
+            self.sensor_prefix = None
 
     def _interpret(self, measurement) -> dict:
         """Interprets an incoming measurement and returns the result"""
@@ -44,7 +48,6 @@ class IncomingParser:
         if self.sensor_prefix:
             return '{}_{}'.format(self.sensor_prefix, sensor_name)
         return sensor_name
-
 
 # class IncomingParserChunked(IncomingParser):
 #     """Incoming data parser where data is coming in as a stream."""
