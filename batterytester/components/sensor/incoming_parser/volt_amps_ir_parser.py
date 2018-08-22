@@ -4,33 +4,30 @@ Incoming parser receives incoming sensor data and cleans it.
 
 import logging
 
-from batterytester.components.sensor.incoming_parser import (
-    IncomingParser,
-    get_measurement,
+from batterytester.components.sensor.incoming_parser import get_measurement
+from batterytester.components.sensor.incoming_parser.squid_parser import (
+    INFO_TYPE_SENSOR,
+    SquidParser,
 )
 from batterytester.core.helpers.helpers import FatalTestFailException
 
 LOGGER = logging.getLogger(__name__)
 
 
-class VoltAmpsIrParser(IncomingParser):
-    """Volts amps parser
-
-    Incoming data is in form of b'v:<Volts>:a:<Amps>'
-    """
+class VoltAmpsIrParser(SquidParser):
+    """Volts amps parser"""
 
     sensor_name = "VI"
 
-    def __init__(self, bus, sensor_prefix=None):
-        super().__init__(bus, sensor_prefix=sensor_prefix)
+    def __init__(self, bus, sensor_queue, sensor_prefix=None):
+        super().__init__(bus, sensor_queue, sensor_prefix=sensor_prefix)
         self.sensor_name = self.decorate_sensor_name(
             VoltAmpsIrParser.sensor_name
         )
 
-    def _interpret(self, measurement):
-        """Interpret incoming data.
+    def finalize(self):
+        """Cast parsed squid data to the correct type.
 
-        Incoming data as described above.
         Parses to: {volts: <value>,amps: <value>}
 
         Finally data is emitted in form of:
@@ -39,15 +36,24 @@ class VoltAmpsIrParser(IncomingParser):
         """
 
         try:
-            _line = measurement.split(b":")
-            assert len(_line) == 4
-            data = {"volts": float(_line[1]), "amps": float(_line[3])}
+            if self.current_measurement[0] == INFO_TYPE_SENSOR:
+                if not len(self.current_measurement) == 5:
+                    raise FatalTestFailException(
+                        "Incorrect sensor data format: {}".format(
+                            self.current_measurement))
 
-            return get_measurement(self.sensor_name, data)
+                data = {
+                    "volts": float(self.current_measurement[2]),
+                    "amps": float(self.current_measurement[4]),
+                }
 
-        except (IndexError, ValueError, AssertionError):
+                self.sensor_queue.put_nowait(
+                    get_measurement(self.sensor_name, data)
+                )
+
+        except (IndexError, ValueError):
             raise FatalTestFailException(
                 "incoming volts amps data is not correct: {}".format(
-                    measurement
+                    self.current_measurement
                 )
             )

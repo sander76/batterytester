@@ -18,7 +18,6 @@ from batterytester.core.helpers.constants import (
 )
 from batterytester.core.helpers.helpers import (
     NonFatalTestFailException,
-    get_current_timestamp,
     FatalTestFailException,
 )
 from batterytester.core.helpers.message_data import (
@@ -38,7 +37,8 @@ class BaseTest:
     """Main test."""
 
     def __init__(
-        self, *, test_name: str, loop_count: int, learning_mode: bool = False
+            self, *, test_name: str, loop_count: int,
+            learning_mode: bool = False
     ):
 
         self.bus = Bus()
@@ -53,6 +53,8 @@ class BaseTest:
 
     def add_sensors(self, *sensors: Sensor):
         """Add sensors to the test."""
+
+        # todo: move the queue to the bus and assign it to the sensors in the setup method.
         if not self.sensor_data_queue:
             self.sensor_data_queue = asyncio.Queue(loop=self.bus.loop)
             self.bus.add_async_task((self._messager()))
@@ -163,7 +165,7 @@ class BaseTest:
             await asyncio.sleep(self._active_atom.duration)
 
             if not self._learning_mode and isinstance(
-                self._active_atom, ReferenceAtom
+                    self._active_atom, ReferenceAtom
             ):
                 # Actual testing mode. reference data
                 # and testing data can be compared.

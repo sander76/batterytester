@@ -35,6 +35,7 @@ class Bus:
         self._exception = None
         self._state = BusState.undefined
 
+    #todo: Can this be removed ?
     @property
     def exception(self):
         return self._exception
@@ -60,9 +61,6 @@ class Bus:
                 except Exception as err:
                     raise
 
-    # except KeyError:
-    #     LOGGER.debug('No subscribers to subject {}.'.format(subject))
-
     def subscribe(self, subject, method):
         self.subscriptions[subject] = method
 
@@ -71,6 +69,8 @@ class Bus:
             val = future.result()
             if val:
                 print(val)
+        except CancelledError:
+            LOGGER.info("Catching a task cancellation.")
         except Exception as err:
             LOGGER.error("A background task has an error: {}".format(err))
             LOGGER.exception(err)

@@ -16,7 +16,6 @@ def fake_relay_actor(monkeypatch):
     return fake_pv
 
 
-# @mock.patch("batterytester.core.actors.relay_actor.Serial", autospec=True)
 def test_instantiate(monkeypatch, fake_relay_actor):
     fake_serial = MagicMock()
     write_mock = Mock()

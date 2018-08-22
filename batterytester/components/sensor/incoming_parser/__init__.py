@@ -23,9 +23,8 @@ def get_measurement(sensor_name, value) -> dict:
 
 
 class IncomingParser:
-    def __init__(self, bus: Bus, separator=b'\n', sensor_prefix=None):
+    def __init__(self, bus: Bus, sensor_prefix=None):
         self.bus = bus
-        self.separator = separator
 
         if sensor_prefix is not None:
             self.sensor_prefix = slugify(str(sensor_prefix))

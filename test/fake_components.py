@@ -135,14 +135,14 @@ class FakeBoundSensorConnector(AsyncSensorConnector):
 class FakeVoltsAmpsSensor(Sensor):
     async def setup(self, test_name: str, bus: Bus):
         self._connector = RandomVoltAmpsConnector(bus)
-        self._sensor_data_parser = VoltAmpsIrParser(bus)
+        self._sensor_data_parser = VoltAmpsIrParser(bus,self.sensor_data_queue)
         return await super().setup(test_name, bus)
 
 
 class FakeLedGateSensor(Sensor):
     async def setup(self, test_name: str, bus: Bus):
         self._connector = FakeLedGateConnector(bus, delay=0.1)
-        self._sensor_data_parser = BooleanParser(bus)
+        self._sensor_data_parser = BooleanParser(bus,self.sensor_data_queue)
         return await super().setup(test_name, bus)
 
 

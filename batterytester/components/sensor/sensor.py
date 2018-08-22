@@ -2,6 +2,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 from asyncio import CancelledError
 
+
 from batterytester.core.bus import Bus
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,8 +51,10 @@ class Sensor(metaclass=ABCMeta):
             while True:  # self.bus.running:
                 _raw_data = await self._connector.raw_sensor_data_queue.get()
                 for _measurement in self._sensor_data_parser.process(
-                        _raw_data):
-                    await self.sensor_data_queue.put(_measurement)
+                    _raw_data
+                ):
+                    if _measurement:
+                        await self.sensor_data_queue.put(_measurement)
         except CancelledError:
             _LOGGER.info("Stopped data parser")
         except Exception:
