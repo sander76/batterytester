@@ -18,7 +18,7 @@ class AltArduinoConnector(AsyncSensorConnector):
     """Arduino based squid connector.
     Listen method is adapted to incoming squid line protocol."""
 
-    def __init__(self, *, bus, serial_port, serial_speed, try_delay=10):
+    def __init__(self, *, bus, serial_port, serial_speed=115200, try_delay=10):
         super().__init__(bus)
         # self.s = Serial()
         self.serial_port = serial_port
@@ -63,7 +63,7 @@ class AltArduinoConnector(AsyncSensorConnector):
             self.s = Serial(port=self.serial_port, baudrate=self.serial_speed)
         except SerialException as err:
             LOGGER.error(err)
-            raise FatalTestFailException(err)
+            raise SquidConnectException(err)
 
     def _listen_for_data(self):
         while self.bus.running:
