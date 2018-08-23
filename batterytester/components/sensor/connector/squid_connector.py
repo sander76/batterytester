@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from asyncio import CancelledError
 from concurrent.futures import ThreadPoolExecutor
@@ -6,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from serial import SerialException, Serial
 
 from batterytester.components.sensor.connector import AsyncSensorConnector
+from batterytester.core.bus import BusState
 from batterytester.core.helpers.helpers import (
     SquidConnectException,
     FatalTestFailException,
@@ -25,7 +25,7 @@ class AltArduinoConnector(AsyncSensorConnector):
         self.serial_speed = serial_speed
         self.s = None  # the serial port
         self.trydelay = try_delay
-        self.shutting_down = False
+        #self.shutting_down = False
 
     def get_version(self):
         if self.s.is_open:
@@ -44,12 +44,12 @@ class AltArduinoConnector(AsyncSensorConnector):
         the wrapping async task"""
 
         LOGGER.info("Closing serial connection")
-        self.shutting_down = True
-        self.s.cancel_read()
+        #self.shutting_down = True
+        #self.s.cancel_read()
         self._close()
 
     def _close(self):
-        if self.s.is_open:
+        if self.s and self.s.is_open:
             try:
                 self.s.close()
             except (OSError, SerialException) as err:
@@ -75,9 +75,10 @@ class AltArduinoConnector(AsyncSensorConnector):
                     self.raw_sensor_data_queue.put_nowait, data
                 )
 
-            except (SerialException, IndexError):
+            except (SerialException, IndexError, TypeError):
                 self._close()
-                if self.shutting_down:
+                if self.bus.state == BusState.shutting_down:
+                #if self.shutting_down:
                     LOGGER.info("Serial connection closed.")
                     break
                 else:
