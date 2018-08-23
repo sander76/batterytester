@@ -6,7 +6,7 @@ from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
     PvApiResponseStatusError
 
 from batterytester.core.helpers.helpers import TestSetupException, \
-    NonFatalTestFailException, AtomExecuteError
+    NonFatalTestFailException
 from batterytester.core.helpers.message_data import AtomData
 
 LOGGING = logging.getLogger(__name__)
@@ -77,6 +77,7 @@ class Atom:
 
     async def execute(self):
         """Executes the defined command."""
+        LOGGING.debug("Execute scene: %s", self.name)
         try:
             if self._args:
                 self._check_args()

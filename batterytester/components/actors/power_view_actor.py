@@ -1,10 +1,7 @@
 """PowerView actor"""
 
 from aiopvapi.helpers.aiorequest import AioRequest, PvApiError
-from aiopvapi.helpers.powerview_util import ResourceNotFoundException
-from aiopvapi.resources.room import Room
 from aiopvapi.resources.scene import Scene
-from aiopvapi.resources.shade import BaseShade
 from aiopvapi.rooms import Rooms
 from aiopvapi.scene_members import SceneMembers
 from aiopvapi.scenes import Scenes
@@ -14,7 +11,24 @@ from batterytester.components.actors.base_actor import (
     ACTOR_TYPE_POWER_VIEW,
     BaseActor,
 )
-from batterytester.core.helpers.helpers import NonFatalTestFailException
+from batterytester.core.helpers.helpers import (
+    NonFatalTestFailException,
+    FatalTestFailException,
+)
+
+
+def catch_exceptions(func):
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+
+        except PvApiError as err:
+            _fatal = kwargs.get("fatal")
+            if _fatal is None or _fatal is True:
+                raise FatalTestFailException(err)
+            raise NonFatalTestFailException(err)
+
+    return wrapper
 
 
 class PowerViewActor(BaseActor):
@@ -28,6 +42,8 @@ class PowerViewActor(BaseActor):
         :param hub_ip: The Powerview hub ip address. like: 192.168.2.4
         """
         self.hub_ip = hub_ip
+        self.room = None
+        self.shade = None
         self.test_name = None
         self.request = None
         self._scenes_entry_point = None
@@ -48,144 +64,97 @@ class PowerViewActor(BaseActor):
         self._shades_entry_point = Shades(self.request)
         self._scene_members_entry_point = SceneMembers(self.request)
 
-        await self.get_scenes()
-        await self.get_shades()
 
-    async def get_scenes(self):
-        """Query the hub for a list of scene instances."""
-        try:
-            self.scenes = await self._scenes_entry_point.get_instances()
-        except PvApiError as err:
-            raise NonFatalTestFailException(err)
 
-    async def create_scene(self, scene_name, room_id) -> Scene:
-        """Create a scene and returns the scene object.
-
-        :raises PvApiError when something is wrong with the hub.
-        """
-        try:
-            _raw = await self._scenes_entry_point.create_scene(
-                room_id, scene_name
-            )
-            result = Scene(_raw, self.request)
-            self.scenes.append(result)
-            return result
-        except PvApiError as err:
-            raise NonFatalTestFailException(err)
-
-    async def get_shades(self):
-        """Query the hub for a list of shade instances."""
-        try:
-            self.shades = await self._shades_entry_point.get_instances()
-        except PvApiError as err:
-            raise NonFatalTestFailException(err)
-
-    async def get_scene(self, scene_id, from_cache=True) -> Scene:
+    @catch_exceptions
+    async def get_scene(self, scene_id) -> Scene:
         """Get a scene resource instance."""
-        try:
-            if not from_cache:
-                await self.get_scenes()
-            for _scene in self.scenes:
-                if _scene.id == scene_id:
-                    return _scene
-        except PvApiError as err:
-            raise NonFatalTestFailException(err)
+        _scene = await self._scenes_entry_point.get_instance(scene_id)
+        return _scene
 
-        raise NonFatalTestFailException(
-            "Scene not found scene_id: {}".format(scene_id)
-        )
-
-    async def get_room(self, room_id, from_cache=True) -> Room:
+    @catch_exceptions
+    async def get_room(self, room_id, fatal=True):
         """Get a scene resource instance."""
-        try:
-            if not from_cache:
-                await self.get_rooms()
-            for _room in self.rooms:
-                if _room.id == room_id:
-                    return _room
+        self.room = await self._rooms_entry_point.get_instance(room_id)
 
-        except PvApiError as err:
-            raise NonFatalTestFailException(err)
-        raise NonFatalTestFailException(
-            "Room not found. Id: {}".format(room_id)
-        )
+    @catch_exceptions
+    async def get_shade(self, shade_id: int):
+        self.shade = await self._shades_entry_point.get_instance(shade_id)
 
-    async def get_shade(self, shade_id, from_cache=True) -> BaseShade:
-        """Get a shade instance based on shade id.
+    @catch_exceptions
+    async def move_to(self, position):
+        await self.shade._move(
+            self.shade._create_shade_data(position_data=position))
 
-
-        :param shade_id: Shade id
-        :param from_cache: get the id from cache or request it from the hub.
-        :return: Shade instance
-        """
-
-        if not from_cache:
-            await self.get_shades()
-        if not self.shades:
-            await self.get_shades()
-        for _shade in self.shades:
-            if _shade.id == shade_id:
-                return _shade
-        raise ResourceNotFoundException(
-            "Shade not found. Id: {}".format(shade_id)
-        )
-
-    async def get_rooms(self):
-        """Query the hub for a list of room instances."""
-        self.rooms = await self._rooms_entry_point.get_instances()
-
-    async def open_shade(self, shade_id):
+    @catch_exceptions
+    async def open_shade(self):
         """Open a shade."""
-        _shade = await self.get_shade(shade_id)
-        await _shade.open()
+        await self.shade.open()
 
-    async def close_shade(self, shade_id):
+    @catch_exceptions
+    async def close_shade(self):
         """Close a shade."""
-        _shade = await self.get_shade(shade_id)
-        await _shade.close()
+        await self.shade.close()
 
-    async def jog_shade(self, shade_id):
+    @catch_exceptions
+    async def jog_shade(self):
         """Jog a shade"""
-        _shade = await self.get_shade(shade_id)
-        await _shade.jog()
+        await self.shade.jog()
 
-    async def activate_scene(self, scene_id: int):
+    @catch_exceptions
+    async def activate_scene(self, scene_id: int = None, scene: Scene = None):
         """Activate a scene
 
         :param scene_id: Scene id.
+        :param scene: A Scene instance
         :return:
         """
-        try:
-            _scene = await self.get_scene(scene_id)
-            await _scene.activate()
-        except PvApiError as err:
-            raise NonFatalTestFailException(err)
+        if scene_id:
+            scene = await self.get_scene(scene_id)
 
-    async def delete_scene(self, scene_id: int):
+        await scene.activate()
+
+    @catch_exceptions
+    async def create_scene(self, scene_name, room_id) -> Scene:
+        """Create a scene and return the scene object.
+
+        :raises PvApiError when something is wrong with the hub.
+        """
+
+        _raw = await self._scenes_entry_point.create_scene(
+            room_id, scene_name
+        )
+        result = Scene(_raw, self.request)
+        self.scenes.append(result)
+        return result
+
+    @catch_exceptions
+    async def delete_scene(self, scene_id: int = None, scene: Scene = None):
         """Delete a scene
 
         :param scene_id:
+        :param scene: A Scene instance
         :return:
         """
-        _scene = await self.get_scene(scene_id, from_cache=False)
-        return await _scene.delete()
+        if scene_id:
+            scene = await self.get_scene(scene_id)
+        return await scene.delete()
 
-    async def add_shade_to_scene(self, shade_id, scene_id, position=None):
+    @catch_exceptions
+    async def add_shade_to_scene(self, scene_id, position=None):
         """Add a shade to a scene."""
         if position is None:
-            _shade = await self.get_shade(shade_id)
-            position = await _shade.get_current_position()
+            # _shade = await self.get_shade(shade_id)
+            position = await self.shade.get_current_position()
 
-        await (SceneMembers(self.request)).create_scene_member(
-            position, scene_id, shade_id
+        await self._scene_members_entry_point.create_scene_member(
+            position, scene_id, self.shade.id
         )
 
+    @catch_exceptions
     async def remove_shade_from_scene(self, shade_id, scene_id):
         """Remove a shade from a scene"""
         await self._scene_members_entry_point.delete_shade_from_scene(
             shade_id, scene_id
         )
 
-    async def warmup(self):
-        await self.get_scenes()
-        await self.get_shades()
