@@ -83,9 +83,7 @@ class Telegram(BaseDataHandler):
             self._send_message(self._make_message(_info, data.time.value))
 
     def _test_start(self, subject, data: TestData):
-        _message = "*{}*\n\n{}\n{}".format(
-            self._test_name, "STARTED", Telegram._to_time(data.started.value)
-        )
+        _message = self._make_message("STARTED", data.started.value)
 
         self._send_message(_message)
 
@@ -104,17 +102,12 @@ class Telegram(BaseDataHandler):
         self._send_message(self._make_message(_resp, data.time.value))
 
     def _test_fatal(self, subject, data: FatalData):
-        LOGGER.info("Test fatal received.")
         _info = data.reason.value
         self._send_message(self._make_message(_info, data.time_finished.value))
 
     def _test_finished(self, subject, data: TestFinished):
-        LOGGER.info("Test finished received.")
-        _message = "*{}*\n\n{}\n{}".format(
-            self._test_name,
-            "FINISHED",
-            Telegram._to_time(data.time_finished.value),
-        )
+        _message = self._make_message("FINISHED", data.time_finished.value)
+
         self._send_message(_message)
 
     def _send_message(self, message, parse_mode="Markdown"):
