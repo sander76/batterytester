@@ -138,7 +138,7 @@ class Bus:
     async def stop_test(self, message=None):
         # wait a little to have all tasks finish gracefully.
         LOGGER.info("stopping test")
-
+        self._state = BusState.shutting_down
         await asyncio.sleep(1)
 
         if self.test_runner_task:

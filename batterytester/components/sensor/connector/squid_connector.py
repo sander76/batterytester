@@ -44,8 +44,7 @@ class AltArduinoConnector(AsyncSensorConnector):
         the wrapping async task"""
 
         LOGGER.info("Closing serial connection")
-        #self.shutting_down = True
-        #self.s.cancel_read()
+
         self._close()
 
     def _close(self):
@@ -77,7 +76,7 @@ class AltArduinoConnector(AsyncSensorConnector):
 
             except (SerialException, IndexError, TypeError):
                 self._close()
-                if self.bus.state == BusState.shutting_down:
+                if self.bus._state == BusState.shutting_down:
                 #if self.shutting_down:
                     LOGGER.info("Serial connection closed.")
                     break
