@@ -25,7 +25,7 @@ class AltArduinoConnector(AsyncSensorConnector):
         self.serial_speed = serial_speed
         self.s = None  # the serial port
         self.trydelay = try_delay
-        #self.shutting_down = False
+        # self.shutting_down = False
 
     def get_version(self):
         if self.s.is_open:
@@ -43,7 +43,7 @@ class AltArduinoConnector(AsyncSensorConnector):
         threaded serial listener effectively stopping
         the wrapping async task"""
 
-        LOGGER.info("Closing serial connection")
+        LOGGER.info("Closing serial connection %s", self.serial_port)
 
         self._close()
 
@@ -69,15 +69,15 @@ class AltArduinoConnector(AsyncSensorConnector):
             try:
                 num = max(1, min(2048, self.s.in_waiting))
                 data = self.s.read(num)
-
                 self.bus.loop.call_soon_threadsafe(
                     self.raw_sensor_data_queue.put_nowait, data
                 )
 
-            except (SerialException, IndexError, TypeError):
+            except (SerialException, IndexError, TypeError) as err:
+                LOGGER.info(err)
                 self._close()
+
                 if self.bus._state == BusState.shutting_down:
-                #if self.shutting_down:
                     LOGGER.info("Serial connection closed.")
                     break
                 else:

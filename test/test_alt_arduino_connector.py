@@ -69,37 +69,38 @@ def test_cancel_read(test_connection):
     async def run():
         vals = bytearray()
         await test_connection.setup("fake_test", test_connection.bus)
-        await asyncio.sleep(1)
+        await asyncio.sleep(3)
         await test_connection.shutdown(test_connection.bus)
+        await asyncio.sleep(10)
 
     loop.run_until_complete(run())
 
 
-# def test_gracefull_shutdown(fake_squid):
-#     test = BaseTest(test_name="test", loop_count=1)
-#
-#
-#     actor = ExampleActor()
-#     test.add_actor(actor)
-#
-#     sensor = fake_squid(serial_port='test')
-#     test.add_sensors(sensor)
-#
-#
-#     def get_sequence(_actors):
-#         _val = (
-#
-#             Atom(
-#                 name='open shade',
-#                 duration=1,
-#                 command=actor.open
-#             ),
-#         )
-#         return _val
-#
-#     test.get_sequence = get_sequence
-#
-#     test.start_test()
+def test_gracefull_shutdown(fake_squid):
+    test = BaseTest(test_name="test", loop_count=1)
+
+
+    actor = ExampleActor()
+    test.add_actor(actor)
+
+    sensor = fake_squid(serial_port='test')
+    test.add_sensors(sensor)
+
+
+    def get_sequence(_actors):
+        _val = (
+
+            Atom(
+                name='open shade',
+                duration=1,
+                command=actor.open
+            ),
+        )
+        return _val
+
+    test.get_sequence = get_sequence
+
+    test.start_test()
 
 
 def test_queue(test_connection):

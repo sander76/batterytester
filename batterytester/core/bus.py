@@ -174,7 +174,6 @@ class Bus:
         LOGGER.info("Finishing ")
         tries = 10
         current_try = 0
-        # todo: throttle this as it may run forever if a task cannot be closed.
 
         all_finished = False
         while not all_finished:
@@ -200,6 +199,8 @@ class Bus:
                     LOGGER.debug("finishing")
                     _task.cancel()
                     all_finished = False
+                    LOGGER.debug("cancel")
 
+            LOGGER.debug("sleeping for 1 second.")
             if not all_finished:
                 await asyncio.sleep(1)

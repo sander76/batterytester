@@ -9,7 +9,7 @@ from batterytester.components.sensor.incoming_parser.squid_parser import (
     DictParser
 )
 from batterytester.components.sensor.sensor import Sensor
-from batterytester.core.bus import Bus
+from batterytester.core.bus import Bus, BusState
 from batterytester.core.helpers.helpers import SquidConnectException
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,11 +59,12 @@ class SquidDetectorSensor(BaseSquidSensor):
 
         async def add_connect_task():
             await asyncio.sleep(5)
-            try:
-                await self._connector.setup(test_name, bus)
-                self._connector.get_version()
-            except SquidConnectException:
-                self._bus.add_async_task(add_connect_task())
+            if not self.bus._state == BusState.shutting_down:
+                try:
+                    await self._connector.setup(test_name, bus)
+                    self._connector.get_version()
+                except SquidConnectException:
+                    self._bus.add_async_task(add_connect_task())
 
         try:
             await super().setup(test_name, bus)
