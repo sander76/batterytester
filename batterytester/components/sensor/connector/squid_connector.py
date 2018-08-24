@@ -48,8 +48,9 @@ class AltArduinoConnector(AsyncSensorConnector):
         self._close()
 
     def _close(self):
-        if self.s and self.s.is_open:
+        if self.s:
             try:
+                LOGGER.debug("Calling close method on serial port")
                 self.s.close()
             except (OSError, SerialException) as err:
                 LOGGER.error(err)
@@ -59,13 +60,15 @@ class AltArduinoConnector(AsyncSensorConnector):
             LOGGER.debug(
                 "Connecting to serial port {}.".format(self.serial_port)
             )
-            self.s = Serial(port=self.serial_port, baudrate=self.serial_speed)
+            self.s = Serial(
+                port=self.serial_port, baudrate=self.serial_speed, timeout=2
+            )
         except SerialException as err:
             LOGGER.error(err)
             raise SquidConnectException(err)
 
     def _listen_for_data(self):
-        while self.bus.running:
+        while not self.bus._state == BusState.shutting_down:
             try:
                 num = max(1, min(2048, self.s.in_waiting))
                 data = self.s.read(num)

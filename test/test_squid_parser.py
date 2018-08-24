@@ -50,6 +50,10 @@ def test_chopper(squid_parser):
     squid_parser.chop(incoming)
     assert squid_parser.sensor_queue.put_nowait.call_count == 2
 
+    incoming = b""
+    squid_parser.chop(incoming)
+    assert squid_parser.sensor_queue.put_nowait.call_count == 2
+
     incoming = b"}"
     squid_parser.chop(incoming)
     squid_parser.sensor_queue.put_nowait.assert_called_with([b"s", b"s", b"s"])
