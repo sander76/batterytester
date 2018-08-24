@@ -35,7 +35,7 @@ class Bus:
         self._exception = None
         self._state = BusState.undefined
 
-    #todo: Can this be removed ?
+    # todo: Can this be removed ?
     @property
     def exception(self):
         return self._exception
@@ -145,7 +145,6 @@ class Bus:
         self._state = BusState.shutting_down
         await asyncio.sleep(1)
 
-
         if self.test_runner_task:
             LOGGER.info("stopping actual test")
             if not self.test_runner_task.done():
@@ -180,16 +179,25 @@ class Bus:
         all_finished = False
         while not all_finished:
             current_try += 1
+            LOGGER.debug("current try %s", current_try)
             if current_try > tries:
+                LOGGER.info(
+                    "Unable to close all tasks gracefully. Just closing now.")
                 # giving up cancelling gracefully
                 break
 
             all_finished = True
+            LOGGER.debug("All running tasks: %s", len(self.tasks))
             for _task in self.tasks:
+                LOGGER.debug(_task)
+
                 if _task.done() or _task.cancelled():
+                    LOGGER.debug("done")
+
                     pass
                     # all_finished = all_finished and True
                 else:
+                    LOGGER.debug("finishing")
                     _task.cancel()
                     all_finished = False
 
