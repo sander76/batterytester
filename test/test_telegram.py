@@ -96,7 +96,7 @@ def test_message_quality():
         for task in bus.tasks:
             await task
         bus.tasks = []
-        await bus.stop_test()
+        await bus.shutdown_test()
 
     bus.loop.run_until_complete(do_test())
     pass

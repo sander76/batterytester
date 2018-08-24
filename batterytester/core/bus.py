@@ -98,15 +98,19 @@ class Bus:
     async def start_main_test(self, test_runner, test_name):
         self._state = BusState.setting_up
 
+        LOGGER.info("Setting up handlers.")
         await asyncio.gather(
             *(_handler.setup(test_name, self) for _handler in
               self._data_handlers))
+        LOGGER.info("Setting up actors.")
         await asyncio.gather(
             *(_actor.setup(test_name, self) for _actor in self.actors.values())
         )
+        LOGGER.info("Setting up sensors.")
         await asyncio.gather(
             *(_sensor.setup(test_name, self) for _sensor in self.sensors)
         )
+        LOGGER.info("Starting test runner.")
         if self._state == BusState.setting_up:
             self._state = BusState.running
             self.test_runner_task = asyncio.ensure_future(test_runner)
@@ -131,37 +135,44 @@ class Bus:
             LOGGER.exception(err)
             self.notify(subj.TEST_FATAL, FatalData(err))
         finally:
-            self.loop.run_until_complete(self.stop_test())
+            self.loop.run_until_complete(self.shutdown_test())
 
         return self.exit_message
 
-    async def stop_test(self, message=None):
+    async def shutdown_test(self, message=None):
         # wait a little to have all tasks finish gracefully.
         LOGGER.info("stopping test")
         self._state = BusState.shutting_down
         await asyncio.sleep(1)
 
+
         if self.test_runner_task:
+            LOGGER.info("stopping actual test")
             if not self.test_runner_task.done():
                 self.test_runner_task.cancel()
 
+        LOGGER.info("Shutting down data handlers")
         await asyncio.gather(
             *(_handler.shutdown(self) for _handler in
               self._data_handlers))
+        LOGGER.info("Shutting down actors")
         await asyncio.gather(
             *(_actor.shutdown(self) for _actor in self.actors.values())
         )
+        LOGGER.info("Shutting down sensors")
         await asyncio.gather(
             *(_sensor.shutdown(self) for _sensor in self.sensors)
         )
 
         self.running = False
 
+        LOGGER.info("Closing all other tasks.")
         await self._finish_all_tasks()
-
+        LOGGER.info("Clossing http session.")
         await self.session.close()
 
     async def _finish_all_tasks(self):
+        LOGGER.info("Finishing ")
         tries = 10
         current_try = 0
         # todo: throttle this as it may run forever if a task cannot be closed.

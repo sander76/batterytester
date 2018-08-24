@@ -25,7 +25,11 @@ def catch_exceptions(func):
         except PvApiError as err:
             _fatal = kwargs.get("fatal")
             if _fatal is None or _fatal is True:
-                raise FatalTestFailException(err)
+                raise FatalTestFailException(
+                    "problem excuting command: {} {}".format(
+                        func.__name__, err
+                    )
+                )
             raise NonFatalTestFailException(err)
 
     return wrapper
@@ -64,8 +68,6 @@ class PowerViewActor(BaseActor):
         self._shades_entry_point = Shades(self.request)
         self._scene_members_entry_point = SceneMembers(self.request)
 
-
-
     @catch_exceptions
     async def get_scene(self, scene_id) -> Scene:
         """Get a scene resource instance."""
@@ -84,7 +86,8 @@ class PowerViewActor(BaseActor):
     @catch_exceptions
     async def move_to(self, position):
         await self.shade._move(
-            self.shade._create_shade_data(position_data=position))
+            self.shade._create_shade_data(position_data=position)
+        )
 
     @catch_exceptions
     async def open_shade(self):
@@ -121,9 +124,7 @@ class PowerViewActor(BaseActor):
         :raises PvApiError when something is wrong with the hub.
         """
 
-        _raw = await self._scenes_entry_point.create_scene(
-            room_id, scene_name
-        )
+        _raw = await self._scenes_entry_point.create_scene(room_id, scene_name)
         result = Scene(_raw, self.request)
         self.scenes.append(result)
         return result
@@ -157,4 +158,3 @@ class PowerViewActor(BaseActor):
         await self._scene_members_entry_point.delete_shade_from_scene(
             shade_id, scene_id
         )
-
