@@ -59,12 +59,11 @@ class SquidDetectorSensor(BaseSquidSensor):
 
         async def add_connect_task():
             await asyncio.sleep(5)
-            if not self.bus._state == BusState.shutting_down:
-                try:
-                    await self._connector.setup(test_name, bus)
-                    self._connector.get_version()
-                except SquidConnectException:
-                    self._bus.add_async_task(add_connect_task())
+            try:
+                await self._connector.setup(test_name, bus)
+                self._connector.get_version()
+            except SquidConnectException:
+                self._bus.add_async_task(add_connect_task())
 
         try:
             await super().setup(test_name, bus)

@@ -60,6 +60,8 @@ class AltArduinoConnector(AsyncSensorConnector):
             LOGGER.debug(
                 "Connecting to serial port {}.".format(self.serial_port)
             )
+            # timeout is required as on linux serial.read(1) keeps blocking
+            # even when serial port is closed.
             self.s = Serial(
                 port=self.serial_port, baudrate=self.serial_speed, timeout=2
             )
