@@ -79,7 +79,6 @@ def test_cancel_read(test_connection):
 def test_gracefull_shutdown(fake_squid):
     test = BaseTest(test_name="test", loop_count=1)
 
-
     actor = ExampleActor()
     test.add_actor(actor)
 

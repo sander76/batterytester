@@ -9,7 +9,7 @@ LOOP_TIME_OUT = 2
 
 _LOGGER = logging.getLogger(__name__)
 
-TIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
+TIME_FORMAT = "%Y-%m-%d_%H-%M-%S"
 
 
 def get_current_time():
@@ -40,8 +40,10 @@ class NonFatalTestFailException(Exception):
 class FatalTestFailException(Exception):
     pass
 
+
 class SquidConnectException(FatalTestFailException):
     pass
+
 
 class AtomExecuteError(Exception):
     pass
@@ -59,7 +61,7 @@ def check_output_location(test_location):
             print(test_location)
             print("IF PROCEED ALL CONTAINING DATA WILL BE ERASED.")
             proceed = input("PROCEED ? [y/n] >")
-            if proceed == 'y':
+            if proceed == "y":
                 # clear all files in folder.
                 for _fl in files:
                     os.remove(os.path.join(test_location, _fl))
@@ -78,7 +80,7 @@ def load_config_file(config_file: str) -> dict:
     :return: a dict.
     """
 
-    with open(config_file, 'r') as fl:
+    with open(config_file, "r") as fl:
         dct = json.load(fl)
     return dct
 
