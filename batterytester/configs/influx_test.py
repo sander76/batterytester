@@ -12,10 +12,10 @@ from batterytester.core.helpers.helpers import set_test_config
 
 set_test_config("../dev_config.json")
 
-test = BaseTest(test_name='new influx test', loop_count=20)
+test = BaseTest(test_name='new influx test', loop_count=5)
 
 test.add_sensors(
-
+    VoltsAmpsSensor(serial_port="COM4")
 )
 
 test.add_actor(
@@ -23,7 +23,6 @@ test.add_actor(
 )
 
 test.add_data_handlers(
-
     datahandlers.Influx(host='172.22.3.21', database='menc'),
     #datahandlers.ConsoleDataHandler()
 )
@@ -36,12 +35,12 @@ def get_sequence(actors):
         atoms.Atom(
             name='open',
             command=example.open,
-            duration=1
+            duration=2
         ),
         atoms.Atom(
             name='activate 2',
             command=example.close,
-            duration=1
+            duration=2
         )
     )
     return _val

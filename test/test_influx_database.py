@@ -11,7 +11,7 @@ from batterytester.components.datahandlers.influx import (
     line_protocol_fields,
     nesting,
     get_annotation_tags,
-)
+    KEY_ATOM_NAME)
 from batterytester.components.sensor.incoming_parser import get_measurement
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers.constants import (
@@ -49,7 +49,7 @@ def fake_tag():
 
 @pytest.fixture
 def fake_atom_data():
-    atom = AtomData("atom1", 0, 0, 5)
+    atom = AtomData("atom 1", 0, 0, 5)
     atom.started = Data(value=12345678)
     return atom
 
@@ -125,9 +125,10 @@ def test_atom_warmup(fake_influx: Influx, fake_atom_data: AtomData):
     _data = fake_influx.data[0]
     assert _data._measurement == "fake-test"
     assert _data._tags is None
-    assert _data._fields["title"] == "atom warmup"
-    assert _data._fields["text"] == fake_atom_data.atom_name.value
+    assert _data._fields["title"] == "atom_warmup"
+    assert _data._fields["text"] == "atom-1"
     assert _data._fields["tags"] == "loop 0,index 0"
+    assert fake_influx._tags[KEY_ATOM_NAME] == "atom-1"
 
 
 def test_prepare_data(fake_influx: Influx, fake_atom_data):
@@ -236,6 +237,7 @@ def test_subscriptions():
     subs = [sub for sub in inf.get_subscriptions()]
     assert len(subs) == 1
     assert subs[0][0] == subj.ACTOR_RESPONSE_RECEIVED
+
 
 
 # todo: test when connection with database server is lost.

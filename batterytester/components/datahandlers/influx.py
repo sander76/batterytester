@@ -135,6 +135,9 @@ def get_annotation_tags(data: dict):
     )
 
 
+KEY_ATOM_NAME = "atom_name"
+
+
 class Influx(BaseDataHandler):
     """Writes data to an InfluxDB database."""
 
@@ -192,7 +195,7 @@ class Influx(BaseDataHandler):
         _annotation_tags = get_annotation_tags(data.response.value)
 
         try:
-            _text = self._tags["atom_name"]
+            _text = self._tags[KEY_ATOM_NAME]
         except KeyError:
             _text = "unkown"
 
@@ -212,7 +215,7 @@ class Influx(BaseDataHandler):
 
         self._tags["loop"] = data.loop.value
         self._tags["idx"] = data.idx.value
-        self._tags["atom_name"] = data.atom_name.value
+        self._tags[KEY_ATOM_NAME] = slugify(data.atom_name.value)
 
         annotation_tags = "loop {},index {}".format(
             data.loop.value, data.idx.value
@@ -221,8 +224,8 @@ class Influx(BaseDataHandler):
             self.measurement,
             data.started.value,
             fields={
-                "title": "atom warmup",
-                "text": "{}".format(data.atom_name.value),
+                "title": "atom_warmup",
+                "text": self._tags[KEY_ATOM_NAME],
                 "tags": annotation_tags,
             },
         )
@@ -272,11 +275,12 @@ class Influx(BaseDataHandler):
     async def _send(self, data):
         resp = None
         try:
-            LOGGER.debug("Flushing")
             with async_timeout.timeout(10, loop=self.bus.loop):
-                LOGGER.debug("Writing data to database")
+                LOGGER.debug("Flushing to database %s", data)
                 resp = await self.bus.session.post(self.url, data=data)
             if resp.status not in [204, 200]:
+                js = await resp.json()
+                LOGGER.error(js)
                 raise FatalTestFailException(
                     "Wrong influx response code {}".format(resp.status)
                 )
