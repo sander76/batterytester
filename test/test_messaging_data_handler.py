@@ -1,7 +1,7 @@
 from typing import Tuple, List
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.components.datahandlers import Messaging
+from batterytester.components.datahandlers.messaging import Messaging
 
 
 def test_subscriptions():

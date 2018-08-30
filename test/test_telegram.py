@@ -4,8 +4,11 @@ from unittest.mock import Mock
 import pytest
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.components.datahandlers import Telegram
-from batterytester.components.datahandlers.telegram import clean_for_markdown
+
+from batterytester.components.datahandlers.telegram import (
+    clean_for_markdown,
+    Telegram,
+)
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.message_data import (
     ActorResponse,
@@ -38,14 +41,18 @@ def fatal_data(fake_time_stamp):
 
 
 def test_telegram_response_received(tg, response):
-    _message = "*None*\n\n```\nt est: 123\ntest1: 456\n```\n\n22:33:09, Nov 29, 1973 "
+    _message = (
+        "*None*\n\n```\nt est: 123\ntest1: 456\n```\n\n22:33:09, Nov 29, 1973 "
+    )
     tg._actor_response_received("nosubj", response)
 
     tg._send_message.assert_called_once_with(_message)
 
 
 def test_telegram_test_fata(tg, fatal_data):
-    _message = "*None*\n\n```\nfatal reason unknown.\n```\n\n22:33:09, Nov 29, 1973 "
+    _message = (
+        "*None*\n\n```\nfatal reason unknown.\n```\n\n22:33:09, Nov 29, 1973 "
+    )
     tg._test_fatal("nosubj", fatal_data)
     tg._send_message.assert_called_once_with(_message)
 

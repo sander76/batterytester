@@ -2,16 +2,17 @@ from collections import OrderedDict
 from unittest.mock import Mock
 
 import pytest
+from slugify import slugify
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.components.datahandlers import Influx
+
 from batterytester.components.datahandlers.influx import (
     get_time_stamp,
     InfluxLineProtocol,
     line_protocol_fields,
     nesting,
     get_annotation_tags,
-    KEY_ATOM_NAME)
+    KEY_ATOM_NAME, Influx)
 from batterytester.components.sensor.incoming_parser import get_measurement
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers.constants import (
@@ -151,7 +152,7 @@ def test_handle_sensor(fake_influx: Influx, fake_measurement1, fake_atom_data):
     fake_influx._handle_sensor("no subj", fake_measurement1)
     assert len(fake_influx.data) == 3
     _data = fake_influx.data[-1]
-    assert _data._tags == {"atom_name":fake_atom_data.atom_name.value, "loop": 0, "idx": 0}
+    assert _data._tags == {"atom_name": slugify(fake_atom_data.atom_name.value), "loop": 0, "idx": 0}
 
 
 def test_flush(fake_influx_nobus: Influx, fake_measurement1):

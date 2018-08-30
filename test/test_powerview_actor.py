@@ -4,25 +4,32 @@ from unittest.mock import Mock
 import pytest
 from aiopvapi.helpers.aiorequest import PvApiError
 
-from batterytester.components.actors import PowerViewActor
-from batterytester.core.helpers.helpers import FatalTestFailException, \
-    NonFatalTestFailException
+from batterytester.components.actors.power_view_actor import PowerViewActor
+from batterytester.core.helpers.helpers import (
+    FatalTestFailException,
+    NonFatalTestFailException,
+)
 
-#todo: finish this testing
+# todo: finish this testing
+
 
 async def raiser(*args, **kwargs):
     raise PvApiError("test error")
 
-async def mocker(*args,**kwargs):
-    return Mock(*args,**kwargs)
+
+async def mocker(*args, **kwargs):
+    return Mock(*args, **kwargs)
+
 
 @pytest.fixture
 def test_actor(monkeypatch):
-    actor = PowerViewActor(hub_ip='no_ip')
+    actor = PowerViewActor(hub_ip="no_ip")
     monkeypatch.setattr(
-        "batterytester.components.actors.power_view_actor.Scenes", Mock)
+        "batterytester.components.actors.power_view_actor.Scenes", Mock
+    )
     monkeypatch.setattr(
-        "batterytester.components.actors.power_view_actor.Rooms", Mock)
+        "batterytester.components.actors.power_view_actor.Rooms", Mock
+    )
     loop = asyncio.get_event_loop()
     loop.run_until_complete(actor.setup("fake", Mock()))
     return actor
@@ -38,8 +45,10 @@ def test_get_room(test_actor):
     with pytest.raises(NonFatalTestFailException):
         loop.run_until_complete(test_actor.get_room(123, fatal=False))
 
+
 def test_get_room_1(test_actor):
     pass
+
 
 # from unittest.mock import Mock
 #

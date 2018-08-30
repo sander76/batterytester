@@ -4,11 +4,12 @@ from shutil import rmtree
 import pytest
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.components.datahandlers import Report
+
 from batterytester.components.datahandlers.base_data_handler import (
     check_output_folder,
     create_report_file,
 )
+from batterytester.components.datahandlers.report import Report
 
 TEST_FOLDER = "testfolder"
 

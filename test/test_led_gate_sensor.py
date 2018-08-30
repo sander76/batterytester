@@ -1,9 +1,10 @@
 import asyncio
 from unittest.mock import Mock
 
-from batterytester.components.sensor import LedGateSensor
+
 from batterytester.components.sensor.incoming_parser.boolean_parser import \
     BooleanParser
+from batterytester.components.sensor.led_gate_sensor import LedGateSensor
 
 
 def test_setup(monkeypatch):

@@ -3,7 +3,7 @@ import asyncio
 import pytest
 import serial
 
-from batterytester.components.actors import ExampleActor
+from batterytester.components.actors.example_actor import ExampleActor
 from batterytester.components.sensor.connector.squid_connector import \
     AltArduinoConnector
 from batterytester.components.sensor.incoming_parser.squid_parser import \
