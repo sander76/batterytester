@@ -1,10 +1,12 @@
-from batterytester.components.actors import ExampleActor, \
-    PowerViewVersionChecker
-from batterytester.components.actors import PowerViewActor
-from batterytester.components.actors import RelayActor
+
 from batterytester.components.actors.base_actor import ACTOR_TYPE_RELAY_ACTOR, \
     ACTOR_TYPE_POWER_VIEW, ACTOR_TYPE_EXAMPLE, \
     ACTOR_TYPE_POWERVIEW_VERSION_CHECKER
+from batterytester.components.actors.example_actor import ExampleActor
+from batterytester.components.actors.power_view_actor import PowerViewActor
+from batterytester.components.actors.powerview_version_checker import \
+    PowerViewVersionChecker
+from batterytester.components.actors.relay_actor import RelayActor
 from batterytester.core.helpers.helpers import TestSetupException
 
 

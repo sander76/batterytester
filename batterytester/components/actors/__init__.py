@@ -3,7 +3,7 @@ and activates any device connected to it.
 Devices can be hubs, serial ports, sockets etc.
 """
 
-from batterytester.components.actors.example_actor import ExampleActor
-from batterytester.components.actors.power_view_actor import PowerViewActor
-from batterytester.components.actors.relay_actor import RelayActor
-from batterytester.components.actors.powerview_version_checker import PowerViewVersionChecker
+# from batterytester.components.actors.example_actor import ExampleActor
+# from batterytester.components.actors.power_view_actor import PowerViewActor
+# from batterytester.components.actors.relay_actor import RelayActor
+# from batterytester.components.actors.powerview_version_checker import PowerViewVersionChecker
