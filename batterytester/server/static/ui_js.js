@@ -56,6 +56,23 @@ let connectStatusConnected = 'connected'
 let statusTestRunning = 'running'
 let statusTestStopped = 'finished'
 
+const subjTestFatal = 'test_fatal'
+const subjTestFinished = 'test_finished'
+const subjTestWarmup = 'test_warmup'
+
+var favIcon = document.getElementById('favicon')
+
+const favError = 'icons/alert-circle.png'
+const favRunning = 'icons/rocket.png'
+const favFinished = 'icons/thumb-up.png'
+const favDisconnected = 'icons/power-plug-off.png'
+var currentFavicon = favFinished
+
+function changeFav(fav) {
+    favIcon.href = fav
+    currentFavicon = fav
+}
+
 function openSocket(url) {
     ws = new WebSocket(url) /* globals WebSocket:true */
     ws.onopen = function (event) {
@@ -106,6 +123,10 @@ function setConnectionStatus(statusKey) {
         case connectStatusConnected:
             connectionStatus.innerHTML = 'CONNECTED'
             connectionStatus.setAttribute('class', 'bg-success')
+            if (currentFavicon === favDisconnected) {
+                changeFav(favFinished)
+            }
+            // favIcon.href = favFinished
             break
         case connectStatusConnecting:
             connectionStatus.innerHTML = 'CONNECTING'
@@ -114,6 +135,7 @@ function setConnectionStatus(statusKey) {
         case connectStatusDisconnected:
             connectionStatus.innerHTML = 'DISCONNECTED'
             connectionStatus.setAttribute('class', 'bg-error')
+            changeFav(favDisconnected)
             break
     }
 }
@@ -323,8 +345,15 @@ function parseValueType(value) {
     return _val
 }
 
+function changeTitle(title) {
+    document.title = title
+}
+
 function parseTestInfo(data) {
     function parser(key, value, _node) {
+        if (key === 'test_name') {
+            changeTitle(value.v)
+        }
         if (key === 'status') {
             if (value.v === statusTestRunning) {
                 replaceClass(_node, ['bg-error'], 'bg-success')
@@ -390,15 +419,18 @@ function parseSensor(data) {
         parseSensorData(data)
     } else if (subj === 'atom_warmup') {
         parseAtomInfo(data)
-    } else if (subj === 'test_warmup') {
+    } else if (subj === subjTestWarmup) {
+        changeFav(favRunning)
         parseTestInfo(data)
     } else if (subj === 'atom_status') {
         parseAtomInfo(data)
     } else if (subj === 'result_summary') {
         parseSummaryInfo(data)
-    } else if (subj === 'test_finished') {
+    } else if (subj === subjTestFinished) {
+        changeFav(favFinished)
         parseTestInfo(data)
-    } else if (subj === 'test_fatal') {
+    } else if (subj === subjTestFatal) {
+        changeFav(favError)
         parseTestInfo(data)
     } else if (subj === 'process_info') {
         parseProcessInfo(data)
