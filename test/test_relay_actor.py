@@ -37,7 +37,7 @@ def test_instantiate(monkeypatch, fake_relay_actor):
 
     loop.run_until_complete(activate())
     fake_relay_actor._serial.write.assert_called_once_with(
-        '{a:2:1}\n'.encode('utf-8'))
+        '{a:02:01}\n'.encode('utf-8'))
 
 
 def test_to_protocol():

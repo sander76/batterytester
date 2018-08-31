@@ -7,13 +7,16 @@ Activate pin2 for 33 seconds.
 
 from serial import Serial
 
-from batterytester.components.actors.base_actor import BaseActor, \
-    ACTOR_TYPE_RELAY_ACTOR
+from batterytester.components.actors.base_actor import (
+    BaseActor,
+    ACTOR_TYPE_RELAY_ACTOR,
+)
 from batterytester.core.bus import Bus
+from batterytester.core.helpers.helpers import FatalTestFailException
 
 
 def to_protocol(command, *args):
-    return '{{{}:{}}}\n'.format(command, ':'.join(str(x) for x in args))
+    return "{{{}:{}}}\n".format(command, ":".join(str(x) for x in args))
 
 
 class RelayActor(BaseActor):
@@ -44,6 +47,13 @@ class RelayActor(BaseActor):
         :param duration: in seconds.
         :return:
         """
+        if duration > 99:
+            raise FatalTestFailException(
+                "Relay duration cannot be larger than 99 seconds."
+            )
 
-        _up = to_protocol('a', pin, duration)
-        self._serial.write(_up.encode('utf-8'))
+        pin = "{:02d}".format(pin)
+
+        duration = "{:02d}".format(duration)
+        _up = to_protocol("a", pin, duration)
+        self._serial.write(_up.encode("utf-8"))
