@@ -14,36 +14,44 @@ from aiohttp import web, WSCloseCode
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.helpers.constants import KEY_SUBJECT
-from batterytester.core.helpers.message_data import to_serializable, \
-    Data, ProcessData, STATUS_FINISHED, STATUS_RUNNING, STATUS_STARTING
-from batterytester.core.helpers.message_subjects import PROCESS_STARTED, \
-    PROCESS_INFO
+from batterytester.core.helpers.message_data import (
+    to_serializable,
+    Data,
+    ProcessData,
+    STATUS_FINISHED,
+    STATUS_RUNNING,
+    STATUS_STARTING,
+)
+from batterytester.core.helpers.message_subjects import (
+    PROCESS_STARTED,
+    PROCESS_INFO,
+)
 
-ATTR_MESSAGE_BUS_ADDRESS = '0.0.0.0'
+ATTR_MESSAGE_BUS_ADDRESS = "0.0.0.0"
 ATTR_MESSAGE_BUS_PORT = 8567
 
-URL_CLOSE = 'close'
-MSG_TYPE_ATOM = 'atom'  # General info about the current atom.
-MSG_TYPE_TEST = 'test'  # General test information.
-MSG_TYPE_STOP_TEST = 'stop_test'
-MSG_TYPE_ALL_TESTS = 'all_tests'
+URL_CLOSE = "close"
+MSG_TYPE_ATOM = "atom"  # General info about the current atom.
+MSG_TYPE_TEST = "test"  # General test information.
+MSG_TYPE_STOP_TEST = "stop_test"
+MSG_TYPE_ALL_TESTS = "all_tests"
 
-CACHE_TEST_DATA = 'test_data'  # Cache key where to store test info.
+CACHE_TEST_DATA = "test_data"  # Cache key where to store test info.
 
 LOGGER = logging.getLogger(__name__)
 
-KEY_PASS = 'passed'
-KEY_FAIL = 'failed'
-ATTR_FAILED_IDS = 'failed_ids'
+KEY_PASS = "passed"
+KEY_FAIL = "failed"
+ATTR_FAILED_IDS = "failed_ids"
 
-URL_INTERFACE = '/ws'
-URL_TEST = '/ws/tester'
-URL_TEST_STOP = '/test_stop'
-URL_TEST_START = '/test_start'
-URL_ALL_TESTS = '/all_tests'
+URL_INTERFACE = "/ws"
+URL_TEST = "/ws/tester"
+URL_TEST_STOP = "/test_stop"
+URL_TEST_START = "/test_start"
+URL_ALL_TESTS = "/all_tests"
 
-DEFAULT_CONFIG_PATH = '/home/pi/test_configs'
-DEFAULT_LOGGING_PATH = '/home/pi/test_configs/logs'
+DEFAULT_CONFIG_PATH = "/home/pi/test_configs"
+DEFAULT_LOGGING_PATH = "/home/pi/test_configs/logs"
 
 
 def set_current_working_folder():
@@ -78,17 +86,19 @@ class Server:
 
     def _add_routes(self):
         # User interface(s) connects here.
-        self.app.router.add_get(URL_INTERFACE,
-                                self.client_ws_connection_handler)
+        self.app.router.add_get(
+            URL_INTERFACE, self.client_ws_connection_handler
+        )
         # Test connects here.
         self.app.router.add_get(URL_TEST, self.test_connection_handler)
-        self.app.router.add_static('/static/', path='static', name='static')
+        self.app.router.add_static("/static/", path="static", name="static")
         self.app.router.add_post(URL_TEST_START, self.test_start_handler)
         self.app.router.add_post(URL_TEST_STOP, self.stop_test_handler)
-        self.app.router.add_get('/get_status', self.get_status_handler)
-        self.app.router.add_get('/get_tests', self.get_tests_handler)
-        self.app.router.add_post('/system_shutdown',
-                                 self.system_shutdown_handler)
+        self.app.router.add_get("/get_status", self.get_status_handler)
+        self.app.router.add_get("/get_tests", self.get_tests_handler)
+        self.app.router.add_post(
+            "/system_shutdown", self.system_shutdown_handler
+        )
 
     def start_server(self):
         """Create a web server"""
@@ -101,8 +111,7 @@ class Server:
         data = {"data": [], KEY_SUBJECT: MSG_TYPE_ALL_TESTS}
         if self.config_folder:
             p = Path(self.config_folder)
-            data['data'] = [pth.name for pth in
-                            p.glob('*.py')]
+            data["data"] = [pth.name for pth in p.glob("*.py")]
         return data
 
     async def get_tests_handler(self, request):
@@ -112,16 +121,17 @@ class Server:
         os.system("sudo shutdown now -h")
 
     async def test_start_handler(self, request):
-        LOGGER.debug('Start test handler')
+        LOGGER.debug("Start test handler")
         data = await request.json()
-        p = str(Path(self.config_folder).joinpath(data['test']))
+        p = str(Path(self.config_folder).joinpath(data["test"]))
 
         if self.test_is_running:
             return web.Response(
-                text="There is another test running. Stop that one first.")
+                text="There is another test running. Stop that one first."
+            )
         else:
             await self._start_test_process(p)
-            self.process_data.process_name = data['test']
+            self.process_data.process_name = data["test"]
             await self.ws_send_to_clients(self.process_data.to_json())
         return web.Response()
 
@@ -132,10 +142,12 @@ class Server:
         await self.ws_send_to_clients(self.process_data.to_json())
 
         self.test_process = await asyncio.create_subprocess_exec(
-            sys.executable, p,
+            sys.executable,
+            p,
             stdout=asyncio.subprocess.PIPE,
             stdin=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT, loop=self.loop
+            stderr=asyncio.subprocess.STDOUT,
+            loop=self.loop,
         )
         self.process_data.status = STATUS_RUNNING
         self.process_data.subj = PROCESS_INFO
@@ -147,18 +159,16 @@ class Server:
         try:
             while not self.test_process.stdout.at_eof():
                 line = await self.test_process.stdout.readline()
-                self.process_data.add_message(line.decode('utf-8'))
+                self.process_data.add_message(line.decode("utf-8"))
                 await self.ws_send_to_clients(self.process_data.to_json())
             code = await self.test_process.wait()
 
-            LOGGER.debug('exit code: {}'.format(code))
+            LOGGER.debug("exit code: {}".format(code))
 
             self.process_data.return_code = int(code)
             self.process_data.status = STATUS_FINISHED
             try:
-                await self.ws_send_to_clients(
-                    self.process_data.to_json()
-                )
+                await self.ws_send_to_clients(self.process_data.to_json())
             except Exception as err:
                 LOGGER.exception(err)
 
@@ -173,7 +183,7 @@ class Server:
         return web.json_response({"running": False})
 
     async def get_status_handler(self, request):
-        self.test_cache['process_info'] = self.process_data.to_dict()
+        self.test_cache["process_info"] = self.process_data.to_dict()
         LOGGER.info("test cache: %s", self.test_cache)
 
         return web.json_response(self.test_cache)
@@ -185,12 +195,13 @@ class Server:
                 try:
                     with async_timeout.timeout(5):
                         await self.test_ws.send_str(
-                            json.dumps({'type': MSG_TYPE_STOP_TEST}))
+                            json.dumps({"type": MSG_TYPE_STOP_TEST})
+                        )
                 except asyncio.TimeoutError:
                     LOGGER.warning("Graceful shutdown failed.")
 
                     # todo: this code
-                    self.close_tester_connection()
+                    await self.close_tester_connection()
 
                     await self.stop_test()
             else:
@@ -206,14 +217,16 @@ class Server:
             except asyncio.TimeoutError:
                 LOGGER.warning(
                     "unable to close the tester websocket connection"
-                    "gracefully")
+                    "gracefully"
+                )
             finally:
                 self.test_ws = None
         _data = self.test_cache.get(subj.TEST_WARMUP)
         if _data:
-            _data['status'] = Data('tester disconnected')
+            _data["status"] = Data("tester disconnected")
             await self.ws_send_to_clients(
-                json.dumps(_data, default=to_serializable))
+                json.dumps(_data, default=to_serializable)
+            )
 
     async def test_connection_handler(self, request):
         """Handle incoming data from the running test."""
@@ -225,9 +238,11 @@ class Server:
                     LOGGER.debug(msg.data)
                     _data = json.loads(msg.data)
                     await self._parse_incoming_test_data(_data, msg.data)
-                elif msg.type in (aiohttp.WSMsgType.CLOSE,
-                                  aiohttp.WSMsgType.CLOSING,
-                                  aiohttp.WSMsgType.CLOSED):
+                elif msg.type in (
+                    aiohttp.WSMsgType.CLOSE,
+                    aiohttp.WSMsgType.CLOSING,
+                    aiohttp.WSMsgType.CLOSED,
+                ):
                     await self.close_tester_connection()
         except Exception as err:
             LOGGER.error(err)
@@ -242,8 +257,9 @@ class Server:
         await ws.prepare(request)
 
         self.client_sockets.append(ws)
-        LOGGER.debug("Websocket clients connected: %s",
-                     len(self.client_sockets))
+        LOGGER.debug(
+            "Websocket clients connected: %s", len(self.client_sockets)
+        )
         try:
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
@@ -275,18 +291,22 @@ class Server:
             _subj = data[KEY_SUBJECT]
 
         except KeyError:
-            LOGGER.error('{} has no subj defined.')
+            LOGGER.error("{} has no subj defined.")
         else:
-            if (_subj == subj.TEST_FINISHED or
-                    _subj == subj.TEST_FATAL or
-                    _subj == subj.TEST_WARMUP or
-                    _subj == subj.TEST_RESULT):
+            if (
+                _subj == subj.TEST_FINISHED
+                or _subj == subj.TEST_FATAL
+                or _subj == subj.TEST_WARMUP
+                or _subj == subj.TEST_RESULT
+            ):
 
                 self._update_test_cache(data, subj.TEST_WARMUP)
-            elif (_subj == subj.ATOM_WARMUP or
-                  _subj == subj.ATOM_STATUS or
-                  _subj == subj.ATOM_RESULT or
-                  _subj == subj.ATOM_FINISHED):
+            elif (
+                _subj == subj.ATOM_WARMUP
+                or _subj == subj.ATOM_STATUS
+                or _subj == subj.ATOM_RESULT
+                or _subj == subj.ATOM_FINISHED
+            ):
 
                 self._update_test_cache(data, subj.ATOM_WARMUP)
             elif _subj == subj.RESULT_SUMMARY:
@@ -318,8 +338,9 @@ class Server:
 
     async def shutdown(self):
         for ws in self.client_sockets:
-            await ws.close(code=WSCloseCode.GOING_AWAY,
-                           message='server shutdown')
+            await ws.close(
+                code=WSCloseCode.GOING_AWAY, message="server shutdown"
+            )
 
     async def start(self):
         """Initialize this data handler"""
@@ -330,7 +351,8 @@ class Server:
         self.server = web.TCPSite(
             self.runner,
             host=ATTR_MESSAGE_BUS_ADDRESS,
-            port=ATTR_MESSAGE_BUS_PORT)
+            port=ATTR_MESSAGE_BUS_PORT,
+        )
         await self.server.start()
 
     async def stop_data_handler(self):
@@ -339,7 +361,7 @@ class Server:
 
 
 def get_loop():
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
     else:
@@ -348,25 +370,22 @@ def get_loop():
 
 
 def load_config(config_file: str) -> dict:
-    with open(config_file, 'r') as fl:
+    with open(config_file, "r") as fl:
         dct = json.load(fl)
     return dct
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--config_file', default='../dev_config.json')
+    parser.add_argument("--config_file", default="../dev_config.json")
     args = parser.parse_args()
     _config = load_config(args.config_file)
 
     logging.config.dictConfig(_config["server_logging"])
 
-
     loop = get_loop()
 
-    server = Server(
-        config_folder=_config["test_configs"],
-        loop_=loop)
+    server = Server(config_folder=_config["test_configs"], loop_=loop)
     server.start_server()
     try:
         loop.run_forever()

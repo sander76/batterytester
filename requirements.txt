@@ -8,3 +8,4 @@ wheel
 telepot
 async_timeout
 python-slugify
+aiotg

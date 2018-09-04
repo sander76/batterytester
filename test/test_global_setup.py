@@ -3,8 +3,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from batterytester.components.sensor.fake_led_gate_sensor import \
+    FakeLedGateSensor
+from batterytester.components.sensor.fake_volts_amps_sensor import \
+    FakeVoltsAmpsSensor
 from batterytester.core.atom.atom import Atom
 from batterytester.core.atom.reference_atom import ReferenceAtom
+from batterytester.core.base_test import BaseTest
 from test.fake_components import FakeActor, FakeBaseTest, FakeVoltsAmpsSensor, \
     FakeLedGateSensor
 
@@ -125,7 +130,7 @@ def test_setup1(fake_tester_1):
     _fake_actor = fake_tester_1.bus.actors[FakeActor.actor_type]
 
     assert len(_fake_actor.open_mock.mock_calls) == 1
-    #_fake_actor.open_mock.assert_called_once()
+    # _fake_actor.open_mock.assert_called_once()
     _fake_actor.close_mock.assert_called_once_with(arg1=1)
 
 
@@ -153,8 +158,7 @@ def test_mix_atoms(fake_tester_4):
     assert _fake_actor.close_mock.call_count == 1
 
     _reference_atom = fake_tester_4._test_sequence[1]
-    assert len(_reference_atom.reference_compare.mock_calls) ==1
-
+    assert len(_reference_atom.reference_compare.mock_calls) == 1
 
 
 # def test_influx(fake_test: FakeBaseTest, fake_actor, fake_sensor, fake_influx):
@@ -183,3 +187,25 @@ def test_fake_ledgate_reference(fake_test: FakeBaseTest, fake_actor):
 #     fake_test.start_test()
 #
 #     assert True
+
+def test_data_handlers(fake_influx):
+    """Test all datahandlers."""
+
+    test = BaseTest(test_name="fake_test", loop_count=2)
+    test.add_data_handlers(
+        fake_influx
+    )
+
+    test.add_sensors(
+        FakeLedGateSensor(),
+        FakeVoltsAmpsSensor()
+    )
+
+    test.add_actor(
+        FakeActor()
+    )
+
+    test.get_sequence = get_sequence2
+
+    test.start_test()
+    print("stop")

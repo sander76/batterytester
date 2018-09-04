@@ -5,7 +5,6 @@ import async_timeout
 from aiohttp.client_exceptions import ClientError
 from slugify import slugify
 
-import batterytester.core.helpers.message_subjects as subj
 from batterytester.components.datahandlers.base_data_handler import (
     BaseDataHandler
 )
@@ -17,11 +16,7 @@ from batterytester.core.helpers.constants import (
     ATTR_SENSOR_NAME,
 )
 from batterytester.core.helpers.helpers import FatalTestFailException
-from batterytester.core.helpers.message_data import (
-    AtomData,
-    TestData,
-    ActorResponse,
-)
+from batterytester.core.helpers.message_data import AtomData, ActorResponse
 
 LOGGER = logging.getLogger(__name__)
 
@@ -155,7 +150,8 @@ class Influx(BaseDataHandler):
         :param buffer_size: buffer length before call to influx api is made.
         :param subscription_filters: Filter subject subscriptions.
 
-        For example: influx = Influx(subscription_filters=subj.ACTOR_RESPONSE_RECEIVED)
+        For example:
+            influx = Influx(subscription_filters=subj.ACTOR_RESPONSE_RECEIVED)
         """
         super().__init__(subscription_filters)
         self.host = host
@@ -166,12 +162,12 @@ class Influx(BaseDataHandler):
         self.buffer_size = buffer_size
         self._tags = {}
 
-        self.subscriptions = (
-            (subj.ATOM_WARMUP, self._atom_warmup_event),
-            (subj.TEST_WARMUP, self._test_warmup_event),
-            (subj.SENSOR_DATA, self._handle_sensor),
-            (subj.ACTOR_RESPONSE_RECEIVED, self._actor_response_received),
-        )
+        # self.subscriptions = (
+        #     (subj.ATOM_WARMUP, self._atom_warmup_event),
+        #     (subj.TEST_WARMUP, self._test_warmup_event),
+        #     (subj.SENSOR_DATA, self._handle_sensor),
+        #     (subj.ACTOR_RESPONSE_RECEIVED, self._actor_response_received),
+        # )
 
     async def setup(self, test_name, bus):
         self.bus = bus
@@ -190,39 +186,45 @@ class Influx(BaseDataHandler):
         if len(self.data) >= self.buffer_size:
             self._flush()
 
-    def _actor_response_received(self, subject, data: ActorResponse):
+    def event_actor_response_received(self, testdata: ActorResponse):
         """Handle actor response data."""
-        _annotation_tags = get_annotation_tags(data.response.value)
+
+        _annotation_tags = get_annotation_tags(testdata.response.value)
 
         try:
             _text = self._tags[KEY_ATOM_NAME]
         except KeyError:
-            _text = "unkown"
+            _text = "unknown"
 
         _influx = InfluxLineProtocol(
             self.measurement,
-            data.time.value,
-            fields={"title": subject, "text": _text, "tags": _annotation_tags},
+            testdata.time.value,
+            fields={
+                "title": testdata,
+                "text": _text,
+                "tags": _annotation_tags,
+            },
         )
         self.add_to_buffer(_influx)
 
-    def _atom_warmup_event(self, subject, data: AtomData):
-        """
-        Respond to warmup event.
+    def event_atom_warmup(self, testdata: AtomData):
+        """Respond to warmup event.
+
         This data is stored as an event or so called annotation.
         For more info on storing and displaying annotations.
         """
+        super().event_atom_warmup(testdata)
 
-        self._tags["loop"] = data.loop.value
-        self._tags["idx"] = data.idx.value
-        self._tags[KEY_ATOM_NAME] = slugify(data.atom_name.value)
+        self._tags["loop"] = testdata.loop.value
+        self._tags["idx"] = testdata.idx.value
+        self._tags[KEY_ATOM_NAME] = slugify(testdata.atom_name.value)
 
         annotation_tags = "loop {},index {}".format(
-            data.loop.value, data.idx.value
+            testdata.loop.value, testdata.idx.value
         )
         _influx = InfluxLineProtocol(
             self.measurement,
-            data.started.value,
+            testdata.started.value,
             fields={
                 "title": "atom_warmup",
                 "text": self._tags[KEY_ATOM_NAME],
@@ -231,31 +233,84 @@ class Influx(BaseDataHandler):
         )
         self.add_to_buffer(_influx)
 
-    def _test_warmup_event(self, subject, data: TestData):
+    # def _atom_warmup_event(self, subject, data: AtomData):
+    #     """
+    #     Respond to warmup event.
+    #     This data is stored as an event or so called annotation.
+    #     For more info on storing and displaying annotations.
+    #     """
+    #
+    #     self._tags["loop"] = data.loop.value
+    #     self._tags["idx"] = data.idx.value
+    #     self._tags[KEY_ATOM_NAME] = slugify(data.atom_name.value)
+    #
+    #     annotation_tags = "loop {},index {}".format(
+    #         data.loop.value, data.idx.value
+    #     )
+    #     _influx = InfluxLineProtocol(
+    #         self.measurement,
+    #         data.started.value,
+    #         fields={
+    #             "title": "atom_warmup",
+    #             "text": self._tags[KEY_ATOM_NAME],
+    #             "tags": annotation_tags,
+    #         },
+    #     )
+    #     self.add_to_buffer(_influx)
+
+    def event_test_warmup(self, testdata):
         """Handle test warmup data"""
 
-        annotation_tags = "loops {}".format(data.loop_count.value)
+        annotation_tags = "loops {}".format(testdata.loop_count.value)
 
         _influx = InfluxLineProtocol(
             self.measurement,
-            data.started.value,
+            testdata.started.value,
             fields={
                 "title": "TEST START",
-                "text": data.test_name.value,
+                "text": testdata.test_name.value,
                 "tags": annotation_tags,
             },
         )
         self.add_to_buffer(_influx)
         self._flush()
 
-    def _handle_sensor(self, subject, data):
+    # def _test_warmup_event(self, subject, data: TestData):
+    #     """Handle test warmup data"""
+    #
+    #     annotation_tags = "loops {}".format(data.loop_count.value)
+    #
+    #     _influx = InfluxLineProtocol(
+    #         self.measurement,
+    #         data.started.value,
+    #         fields={
+    #             "title": "TEST START",
+    #             "text": data.test_name.value,
+    #             "tags": annotation_tags,
+    #         },
+    #     )
+    #     self.add_to_buffer(_influx)
+    #     self._flush()
+
+    def event_sensor_data(self, testdata):
         influx = InfluxLineProtocol(
             self.measurement,
-            data[ATTR_TIMESTAMP][ATTR_VALUES],
+            testdata[ATTR_TIMESTAMP][ATTR_VALUES],
             tags=self._tags,
-            fields={data[ATTR_SENSOR_NAME]: data[ATTR_VALUES][ATTR_VALUES]},
+            fields={
+                testdata[ATTR_SENSOR_NAME]: testdata[ATTR_VALUES][ATTR_VALUES]
+            },
         )
         self.add_to_buffer(influx)
+
+    # def _handle_sensor(self, subject, data):
+    #     influx = InfluxLineProtocol(
+    #         self.measurement,
+    #         data[ATTR_TIMESTAMP][ATTR_VALUES],
+    #         tags=self._tags,
+    #         fields={data[ATTR_SENSOR_NAME]: data[ATTR_VALUES][ATTR_VALUES]},
+    #     )
+    #     self.add_to_buffer(influx)
 
     def _prepare_data(self):
         if self.data:

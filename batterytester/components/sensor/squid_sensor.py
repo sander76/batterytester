@@ -9,7 +9,7 @@ from batterytester.components.sensor.incoming_parser.squid_parser import (
     DictParser
 )
 from batterytester.components.sensor.sensor import Sensor
-from batterytester.core.bus import Bus, BusState
+from batterytester.core.bus import Bus
 from batterytester.core.helpers.helpers import SquidConnectException
 
 _LOGGER = logging.getLogger(__name__)

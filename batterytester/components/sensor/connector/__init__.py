@@ -8,7 +8,6 @@ Finally the parsed incoming data is put in the sensor_data_queue
 
 import asyncio
 import logging
-from threading import Thread
 
 _LOGGER = logging.getLogger(__name__)
 

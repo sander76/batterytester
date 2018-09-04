@@ -54,3 +54,21 @@ SENSOR_DATA = 'sensor_data'
 
 TEST_FATAL = 'test_fatal'
 """Emitted when a test has unexpectedly ended."""
+
+
+class Subscriptions:
+    def __init__(self):
+        self.test_finished = True
+        self.test_result = True
+        self.test_warmup = True
+        self.actor_executed = True
+        self.actor_response_received = True
+        self.atom_finished = True
+        self.atom_warmup = True
+        self.atom_status = True
+        self.atom_result = True
+        self.result_summary = True
+        self.loop_warmup = True
+        self.loop_finished = True
+        self.sensor_data = True
+        self.test_fatal = True

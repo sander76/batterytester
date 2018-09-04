@@ -40,8 +40,10 @@ class NonFatalTestFailException(Exception):
 class FatalTestFailException(Exception):
     pass
 
+
 class StopTestException(FatalTestFailException):
     pass
+
 
 class SquidConnectException(FatalTestFailException):
     pass

@@ -1,11 +1,12 @@
-"""A ledgate test."""
+"""A led-gate test."""
 
 # All imports. Please leave alone.
-import batterytester.components.actors as actors
 import batterytester.components.actors.tools as actor_tools
-import batterytester.components.datahandlers as datahandlers
-import batterytester.components.sensor as sensors
 import batterytester.core.atom as atoms
+from batterytester.components.actors.example_actor import ExampleActor
+from batterytester.components.datahandlers.console_data_handler import \
+    ConsoleDataHandler
+from batterytester.components.sensor.led_gate_sensor import LedGateSensor
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers.helpers import set_test_config
 
@@ -17,17 +18,17 @@ test = BaseTest(test_name='empty test', loop_count=2)
 
 # Add actors to the test.
 test.add_actor(
-    actors.ExampleActor()
+    ExampleActor()
 )
 
 # Add sensors to the test.
 test.add_sensors(
-    sensors.LedGateSensor(serial_port='COM4')
+    LedGateSensor(serial_port='COM4')
 )
 
 # Add data handlers to the test.
 test.add_data_handlers(
-    datahandlers.ConsoleDataHandler()
+    ConsoleDataHandler()
 )
 
 

@@ -8,8 +8,6 @@ from batterytester.core.helpers.constants import KEY_ATOM_INDEX, \
     KEY_ATOM_LOOP, KEY_ATOM_NAME, REASON
 from batterytester.core.helpers.helpers import get_current_timestamp
 
-# from batterytester.core.helpers.message_subjects import RESULT_SUMMARY, \
-#     PROCESS_INFO
 
 TYPE_STR = 'str'
 TYPE_TIME = 'time'
@@ -26,7 +24,8 @@ STATUS_FINISHED = 'finished'
 STATUS_STARTING = 'starting'
 
 
-# todo: Add source to message. This can be used to later filter out messages depending on sender.
+# todo: Add source to message. This can be used to later
+# filter out messages depending on sender.
 
 class Data:
     def __init__(self, value: typing.Any = 'unknown', type_=TYPE_STR):
@@ -70,6 +69,16 @@ class Message:
 
     def to_dict(self):
         return json.loads(self.to_json())
+
+
+class BaseEvent(Message):
+    def __init__(self, subject, data=None):
+        super().__init__()
+        self.subj = subject
+        if data:
+            self.data = data
+        else:
+            self.data = {}
 
 
 @singledispatch

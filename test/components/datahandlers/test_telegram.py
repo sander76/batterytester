@@ -4,7 +4,6 @@ from unittest.mock import Mock
 import pytest
 
 import batterytester.core.helpers.message_subjects as subj
-
 from batterytester.components.datahandlers.telegram import (
     clean_for_markdown,
     Telegram,
@@ -32,29 +31,27 @@ def response(fake_time_stamp):
     return resp
 
 
-@pytest.fixture
-def fatal_data(fake_time_stamp):
-    ft = FatalData("fatal reason unknown.")
-    ft.time = fake_time_stamp
-    ft.time_finished = fake_time_stamp
-    return ft
-
-
 def test_telegram_response_received(tg, response):
     _message = (
         "*None*\n\n```\nt est: 123\ntest1: 456\n```\n\n22:33:09, Nov 29, 1973 "
     )
-    tg._actor_response_received("nosubj", response)
+    tg.handle_event(subj.ACTOR_RESPONSE_RECEIVED, response)
 
     tg._send_message.assert_called_once_with(_message)
 
 
-def test_telegram_test_fata(tg, fatal_data):
+def test_telegram_test_data(tg, fatal_data):
     _message = (
         "*None*\n\n```\nfatal reason unknown.\n```\n\n22:33:09, Nov 29, 1973 "
     )
-    tg._test_fatal("nosubj", fatal_data)
+    tg.handle_event(subj.TEST_FATAL, fatal_data)
+
     tg._send_message.assert_called_once_with(_message)
+
+
+def test_event_test_warmup(tg, test_warmup_data):
+    tg.handle_event(subj.TEST_WARMUP, test_warmup_data)
+    assert tg._send_message.call_count == 1
 
 
 def test_clean_for_markdown():
@@ -64,17 +61,17 @@ def test_clean_for_markdown():
     assert _new == _val
 
 
-def test_telegram_atom_result_received(tg):
+def test_event_atom_result(tg):
     """Check if only failed tests are communicated."""
     _res = AtomResult(
         passed=False,
         reason="Failed to communicate with PowerView hub: Cannot connect to host 192.168.1.11:80 ssl:None [Connect call failed ('192.168.1.11', 80)]",
     )
 
-    tg._atom_result("nosubj", _res)
-
+    tg.handle_event(subj.ATOM_RESULT, _res)
     _res = AtomResult(passed=True, reason="unknown")
-    tg._atom_result("nosubj", _res)
+
+    tg.handle_event(subj.ATOM_RESULT, _res)
 
     assert len(tg._send_message.mock_calls) == 1
 
@@ -91,11 +88,11 @@ def test_message_quality():
             passed=False,
             reason="Failed to communicate with PowerView hub: Cannot connect to host 192.168.1.11:80 ssl:None [Connect call failed ('192.168.1.11', 80)]",
         )
-        telegram._atom_result("nosubj", _res)
+        telegram.handle_event(subj.ATOM_RESULT, _res)
 
         _dct = OrderedDict([("key_1", "A very long message"), ("key_2", 1234)])
         _response = ActorResponse(_dct)
-        telegram._actor_response_received("nosubj", _response)
+        telegram.handle_event(subj.ACTOR_RESPONSE_RECEIVED, _response)
 
     async def do_test():
         await test_setup()
@@ -107,22 +104,3 @@ def test_message_quality():
 
     bus.loop.run_until_complete(do_test())
     pass
-
-
-def test_subscriptions():
-    inf = Telegram(token=123, chat_id=123)
-
-    subs = inf.get_subscriptions()
-
-    assert len(subs) == len(inf.subscriptions)
-    for sub in subs:
-        assert sub in inf.subscriptions
-
-    inf = Telegram(
-        token=123,
-        chat_id=123,
-        subscription_filters=[subj.ACTOR_RESPONSE_RECEIVED],
-    )
-    subs = [sub for sub in inf.get_subscriptions()]
-    assert len(subs) == 1
-    assert subs[0][0] == subj.ACTOR_RESPONSE_RECEIVED

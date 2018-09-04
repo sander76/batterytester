@@ -1,5 +1,6 @@
 from pathlib import Path
 from shutil import rmtree
+from unittest.mock import Mock
 
 import pytest
 
@@ -59,18 +60,48 @@ def test_create_report_file(test_path):
     assert "report_name" in full
 
 
-def test_subscriptions():
-    inf = Report()
+@pytest.fixture
+def report():
+    rep = Report()
+    rep.event_test_finished = Mock()
+    rep.event_test_fatal = Mock()
+    rep.event_atom_result = Mock()
+    rep.event_atom_warmup = Mock()
+    rep.event_test_warmup = Mock()
+    return rep
 
-    subs = inf.get_subscriptions()
 
-    assert len(subs) == len(inf.subscriptions)
-    for sub in subs:
-        assert sub in inf.subscriptions
+def test_events(report):
+    test_data = {}
 
-    inf = Report(subscription_filters=[subj.TEST_WARMUP])
-    subs = [sub for sub in inf.get_subscriptions()]
+    report.handle_event(subj.TEST_FINISHED, test_data)
+    report.event_test_finished.assert_called_once_with(test_data)
 
-    assert len(subs) == 1
-    assert subs[0][0] == subj.TEST_WARMUP
+    report.handle_event(subj.TEST_FATAL, test_data)
+    report.event_test_fatal.assert_called_once_with(test_data)
 
+    report.handle_event(subj.ATOM_RESULT, test_data)
+    report.event_atom_result.assert_called_once_with(test_data)
+
+    report.handle_event(subj.ATOM_WARMUP, test_data)
+    report.event_atom_warmup.assert_called_once_with(test_data)
+
+    report.handle_event(subj.TEST_WARMUP, test_data)
+    report.event_test_warmup.assert_called_once_with(test_data)
+
+
+
+# def test_subscriptions():
+#     inf = Report()
+#
+#     subs = inf.get_subscriptions()
+#
+#     assert len(subs) == len(inf.subscriptions)
+#     for sub in subs:
+#         assert sub in inf.subscriptions
+#
+#     inf = Report(subscription_filters=[subj.TEST_WARMUP])
+#     subs = [sub for sub in inf.get_subscriptions()]
+#
+#     assert len(subs) == 1
+#     assert subs[0][0] == subj.TEST_WARMUP

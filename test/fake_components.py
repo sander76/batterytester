@@ -131,14 +131,14 @@ class FakeBoundSensorConnector(AsyncSensorConnector):
         except CancelledError:
             return
 
-
+#todo: remove this in favour of fake sensor in sensor package.
 class FakeVoltsAmpsSensor(Sensor):
     async def setup(self, test_name: str, bus: Bus):
         self._connector = RandomVoltAmpsConnector(bus)
         self._sensor_data_parser = VoltAmpsIrParser(bus,self.sensor_data_queue)
         return await super().setup(test_name, bus)
 
-
+#todo: remove this in favour of fake sensor in sensor package.
 class FakeLedGateSensor(Sensor):
     async def setup(self, test_name: str, bus: Bus):
         self._connector = FakeLedGateConnector(bus, delay=0.1)
@@ -154,28 +154,34 @@ class FakeBaseTest(BaseTest):
 
 class FakeDataHandler(BaseDataHandler):
     def __init__(self):
-        super().__init__(subscription_filters=None)
+        super().__init__()
         self.calls = []
         self.setup = AsyncMock()
         self.shutdown = AsyncMock()
 
-    def get_subscriptions(self):
-        return (
-            (subj.TEST_FINISHED, self.notify),
-            (subj.TEST_RESULT, self.notify),
-            (subj.TEST_WARMUP, self.notify),
-            (subj.ACTOR_EXECUTED, self.notify),
-            (subj.ACTOR_RESPONSE_RECEIVED, self.notify),
-            (subj.ATOM_FINISHED, self.notify),
-            (subj.ATOM_WARMUP, self.notify),
-            (subj.ATOM_STATUS, self.notify),
-            (subj.ATOM_RESULT, self.notify),
-            (subj.RESULT_SUMMARY, self.notify),
-            (subj.LOOP_WARMUP, self.notify),
-            (subj.LOOP_FINISHED, self.notify),
-            (subj.SENSOR_DATA, self.notify),
-            (subj.TEST_FATAL, self.notify),
-        )
+    def handle_event(self, subj, testdata):
+        self.notify(subj,testdata)
+
+    # def event_sensor_data(self, testdata):
+    #     self.calls.append()
+    #
+    # def get_subscriptions(self):
+    #     return (
+    #         (subj.TEST_FINISHED, self.notify),
+    #         (subj.TEST_RESULT, self.notify),
+    #         (subj.TEST_WARMUP, self.notify),
+    #         (subj.ACTOR_EXECUTED, self.notify),
+    #         (subj.ACTOR_RESPONSE_RECEIVED, self.notify),
+    #         (subj.ATOM_FINISHED, self.notify),
+    #         (subj.ATOM_WARMUP, self.notify),
+    #         (subj.ATOM_STATUS, self.notify),
+    #         (subj.ATOM_RESULT, self.notify),
+    #         (subj.RESULT_SUMMARY, self.notify),
+    #         (subj.LOOP_WARMUP, self.notify),
+    #         (subj.LOOP_FINISHED, self.notify),
+    #         (subj.SENSOR_DATA, self.notify),
+    #         (subj.TEST_FATAL, self.notify),
+    #     )
 
     def notify(self, subject, data):
         self.calls.append(subject)

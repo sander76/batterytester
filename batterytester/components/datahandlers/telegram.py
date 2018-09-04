@@ -4,21 +4,15 @@ import logging
 import re
 from asyncio import CancelledError
 from datetime import datetime
+from typing import Optional
 
 from aiotg import Bot, BotApiError
 
-import batterytester.core.helpers.message_subjects as subj
 from batterytester.components.datahandlers.base_data_handler import (
     BaseDataHandler
 )
 from batterytester.core.bus import Bus
-from batterytester.core.helpers.message_data import (
-    TestData,
-    TestFinished,
-    ActorResponse,
-    AtomResult,
-    FatalData,
-)
+from batterytester.core.helpers.message_subjects import Subscriptions
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +28,11 @@ def clean_for_markdown(string):
 
 
 class Telegram(BaseDataHandler):
-    def __init__(self, *, token, chat_id, subscription_filters=None):
-        super().__init__(subscription_filters=subscription_filters)
+    def __init__(
+            self, *, token, chat_id,
+            subscriptions: Optional[Subscriptions] = None
+    ):
+        super().__init__(subscriptions)
         self._token = token
         self._chat_id = chat_id
         self._bus = None
@@ -43,13 +40,14 @@ class Telegram(BaseDataHandler):
         self.bot = None
         self.sending = False
 
-        self.subscriptions = (
-            (subj.TEST_WARMUP, self._test_start),
-            (subj.TEST_FINISHED, self._test_finished),
-            (subj.ACTOR_RESPONSE_RECEIVED, self._actor_response_received),
-            (subj.ATOM_RESULT, self._atom_result),
-            (subj.TEST_FATAL, self._test_fatal),
-        )
+        self.subscriptions = []
+        # self.subscriptions = (
+        #     # (subj.TEST_WARMUP, self._test_start),
+        #     #(subj.TEST_FINISHED, self._test_finished),
+        #     # (subj.ACTOR_RESPONSE_RECEIVED, self._actor_response_received),
+        #     #(subj.ATOM_RESULT, self._atom_result),
+        #     (subj.TEST_FATAL, self._test_fatal),
+        # )
 
     async def setup(self, test_name: str, bus: Bus):
         self._bus = bus
@@ -75,17 +73,20 @@ class Telegram(BaseDataHandler):
             (datetime.fromtimestamp(value)).strftime("%H:%M:%S, %b %d, %Y ")
         )
 
-    def _atom_result(self, subject, data: AtomResult):
-        """Handle atom result data"""
+    def event_atom_result(self, testdata):
+        if not testdata.passed.value:
+            _info = testdata.reason.value
+            self._send_message(self._make_message(_info, testdata.time.value))
 
-        if not data.passed.value:
-            _info = data.reason.value
-            self._send_message(self._make_message(_info, data.time.value))
-
-    def _test_start(self, subject, data: TestData):
-        _message = self._make_message("STARTED", data.started.value)
+    def event_test_warmup(self, testdata):
+        _message = self._make_message("STARTED", testdata.started.value)
 
         self._send_message(_message)
+
+    # def _test_start(self, subject, data: TestData):
+    #     _message = self._make_message("STARTED", data.started.value)
+    #
+    #     self._send_message(_message)
 
     def _make_message(self, info, time):
 
@@ -94,19 +95,27 @@ class Telegram(BaseDataHandler):
         )
         return _message
 
-    def _actor_response_received(self, subject, data: ActorResponse):
+    def event_actor_response_received(self, testdata):
         _resp = "\n".join(
             "{}: {}".format(key, value)
-            for key, value in data.response.value.items()
+            for key, value in testdata.response.value.items()
         )
-        self._send_message(self._make_message(_resp, data.time.value))
+        self._send_message(self._make_message(_resp, testdata.time.value))
 
-    def _test_fatal(self, subject, data: FatalData):
-        _info = data.reason.value
-        self._send_message(self._make_message(_info, data.time_finished.value))
+    # def _actor_response_received(self, subject, data: ActorResponse):
+    #     _resp = "\n".join(
+    #         "{}: {}".format(key, value)
+    #         for key, value in data.response.value.items()
+    #     )
+    #     self._send_message(self._make_message(_resp, data.time.value))
 
-    def _test_finished(self, subject, data: TestFinished):
-        _message = self._make_message("FINISHED", data.time_finished.value)
+    def event_test_fatal(self, testdata):
+        _info = testdata.reason.value
+        self._send_message(
+            self._make_message(_info, testdata.time_finished.value))
+
+    def event_test_finished(self, testdata):
+        _message = self._make_message("FINISHED", testdata.time_finished.value)
 
         self._send_message(_message)
 

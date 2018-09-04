@@ -1,18 +1,20 @@
-"""Fake Ledgate sensor.
+"""Fake Led gate sensor.
 
 When the sensor is open it will return True.
 if sensor is blocked it will return False.
 """
-from batterytester.components.sensor.connector.random_ledgate_connector import \
+from batterytester.components.sensor.connector.random_ledgate_connector import (
     RandomLedgateConnector
-from batterytester.components.sensor.incoming_parser.boolean_parser import \
+)
+from batterytester.components.sensor.incoming_parser.boolean_parser import (
     BooleanParser
+)
 from batterytester.components.sensor.squid_sensor import BaseSquidSensor
 from batterytester.core.bus import Bus
 
 
 class FakeLedGateSensor(BaseSquidSensor):
-    """Fake Led gate sensor. Detects whether ledgate sensor is opened (True) or closed (False)
+    """Fake Led gate sensor. Detects whether led gate sensor is opened (True) or closed (False)
 
     Expecting incoming bytes in form of "a:0" or "a:1"
     a is the sensor name. 0 or 1 is the boolean value.
@@ -32,7 +34,6 @@ class FakeLedGateSensor(BaseSquidSensor):
         super().__init__(serial_port="abc", sensor_prefix=sensor_prefix)
 
     async def setup(self, test_name: str, bus: Bus):
-        self._connector = RandomLedgateConnector(
-            bus=bus, delay=self._delay)
+        self._connector = RandomLedgateConnector(bus=bus, delay=self._delay)
         self._sensor_data_parser = BooleanParser(bus, self.sensor_prefix)
         await super().setup(test_name, bus)

@@ -1,10 +1,7 @@
-
 # All imports. Please leave alone.
-import batterytester.components.actors as actors
 import batterytester.components.actors.tools as actor_tools
 import batterytester.core.atom as atoms
-import batterytester.components.datahandlers as datahandlers
-import batterytester.components.sensor as sensors
+from batterytester.components.actors.relay_actor import RelayActor
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers.helpers import set_test_config
 
@@ -16,7 +13,7 @@ test.add_sensors(
 )
 
 test.add_actor(
-    actors.RelayActor(serial_port='COM6')
+    RelayActor(serial_port='COM6')
 )
 
 test.add_data_handlers(
@@ -28,7 +25,7 @@ def get_sequence(actors):
     relay = actor_tools.get_relay_actor(actors)
 
     actor1 = 4  # arduino pin 4
-    #actor2 = 5  # arduino pin 2
+    # actor2 = 5  # arduino pin 2
 
     _val = (
         atoms.Atom(

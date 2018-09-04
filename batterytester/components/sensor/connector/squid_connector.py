@@ -24,6 +24,8 @@ class AltArduinoConnector(AsyncSensorConnector):
         self.serial_port = serial_port
         self.serial_speed = serial_speed
         self.s = None  # the serial port
+
+        #todo: can below be removed ?
         self.trydelay = try_delay
         # self.shutting_down = False
 

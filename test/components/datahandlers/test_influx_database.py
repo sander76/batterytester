@@ -4,8 +4,6 @@ from unittest.mock import Mock
 import pytest
 from slugify import slugify
 
-import batterytester.core.helpers.message_subjects as subj
-
 from batterytester.components.datahandlers.influx import (
     get_time_stamp,
     InfluxLineProtocol,
@@ -25,8 +23,9 @@ from batterytester.core.helpers.message_data import (
     Data,
     ActorResponse,
 )
-from test.fake_components import FakeActor
+from test.fake_components import FakeActor, AsyncMock
 from test.seqeuences import get_empty_sequence, get_unknown_exception_sequence
+from test.test_global_setup import get_sequence3
 
 
 @pytest.fixture
@@ -87,8 +86,8 @@ def test_influx_line_protocol_nested_values(fake_measurement2):
     db = Influx()
     db.measurement = "test-measurement"
     db.add_to_buffer = Mock()
-    db._handle_sensor("nosubj", fake_measurement2)
-
+    # db._handle_sensor("nosubj", fake_measurement2)
+    db.event_sensor_data(fake_measurement2)
     meas = db.add_to_buffer.call_args[0][0]
     assert meas._fields == {"vi": fake_measurement2[ATTR_VALUES][ATTR_VALUES]}
 
@@ -121,7 +120,8 @@ def test_get_time_stamp():
 
 
 def test_atom_warmup(fake_influx: Influx, fake_atom_data: AtomData):
-    fake_influx._atom_warmup_event("no subj", fake_atom_data)
+    fake_influx.event_atom_warmup(fake_atom_data)
+
     assert len(fake_influx.data) == 1
     _data = fake_influx.data[0]
     assert _data._measurement == "fake-test"
@@ -135,35 +135,37 @@ def test_atom_warmup(fake_influx: Influx, fake_atom_data: AtomData):
 def test_prepare_data(fake_influx: Influx, fake_atom_data):
     val = fake_influx._prepare_data()
     assert val is None
-    fake_influx._atom_warmup_event("no subj", fake_atom_data)
+    fake_influx.event_atom_warmup(fake_atom_data)
     val = fake_influx._prepare_data()
     assert val is not None
 
 
 def test_handle_sensor(fake_influx: Influx, fake_measurement1, fake_atom_data):
-    fake_influx._handle_sensor("no subj", fake_measurement1)
+    fake_influx.event_sensor_data(fake_measurement1)
     assert len(fake_influx.data) == 1
     _data = fake_influx.data[0]
     assert _data._measurement == "fake-test"
     assert _data._tags == {}
     assert _data._fields == {fake_measurement1[ATTR_SENSOR_NAME]: 10}
 
-    fake_influx._atom_warmup_event("no subj", fake_atom_data)
-    fake_influx._handle_sensor("no subj", fake_measurement1)
+    fake_influx.event_atom_warmup(fake_atom_data)
+    fake_influx.event_sensor_data(fake_measurement1)
     assert len(fake_influx.data) == 3
     _data = fake_influx.data[-1]
-    assert _data._tags == {"atom_name": slugify(fake_atom_data.atom_name.value), "loop": 0, "idx": 0}
+    assert _data._tags == {
+        "atom_name": slugify(fake_atom_data.atom_name.value), "loop": 0,
+        "idx": 0}
 
 
 def test_flush(fake_influx_nobus: Influx, fake_measurement1):
-    fake_influx_nobus._handle_sensor("no subj", fake_measurement1)
+    fake_influx_nobus.event_sensor_data(fake_measurement1)
     assert len(fake_influx_nobus.data) == 1
     fake_influx_nobus._flush()
     assert len(fake_influx_nobus.data) == 0
 
 
 def test_shutdown(fake_influx: Influx, base_test: BaseTest, fake_measurement1):
-    fake_influx._handle_sensor("no subj", fake_measurement1)
+    fake_influx.event_sensor_data(fake_measurement1)
     base_test.get_sequence = get_empty_sequence
     base_test.add_data_handlers(fake_influx)
 
@@ -177,14 +179,14 @@ def test_shutdown(fake_influx: Influx, base_test: BaseTest, fake_measurement1):
 
 def test_response_received(fake_influx: Influx):
     response = ActorResponse({"test": 1})
-    fake_influx._actor_response_received("no_subj", response)
+    fake_influx.event_actor_response_received(response)
     assert len(fake_influx.data) == 1
 
 
 def test_shutdown_test_error(
-    fake_influx: Influx, base_test: BaseTest, fake_measurement1
+        fake_influx: Influx, base_test: BaseTest, fake_measurement1
 ):
-    fake_influx._handle_sensor("no subj", fake_measurement1)
+    fake_influx.event_sensor_data(fake_measurement1)
     base_test.get_sequence = get_unknown_exception_sequence
 
     base_test.add_actor(FakeActor())
@@ -225,20 +227,36 @@ def test_nesting():
         assert new[key] == value
 
 
-def test_subscriptions():
-    inf = Influx()
+# def test_subscriptions():
+#     inf = Influx()
+#
+#     subs = inf.get_subscriptions()
+#
+#     assert len(subs) == len(inf.subscriptions)
+#     for sub in subs:
+#         assert sub in inf.subscriptions
+#
+#     inf = Influx(subscription_filters=[subj.ACTOR_RESPONSE_RECEIVED])
+#     subs = [sub for sub in inf.get_subscriptions()]
+#     assert len(subs) == 1
+#     assert subs[0][0] == subj.ACTOR_RESPONSE_RECEIVED
 
-    subs = inf.get_subscriptions()
 
-    assert len(subs) == len(inf.subscriptions)
-    for sub in subs:
-        assert sub in inf.subscriptions
+def test_setup_and_shutdown(fake_influx):
+    """Test whether setup and shutdown coroutines are called during a normal
+    test."""
+    test = BaseTest(test_name="basetest", loop_count=1)
+    test.add_actor(
+        FakeActor()
+    )
+    fake_influx.setup = AsyncMock()
+    fake_influx.shutdown = AsyncMock()
+    test.add_data_handlers(fake_influx)
 
-    inf = Influx(subscription_filters=[subj.ACTOR_RESPONSE_RECEIVED])
-    subs = [sub for sub in inf.get_subscriptions()]
-    assert len(subs) == 1
-    assert subs[0][0] == subj.ACTOR_RESPONSE_RECEIVED
+    test.get_sequence = get_sequence3
 
+    test.start_test()
 
-
+    assert fake_influx.setup.mock.call_count == 1
+    assert fake_influx.shutdown.mock.call_count == 1
 # todo: test when connection with database server is lost.

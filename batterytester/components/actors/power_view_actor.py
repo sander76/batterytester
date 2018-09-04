@@ -26,7 +26,7 @@ def catch_exceptions(func):
             _fatal = kwargs.get("fatal")
             if _fatal is None or _fatal is True:
                 raise FatalTestFailException(
-                    "problem excuting command: {} {}".format(
+                    "problem executing command: {} {}".format(
                         func.__name__, err
                     )
                 )

@@ -2,34 +2,28 @@
 from batterytester.components.actors.example_actor import ExampleActor
 from batterytester.components.actors.tools import get_example_actor
 from batterytester.components.datahandlers.messaging import Messaging
-from batterytester.components.sensor.fake_volts_amps_sensor import \
+from batterytester.components.sensor.fake_volts_amps_sensor import (
     FakeVoltsAmpsSensor
-from batterytester.core.atom import BooleanReferenceAtom, Atom
+)
+from batterytester.core.atom import Atom
 from batterytester.core.base_test import BaseTest
 
 # Define a test. Give it a proper name and define the amount
 # of loops to run.
 from batterytester.core.helpers.helpers import set_test_config
 
-
 set_test_config("../dev_config.json")
 
-test = BaseTest(test_name='empty test', loop_count=20)
+test = BaseTest(test_name="empty test", loop_count=20)
 
 # Add actors to the test.
-test.add_actor(
-    ExampleActor()
-)
+test.add_actor(ExampleActor())
 
 # Add sensors to the test.
-test.add_sensors(
-    FakeVoltsAmpsSensor(delay=5)
-)
+test.add_sensors(FakeVoltsAmpsSensor(delay=5))
 
 # Add data handlers to the test.
-test.add_data_handlers(
-    Messaging()
-)
+test.add_data_handlers(Messaging())
 
 
 # Each test (each loop) runs a sequence of tests to perform.
@@ -39,19 +33,10 @@ def get_sequence(_actors):
     example_actor = get_example_actor(_actors)
 
     _val = (
-        Atom(
-            name='close shade',
-            command=example_actor.close,
-            duration=10
-        ),
-        Atom(
-            name='open shade',
-            duration=10,
-            command=example_actor.open
-        )
+        Atom(name="close shade", command=example_actor.close, duration=10),
+        Atom(name="open shade", duration=10, command=example_actor.open),
     )
     return _val
-
 
 
 test.get_sequence = get_sequence

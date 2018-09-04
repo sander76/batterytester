@@ -33,6 +33,7 @@ class VoltAmpsIrParser(SquidParser):
         Finally data is emitted in form of:
 
         val = get_measurement(self.sensor_name,{volts: 1,amps: 2})
+        amps is in milli amps
         """
 
         try:

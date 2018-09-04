@@ -1,11 +1,8 @@
 # All imports. Please leave alone.
-import batterytester.components.actors as actors
 import batterytester.components.actors.tools as actor_tools
-import batterytester.components.datahandlers as datahandlers
 import batterytester.core.atom as atoms
-from batterytester.components.sensor import FakeVoltsAmpsSensor
-from batterytester.components.sensor.fake_led_gate_sensor import \
-    FakeLedGateSensor
+from batterytester.components.actors.example_actor import ExampleActor
+from batterytester.components.datahandlers.influx import Influx
 from batterytester.components.sensor.volts_amps_sensor import VoltsAmpsSensor
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers.helpers import set_test_config
@@ -19,12 +16,12 @@ test.add_sensors(
 )
 
 test.add_actor(
-    actors.ExampleActor()
+    ExampleActor()
 )
 
 test.add_data_handlers(
-    datahandlers.Influx(host='172.22.3.21', database='menc'),
-    #datahandlers.ConsoleDataHandler()
+    Influx(host='172.22.3.21', database='menc'),
+
 )
 
 

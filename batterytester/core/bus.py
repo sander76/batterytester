@@ -6,8 +6,10 @@ from enum import Enum
 import aiohttp
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.core.helpers.helpers import FatalTestFailException, \
-    TestSetupException
+from batterytester.core.helpers.helpers import (
+    FatalTestFailException,
+    TestSetupException,
+)
 from batterytester.core.helpers.message_data import FatalData
 
 LOGGER = logging.getLogger(__name__)
@@ -44,25 +46,28 @@ class Bus:
         """Registers a data handler"""
         data_handler.test_name = test_name
         self._data_handlers.append(data_handler)
-        for _subscription in data_handler.get_subscriptions():
-            _subj = _subscription[0]
-            _handler = _subscription[1]
-            if _subj in self.subscriptions:
-                self.subscriptions[_subj].append(_handler)
-            else:
-                self.subscriptions[_subj] = [_handler]
+        # for _subscription in data_handler.get_subscriptions():
+        #     _subj = _subscription[0]
+        #     _handler = _subscription[1]
+        #     if _subj in self.subscriptions:
+        #         self.subscriptions[_subj].append(_handler)
+        #     else:
+        #         self.subscriptions[_subj] = [_handler]
 
     def notify(self, subject, data=None):
         """Notifies the data handlers for incoming data."""
-        if subject in self.subscriptions:
-            for _subscriber in self.subscriptions[subject]:
-                try:
-                    _subscriber(subject, data)
-                except Exception as err:
-                    raise
 
-    def subscribe(self, subject, method):
-        self.subscriptions[subject] = method
+        # if subject in self.subscriptions:
+        #     for _subscriber in self.subscriptions[subject]:
+        #         try:
+        #             _subscriber(subject, data)
+        #         except Exception as err:
+        #             raise
+        for handler in self._data_handlers:
+            handler.handle_event(subject, data)
+
+    # def subscribe(self, subject, method):
+    #     self.subscriptions[subject] = method
 
     def task_finished_callback(self, future):
         try:
@@ -100,8 +105,11 @@ class Bus:
 
         LOGGER.info("Setting up handlers.")
         await asyncio.gather(
-            *(_handler.setup(test_name, self) for _handler in
-              self._data_handlers))
+            *(
+                _handler.setup(test_name, self)
+                for _handler in self._data_handlers
+            )
+        )
         LOGGER.info("Setting up actors.")
         await asyncio.gather(
             *(_actor.setup(test_name, self) for _actor in self.actors.values())
@@ -120,7 +128,8 @@ class Bus:
     def _start_test(self, test_runner, test_name):
         try:
             self.loop.run_until_complete(
-                self.start_main_test(test_runner, test_name))
+                self.start_main_test(test_runner, test_name)
+            )
         except TestSetupException as err:
             LOGGER.error(err)
             self._exception = err
@@ -152,8 +161,8 @@ class Bus:
 
         LOGGER.info("Shutting down data handlers")
         await asyncio.gather(
-            *(_handler.shutdown(self) for _handler in
-              self._data_handlers))
+            *(_handler.shutdown(self) for _handler in self._data_handlers)
+        )
         LOGGER.info("Shutting down actors")
         await asyncio.gather(
             *(_actor.shutdown(self) for _actor in self.actors.values())
@@ -167,7 +176,7 @@ class Bus:
 
         LOGGER.info("Closing all other tasks.")
         await self._finish_all_tasks()
-        LOGGER.info("Clossing http session.")
+        LOGGER.info("Closing http session.")
         await self.session.close()
 
     async def _finish_all_tasks(self):
@@ -181,7 +190,8 @@ class Bus:
             LOGGER.debug("current try %s", current_try)
             if current_try > tries:
                 LOGGER.info(
-                    "Unable to close all tasks gracefully. Just closing now.")
+                    "Unable to close all tasks gracefully. Just closing now."
+                )
                 # giving up cancelling gracefully
                 break
 

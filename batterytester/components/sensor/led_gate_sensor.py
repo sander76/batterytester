@@ -1,4 +1,4 @@
-"""Ledgate sensor.
+"""Led gate sensor.
 
 When the sensor is open it will return True.
 if sensor is blocked it will return False.
@@ -15,7 +15,7 @@ from batterytester.core.bus import Bus
 
 
 class LedGateSensor(BaseSquidSensor):
-    """Led gate sensor. Detects whether ledgate sensor is opened (True) or
+    """Led gate sensor. Detects whether led gate sensor is opened (True) or
     closed (False)
 
     Expecting incoming bytes in form of "a:0" or "a:1"

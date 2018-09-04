@@ -9,17 +9,22 @@ LOGGER = logging.getLogger(__name__)
 
 class BooleanReferenceAtom(ReferenceAtom):
     def __init__(
-            self,
-            name,
-            command,
-            duration,
-            reference,
-            arguments=None,
-            result_key: str = None):
+        self,
+        name,
+        command,
+        duration,
+        reference,
+        arguments=None,
+        result_key: str = None,
+    ):
         super().__init__(
-            name=name, command=command,
-            duration=duration, reference=reference,
-            arguments=arguments, result_key=result_key)
+            name=name,
+            command=command,
+            duration=duration,
+            reference=reference,
+            arguments=arguments,
+            result_key=result_key,
+        )
 
     def _process_sensor_data(self):
         """Get the most recent values of stored sensor data."""
@@ -28,8 +33,9 @@ class BooleanReferenceAtom(ReferenceAtom):
         _result = {}
         if self.sensor_data:
             for _measurement in self.sensor_data:
-                _result[_measurement[ATTR_SENSOR_NAME]] = \
-                    _measurement[KEY_VALUE][KEY_VALUE]
+                _result[_measurement[ATTR_SENSOR_NAME]] = _measurement[
+                    KEY_VALUE
+                ][KEY_VALUE]
 
         return _result
 
@@ -41,14 +47,15 @@ class BooleanReferenceAtom(ReferenceAtom):
                 if not _sensor_data[key] == value:
                     _atom_result.passed = Data(False, type_=TYPE_BOOL)
                     _atom_result.reason = Data(
-                        "Ref values don't match. ref: {} sensor: {}""".format(
-                            str(_sensor_data), str(self.reference_data)))
+                        "Ref values don't match. ref: {} sensor: {}"
+                        "".format(str(_sensor_data), str(self.reference_data))
+                    )
                     return _atom_result
             except KeyError:
                 _atom_result.passed = Data(False, type_=TYPE_BOOL)
                 _atom_result.reason = Data(
-                    "Ref sensor data not available in sensor feedback. ref: {} sensor: {}""".format(
-                        str(_sensor_data), str(self.reference_data))
+                    "Ref sensor data not available in sensor feedback. ref: {} sensor: {}"
+                    "".format(str(_sensor_data), str(self.reference_data))
                 )
 
         return _atom_result

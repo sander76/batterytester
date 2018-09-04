@@ -1,4 +1,4 @@
-"""Basetest main entrypoint for every test."""
+"""Main entry point for every test."""
 
 import asyncio
 import logging
@@ -54,7 +54,8 @@ class BaseTest:
     def add_sensors(self, *sensors: Sensor):
         """Add sensors to the test."""
 
-        # todo: move the queue to the bus and assign it to the sensors in the setup method.
+        # todo: move the queue to the bus and assign it to the
+        # sensors in the setup method.
         if not self.sensor_data_queue:
             self.sensor_data_queue = asyncio.Queue(loop=self.bus.loop)
             self.bus.add_async_task((self._messager()))
