@@ -23,7 +23,7 @@ class ConsoleDataHandler(BaseDataHandler):
         self.to_console("TEST WARMUP")
         self.to_console(testdata.to_dict())
 
-    def event_actor_executed(self, testdata):
+    def event_atom_execute(self, testdata):
         self.to_console("ACTOR EXECUTED")
         self.to_console(testdata.to_dict())
 
@@ -39,7 +39,7 @@ class ConsoleDataHandler(BaseDataHandler):
         self.to_console("ATOM WARMUP")
         self.to_console(testdata.to_dict())
 
-    def event_atom_status(self, testdata):
+    def event_atom_collecting(self, testdata):
         self.to_console("ATOM STATUS")
         self.to_console(testdata.to_dict())
 

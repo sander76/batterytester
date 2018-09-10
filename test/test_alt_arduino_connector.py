@@ -110,12 +110,16 @@ def test_queue(test_connection):
         await test_connection.setup("fake_test", test_connection.bus)
         test_connection.s.write(b'{abc')
 
+
+        await asyncio.sleep(0.2)
         raw = await test_connection.raw_sensor_data_queue.get()
         vals.extend(raw)
 
         test_connection.s.write(b'def}')
+        await asyncio.sleep(0.2)
         raw = await test_connection.raw_sensor_data_queue.get()
         vals.extend(raw)
+        await asyncio.sleep(0.2)
         raw = await test_connection.raw_sensor_data_queue.get()
         vals.extend(raw)
         assert bytes(vals) == b'{abcdef}'

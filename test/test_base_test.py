@@ -73,8 +73,8 @@ def test_notifications_sequence(base_test):
         subj.TEST_WARMUP,
         subj.LOOP_WARMUP,
         subj.ATOM_WARMUP,
-        subj.ATOM_STATUS,
-        subj.ATOM_STATUS,
+        subj.ATOM_EXECUTE,
+        subj.ATOM_COLLECTING,
         subj.LOOP_FINISHED,
         subj.TEST_FINISHED
     ]
@@ -100,7 +100,7 @@ def test_notifications_test_fail(base_test):
         subj.TEST_WARMUP,
         subj.LOOP_WARMUP,
         subj.ATOM_WARMUP,
-        subj.ATOM_STATUS,
+        subj.ATOM_EXECUTE,
         subj.TEST_FATAL
     ]
 
@@ -120,7 +120,7 @@ def test_notifications_fatal_test_fail(base_test):
         subj.TEST_WARMUP,
         subj.LOOP_WARMUP,
         subj.ATOM_WARMUP,
-        subj.ATOM_STATUS,
+        subj.ATOM_EXECUTE,
         subj.TEST_FATAL
     ]
 
@@ -140,7 +140,7 @@ def test_notifications_non_fatal_test_fail(base_test):
         subj.TEST_WARMUP,
         subj.LOOP_WARMUP,
         subj.ATOM_WARMUP,
-        subj.ATOM_STATUS,
+        subj.ATOM_EXECUTE,
         subj.ATOM_RESULT,
         subj.LOOP_FINISHED,
         subj.TEST_FINISHED
@@ -163,9 +163,9 @@ def test_notification_actor_response(base_test: BaseTest):
         subj.TEST_WARMUP,
         subj.LOOP_WARMUP,
         subj.ATOM_WARMUP,
-        subj.ATOM_STATUS,
+        subj.ATOM_EXECUTE,
         subj.ACTOR_RESPONSE_RECEIVED,
-        subj.ATOM_STATUS,
+        subj.ATOM_COLLECTING,
         subj.LOOP_FINISHED,
         subj.TEST_FINISHED
     ]
@@ -292,14 +292,16 @@ def test_non_fatal_actor_boolean_reference_atom():
     test.start_test()
 
     subjects = [
-        (subj.TEST_WARMUP, md.TestData),
+        (subj.TEST_WARMUP, md.TestWarmup),
         (subj.LOOP_WARMUP, md.LoopData),
-        (subj.ATOM_WARMUP, md.AtomData),
-        (subj.ATOM_STATUS, md.AtomStatus),
+        (subj.ATOM_WARMUP, md.AtomWarmup),
+        (subj.ATOM_EXECUTE, md.AtomExecute),
         (subj.ATOM_RESULT, md.AtomResult),
         (subj.LOOP_FINISHED, md.LoopFinished),
         (subj.TEST_FINISHED, md.TestFinished)
     ]
+
+    assert len(subjects) == len(test.bus.notify.call_args_list)
 
     for idx, _call in enumerate(_notify.mock_calls):
         _subj = _call[1][0]

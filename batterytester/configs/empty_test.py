@@ -11,16 +11,19 @@ from batterytester.core.base_test import BaseTest
 # Define a test. Give it a proper name and define the amount
 # of loops to run.
 from batterytester.core.helpers.helpers import set_test_config
+from components.sensor.fake_led_gate_sensor import FakeLedGateSensor
+from core.atom import BooleanReferenceAtom
+from core.atom.reference_atom import ReferenceAtom
 
 set_test_config("../dev_config.json")
 
-test = BaseTest(test_name="empty test", loop_count=20)
+test = BaseTest(test_name="empty test", loop_count=1)
 
 # Add actors to the test.
 test.add_actor(ExampleActor())
 
 # Add sensors to the test.
-test.add_sensors(FakeVoltsAmpsSensor(delay=5))
+test.add_sensors(FakeVoltsAmpsSensor(delay=1), FakeLedGateSensor(delay=3))
 
 # Add data handlers to the test.
 test.add_data_handlers(Messaging())
@@ -33,7 +36,12 @@ def get_sequence(_actors):
     example_actor = get_example_actor(_actors)
 
     _val = (
-        Atom(name="close shade", command=example_actor.close, duration=10),
+        BooleanReferenceAtom(
+            name="close shade",
+            command=example_actor.close,
+            duration=4,
+            reference={"6": True}
+        ),
         Atom(name="open shade", duration=10, command=example_actor.open),
     )
     return _val

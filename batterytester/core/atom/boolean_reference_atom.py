@@ -54,7 +54,7 @@ class BooleanReferenceAtom(ReferenceAtom):
             except KeyError:
                 _atom_result.passed = Data(False, type_=TYPE_BOOL)
                 _atom_result.reason = Data(
-                    "Ref sensor data not available in sensor feedback. ref: {} sensor: {}"
+                    "Ref data not in sensor data. ref: {} sensor: {}"
                     "".format(str(_sensor_data), str(self.reference_data))
                 )
 

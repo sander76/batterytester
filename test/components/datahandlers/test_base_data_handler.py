@@ -24,7 +24,8 @@ def base_handler():
     handler.event_test_finished = Mock()
 
     handler.event_atom_result = Mock()
-    handler.event_atom_status = Mock()
+    handler.event_atom_collecting = Mock()
+    handler.event_atom_execute = Mock()
     handler.event_atom_warmup = Mock()
     handler.event_atom_finished = Mock()
 
@@ -50,8 +51,11 @@ def test_handle_event(base_handler):
     base_handler.handle_event(message_subjects.ATOM_RESULT, data)
     base_handler.event_atom_result.assert_called_with(data)
 
-    base_handler.handle_event(message_subjects.ATOM_STATUS, data)
-    base_handler.event_atom_status.assert_called_with(data)
+    base_handler.handle_event(message_subjects.ATOM_EXECUTE, data)
+    base_handler.event_atom_execute.assert_called_with(data)
+
+    base_handler.handle_event(message_subjects.ATOM_COLLECTING, data)
+    base_handler.event_atom_collecting.assert_called_with(data)
 
     base_handler.handle_event(message_subjects.ATOM_WARMUP, data)
     base_handler.event_atom_warmup.assert_called_with(data)
@@ -64,7 +68,7 @@ def test_handle_event(base_handler):
 
 
 def test_handle_event_unsubscribed(base_handler):
-    base_handler._subscriptions.actor_response_received=False
+    base_handler._subscriptions.actor_response_received = False
     data = {}
 
     base_handler.handle_event(message_subjects.ACTOR_RESPONSE_RECEIVED, data)

@@ -6,7 +6,7 @@ from typing import Optional
 from batterytester.core.bus import Bus
 from batterytester.core.helpers import message_subjects
 from batterytester.core.helpers.helpers import get_current_time_string
-from batterytester.core.helpers.message_data import AtomData
+from batterytester.core.helpers.message_data import AtomWarmup
 from batterytester.core.helpers.message_subjects import Subscriptions
 
 LOGGER = logging.getLogger(__name__)
@@ -68,9 +68,9 @@ class BaseDataHandler(metaclass=ABCMeta):
             if self._subscriptions.test_warmup:
                 self.event_test_warmup(testdata)
 
-        elif subj == message_subjects.ACTOR_EXECUTED:
+        elif subj == message_subjects.ATOM_EXECUTE:
             if self._subscriptions.actor_executed:
-                self.event_actor_executed(testdata)
+                self.event_atom_execute(testdata)
 
         elif subj == message_subjects.ACTOR_RESPONSE_RECEIVED:
             if self._subscriptions.actor_response_received:
@@ -80,8 +80,8 @@ class BaseDataHandler(metaclass=ABCMeta):
             self.event_atom_finished(testdata)
         elif subj == message_subjects.ATOM_WARMUP:
             self.event_atom_warmup(testdata)
-        elif subj == message_subjects.ATOM_STATUS:
-            self.event_atom_status(testdata)
+        elif subj == message_subjects.ATOM_COLLECTING:
+            self.event_atom_collecting(testdata)
         elif subj == message_subjects.ATOM_RESULT:
             self.event_atom_result(testdata)
         elif subj == message_subjects.RESULT_SUMMARY:
@@ -104,7 +104,7 @@ class BaseDataHandler(metaclass=ABCMeta):
     def event_test_warmup(self, testdata):
         pass
 
-    def event_actor_executed(self, testdata):
+    def event_atom_execute(self, testdata):
         pass
 
     def event_actor_response_received(self, testdata):
@@ -113,12 +113,12 @@ class BaseDataHandler(metaclass=ABCMeta):
     def event_atom_finished(self, testdata):
         pass
 
-    def event_atom_warmup(self, testdata: AtomData):
+    def event_atom_warmup(self, testdata: AtomWarmup):
         self._current_idx = testdata.idx.value
         self._current_loop = testdata.loop.value
         self._atom_name = testdata.atom_name.value
 
-    def event_atom_status(self, testdata):
+    def event_atom_collecting(self, testdata):
         pass
 
     def event_atom_result(self, testdata):

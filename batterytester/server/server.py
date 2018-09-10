@@ -136,6 +136,7 @@ class Server:
         return web.Response()
 
     async def _start_test_process(self, p):
+        """Start a process containing a new test to run."""
         self.clear_cache()
         self.process_data.status = STATUS_STARTING
         self.process_data.subj = PROCESS_STARTED
@@ -303,7 +304,8 @@ class Server:
                 self._update_test_cache(data, subj.TEST_WARMUP)
             elif (
                 _subj == subj.ATOM_WARMUP
-                or _subj == subj.ATOM_STATUS
+                or _subj == subj.ATOM_EXECUTE
+                or _subj == subj.ATOM_COLLECTING
                 or _subj == subj.ATOM_RESULT
                 or _subj == subj.ATOM_FINISHED
             ):

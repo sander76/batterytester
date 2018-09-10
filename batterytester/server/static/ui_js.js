@@ -422,7 +422,9 @@ function parseSensor(data) {
     } else if (subj === subjTestWarmup) {
         changeFav(favRunning)
         parseTestInfo(data)
-    } else if (subj === 'atom_status') {
+    } else if (subj === 'atom_collecting') {
+        parseAtomInfo(data)
+    } else if (subj === 'atom_execute') {
         parseAtomInfo(data)
     } else if (subj === 'result_summary') {
         parseSummaryInfo(data)

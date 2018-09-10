@@ -7,7 +7,7 @@ from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
 
 from batterytester.core.helpers.helpers import TestSetupException, \
     NonFatalTestFailException
-from batterytester.core.helpers.message_data import AtomData
+from batterytester.core.helpers.message_data import AtomWarmup
 
 LOGGING = logging.getLogger(__name__)
 
@@ -61,8 +61,16 @@ class Atom:
         self._loop = current_loop
         self._stored_atom_results = stored_atom_results
 
+    def get_atom_warmup_data(self):
+        return AtomWarmup(
+            self.name,
+            self._idx,
+            self._loop,
+            self._duration
+        )
+
     def get_atom_data(self):
-        return AtomData(
+        return AtomWarmup(
             self.name,
             self._idx,
             self._loop,

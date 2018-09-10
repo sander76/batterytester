@@ -22,13 +22,15 @@ from batterytester.core.helpers.helpers import (
 )
 from batterytester.core.helpers.message_data import (
     LoopData,
-    AtomStatus,
-    TestData,
+    AtomCollecting,
+    TestWarmup,
     TestFinished,
     ActorResponse,
     AtomResult,
     LoopFinished,
+    AtomExecute
 )
+#from core.helpers.message_data import AtomExecute
 
 LOGGER = logging.getLogger(__name__)
 
@@ -140,10 +142,7 @@ class BaseTest:
 
     async def perform_test(self):
         """The test to be performed"""
-        self.bus.notify(subj.ATOM_STATUS, AtomStatus(ATOM_STATUS_EXECUTING))
-        # todo: move to the below event instead of the above one.
-        # self.bus.notify(subj.ACTOR_EXECUTED, self._perform_test_data())
-
+        self.bus.notify(subj.ATOM_EXECUTE,AtomExecute(ATOM_STATUS_EXECUTING))
         try:
             _result = await self._active_atom.execute()
         except NonFatalTestFailException as err:
@@ -157,7 +156,7 @@ class BaseTest:
                     subj.ACTOR_RESPONSE_RECEIVED, ActorResponse(_result)
                 )
             self.bus.notify(
-                subj.ATOM_STATUS, AtomStatus(ATOM_STATUS_COLLECTING)
+                subj.ATOM_COLLECTING, AtomCollecting(ATOM_STATUS_COLLECTING)
             )
 
             # sleeping the defined duration to gather sensor
@@ -188,7 +187,7 @@ class BaseTest:
     async def async_test(self):
         LOGGER.info("STARTING async_test")
         self.bus.notify(
-            subj.TEST_WARMUP, TestData(self.test_name, self._loopcount)
+            subj.TEST_WARMUP, TestWarmup(self.test_name, self._loopcount)
         )
         await self.test_warmup()
 

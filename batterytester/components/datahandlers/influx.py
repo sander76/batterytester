@@ -16,7 +16,7 @@ from batterytester.core.helpers.constants import (
     ATTR_SENSOR_NAME,
 )
 from batterytester.core.helpers.helpers import FatalTestFailException
-from batterytester.core.helpers.message_data import AtomData, ActorResponse
+from batterytester.core.helpers.message_data import AtomWarmup, ActorResponse
 
 LOGGER = logging.getLogger(__name__)
 
@@ -207,7 +207,7 @@ class Influx(BaseDataHandler):
         )
         self.add_to_buffer(_influx)
 
-    def event_atom_warmup(self, testdata: AtomData):
+    def event_atom_warmup(self, testdata: AtomWarmup):
         """Respond to warmup event.
 
         This data is stored as an event or so called annotation.

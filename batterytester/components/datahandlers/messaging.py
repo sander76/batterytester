@@ -20,7 +20,7 @@ from batterytester.core.helpers.helpers import (
 )
 from batterytester.core.helpers.message_data import (
     to_serializable,
-    AtomData,
+    AtomWarmup,
     TestSummary,
     Message,
     LoopData,
@@ -53,8 +53,11 @@ class Messaging(BaseDataHandler):
     Needs a running websocket server to connect and interact with."""
 
     def __init__(
-            self, *, host="127.0.0.1", port=8567,
-            subscriptions: Optional[Subscriptions] = None
+        self,
+        *,
+        host="127.0.0.1",
+        port=8567,
+        subscriptions: Optional[Subscriptions] = None
     ):
         """
 
@@ -64,6 +67,7 @@ class Messaging(BaseDataHandler):
         super().__init__(subscriptions=subscriptions)
         self.ws_connection = None
         self.session = None
+        #todo: move the test summary to the server part.
         self.test_summary = TestSummary()
         self.test_summary.cache = True
         self._host = host
@@ -71,17 +75,6 @@ class Messaging(BaseDataHandler):
         self._server_address = None
         self._connection_state = ConnectionState.UNDEFINED
         self._ws_connection_handler = None
-
-        # self.subscriptions = (
-        #     #(subj.TEST_WARMUP, self.test_warmup),
-        #     (subj.TEST_FATAL, self.test_fatal),
-        #     (subj.TEST_FINISHED, self.test_finished),
-        #     (subj.ATOM_STATUS, self.atom_status),
-        #     #(subj.LOOP_WARMUP, self.loop_warmup),
-        #     #(subj.ATOM_WARMUP, self._atom_warmup),
-        #     (subj.ATOM_RESULT, self.atom_result),
-        #     (subj.SENSOR_DATA, self.test_data),
-        # )
 
     async def shutdown(self, bus):
         LOGGER.info("Messaging shutdown signal received.")
@@ -97,7 +90,7 @@ class Messaging(BaseDataHandler):
     #     data.subj = subject
     #     self._send_to_ws(data)
 
-    def event_atom_warmup(self, testdata: AtomData):
+    def event_atom_warmup(self, testdata: AtomWarmup):
         super().event_atom_warmup(testdata)
         testdata.subj = subj.ATOM_WARMUP
         self._send_to_ws(testdata)
@@ -170,13 +163,13 @@ class Messaging(BaseDataHandler):
     # def test_data(self, subject, data):
     #     self._send_to_ws(data)
 
-    def event_atom_status(self, testdata):
-        testdata.subj = subj.ATOM_STATUS
+    def event_atom_execute(self, testdata):
+        testdata.subj = subj.ATOM_EXECUTE
         self._send_to_ws(testdata)
 
-    # def atom_status(self, subject, data: AtomStatus):
-    #     data.subj = subject
-    #     self._send_to_ws(data)
+    def event_atom_collecting(self, testdata):
+        testdata.subj = subj.ATOM_COLLECTING
+        self._send_to_ws(testdata)
 
     def _send_to_ws(self, data: Message):
         _js = json.dumps(data, default=to_serializable)
@@ -261,9 +254,9 @@ class Messaging(BaseDataHandler):
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     await self.parser(msg)
                 elif msg.type in (
-                        aiohttp.WSMsgType.CLOSED,
-                        aiohttp.WSMsgType.CLOSING,
-                        aiohttp.WSMsgType.CLOSE,
+                    aiohttp.WSMsgType.CLOSED,
+                    aiohttp.WSMsgType.CLOSING,
+                    aiohttp.WSMsgType.CLOSE,
                 ):
                     break
                 elif msg.type == aiohttp.WSMsgType.ERROR:

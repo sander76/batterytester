@@ -1,49 +1,49 @@
 import json
 import typing
+from collections import deque
 from functools import singledispatch
-from typing import List
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.core.helpers.constants import KEY_ATOM_INDEX, \
-    KEY_ATOM_LOOP, KEY_ATOM_NAME, REASON
+from batterytester.core.helpers.constants import (
+    KEY_ATOM_INDEX,
+    KEY_ATOM_LOOP,
+    KEY_ATOM_NAME,
+    REASON,
+)
 from batterytester.core.helpers.helpers import get_current_timestamp
 
+TYPE_STR = "str"
+TYPE_TIME = "time"
+TYPE_INT = "int"
+TYPE_TIME_DELTA = "time_delta"
+TYPE_JSON = "json"
+TYPE_BOOL = "bool"
+TYPE_STATUS = "status"
+TYPE_STR_LIST = "strlist"
 
-TYPE_STR = 'str'
-TYPE_TIME = 'time'
-TYPE_INT = 'int'
-TYPE_TIME_DELTA = 'time_delta'
-TYPE_JSON = 'json'
-TYPE_BOOL = 'bool'
-TYPE_STATUS = 'status'
-TYPE_STR_LIST = 'strlist'
+STATUS_RUNNING = "running"
+STATUS_UNKOWN = "unknown"
+STATUS_FINISHED = "finished"
+STATUS_STARTING = "starting"
 
-STATUS_RUNNING = 'running'
-STATUS_UNKOWN = 'unknown'
-STATUS_FINISHED = 'finished'
-STATUS_STARTING = 'starting'
+PROCESS_INFO = "process_info"
 
 
 # todo: Add source to message. This can be used to later
 # filter out messages depending on sender.
 
+
 class Data:
-    def __init__(self, value: typing.Any = 'unknown', type_=TYPE_STR):
+    def __init__(self, value: typing.Any = "unknown", type_=TYPE_STR):
         self.value = value
         self.type = type_
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return (
-                    self.value == other.value and
-                    self.type == other.type
-            )
+            return self.value == other.value and self.type == other.type
 
     def __ne__(self, other):
-        return (
-                self.value != other.value or
-                self.type != other.type
-        )
+        return self.value != other.value or self.type != other.type
 
 
 class ListData:
@@ -59,10 +59,27 @@ class ListData:
         self._value.append(value)
 
 
+class DeQueData:
+    def __init__(self, max_len=100):
+        self._value = deque(maxlen=max_len)
+        self.type = TYPE_STR_LIST
+
+    def __len__(self):
+        return len(self._value)
+
+    @property
+    def value(self):
+        return self._value
+
+    def add(self, value):
+        self._value.append(value)
+
+
 class Message:
     def __init__(self):
-        self.subj = 'unknown'
+        self.subj = "unknown"
         self.time = Data(get_current_timestamp(), type_=TYPE_TIME)
+        self.identity = None
 
     def to_json(self):
         return json.dumps(self, default=to_serializable)
@@ -94,25 +111,71 @@ def data_serializable(val):
 
 @to_serializable.register(ListData)
 def data_serializable(val):
-    return {'v': val.value, 'type': val.type}
+    return {"v": val.value, "type": val.type}
+
+
+@to_serializable.register(DeQueData)
+def data_serializable(val):
+    return {"v": val.value, "type": val.type}
 
 
 @to_serializable.register(Message)
 def message_serializable(val):
-    _val = vars(val)
-    _val['subj'] = val.subj
+    _val = {}
+    for key, data in vars(val).items():
+        if data is not None:
+            _val[key] = data
+    _val["subj"] = val.subj
     return _val
 
 
-class BaseTestData(Message):
+class BaseProcessData(Message):
     def __init__(self):
         super().__init__()
-        self.time_finished = Data("unknown", type_=TYPE_TIME)
-        self.status = Data(STATUS_UNKOWN, TYPE_STATUS)
+        self.identity = "process"
+        self._process_name = None
+        self._process_id = None
+        self._status = None
+        self._return_code = None
+        self._message = None
+        self._messages = DeQueData()
+
+    def update(self, process_data):
+        if process_data._status:
+            self._status = process_data._status
+
+        if process_data._process_name:
+            self._process_name = process_data._process_name
+
+        if process_data._process_id:
+            self._process_id = process_data._process_id
+
+        if process_data._message:
+            self._message = process_data._message
+            self._messages.add(process_data._message)
+
+
+class ProcessStarted(BaseProcessData):
+    def __init__(self, process_name, process_id):
+        super().__init__()
+        self._status = Data(STATUS_RUNNING)
+        self._process_name = Data(process_name)
+        self._process_id = Data(process_id)
+
+
+class ProcessMessage(BaseProcessData):
+    def __init__(self, message):
+        super().__init__()
+        self._message = Data(message)
+
+
+class ProcessFinished(BaseProcessData):
+    def __init__(self):
+        super().__init__()
+        self._status = Data(STATUS_FINISHED)
 
 
 class ProcessData(Message):
-
     def __init__(self):
         super().__init__()
         self.subj = subj.PROCESS_INFO
@@ -120,6 +183,7 @@ class ProcessData(Message):
         self._process_id = Data(type_=TYPE_INT)
         self._status = Data(STATUS_UNKOWN, TYPE_STATUS)
         self._return_code = Data(type_=TYPE_INT)
+        # todo: make this a cyclic buffer of length 100 (?)
         self._messages = ListData()
 
     @property
@@ -158,32 +222,76 @@ class ProcessData(Message):
         self._messages.add(message)
 
 
-class TestFinished(BaseTestData):
+class BaseTestData(Message):
     def __init__(self):
         super().__init__()
-        self.subj = subj.TEST_FINISHED
-        self.status = Data(STATUS_FINISHED, TYPE_STATUS)
-        self.time_finished = Data(get_current_timestamp(), type_=TYPE_TIME)
-        self.reason = Data(value='End of test reached.')
+        self.identity = "test_data"
+        self.started = None
+        self.test_name = None
+        self.loop_count = None
+        self.status = Data(STATUS_UNKOWN, TYPE_STATUS)
+        self.time_finished = Data("unknown", type_=TYPE_TIME)
+        self.reason = None
 
 
-class FatalData(TestFinished):
-    def __init__(self, reason):
-        super().__init__()
-        self.subj = subj.TEST_FATAL
-        self.reason = Data(value=str(reason))
-
-
-class TestData(BaseTestData):
+class TestWarmup(BaseTestData):
     def __init__(self, test_name, loop_count):
         super().__init__()
+        self.subj = subj.TEST_WARMUP
         self.test_name = Data(test_name)
         self.started = Data(get_current_timestamp(), type_=TYPE_TIME)
         self.loop_count = Data(loop_count, type_=TYPE_INT)
         self.status = Data("running")
 
 
-class AtomData(Message):
+class TestFinished(BaseTestData):
+    def __init__(self):
+        super().__init__()
+        self.subj = subj.TEST_FINISHED
+        self.status = Data(STATUS_FINISHED, TYPE_STATUS)
+        self.time_finished = Data(get_current_timestamp(), type_=TYPE_TIME)
+        self.reason = Data(value="End of test reached.")
+
+
+class TestFatal(TestFinished):
+    def __init__(self, reason):
+        super().__init__()
+        self.subj = subj.TEST_FATAL
+        self.reason = Data(value=str(reason))
+
+
+class BaseLoopData(Message):
+    def __init__(self):
+        super().__init__()
+        self.identity = "loop_data"
+
+
+class LoopData(BaseLoopData):
+    def __init__(self, atoms):
+        super().__init__()
+        self.atoms = atoms
+
+
+class LoopFinished(BaseLoopData):
+    def __init__(self):
+        super().__init__()
+        self.subj = subj.LOOP_FINISHED
+
+
+class BaseAtomData(Message):
+    def __init__(self):
+        super().__init__()
+        self.identity = "atom_data"
+        self.atom_name = None
+        self.idx = None
+        self.loop = None
+        self.status = None
+        self.started = None
+        self.duration = None
+
+
+# todo: to be obsolete.
+class AtomWarmup(BaseAtomData):
     def __init__(self, name, idx, loop, duration):
         super().__init__()
         self.atom_name = Data(name)
@@ -195,19 +303,27 @@ class AtomData(Message):
         self.duration = Data(duration, type_=TYPE_TIME_DELTA)
 
 
-class LoopData(BaseTestData):
-    def __init__(self, atoms: List[AtomData]):
+# class AtomWarmup(BaseAtomData):
+#     def __init__(self, name, idx, loop, duration):
+#         super().__init__()
+#         self.atom_name = Data(name)
+#         self.idx = Data(idx)
+#         self.loop = Data(loop)
+#         self.status = Data()
+#         self.status_updated = Data()
+#         self.started = Data(get_current_timestamp(), type_=TYPE_TIME)
+#         self.duration = Data(duration, type_=TYPE_TIME_DELTA)
+
+
+class AtomExecute(BaseAtomData):
+    def __init__(self, status):
         super().__init__()
-        self.atoms = atoms
+        self.subj = subj.ATOM_EXECUTE
+        self.status = Data(status)
+        self.status_updated = Data(get_current_timestamp(), type_=TYPE_TIME)
 
 
-class LoopFinished(Message):
-    def __init__(self):
-        super().__init__()
-        self.subj = subj.LOOP_FINISHED
-
-
-class AtomStatus(Message):
+class AtomCollecting(BaseAtomData):
     def __init__(self, status):
         super().__init__()
         self.status = Data(status)
@@ -221,7 +337,7 @@ class ActorResponse(Message):
 
 
 class AtomResult(Message):
-    def __init__(self, passed: bool, reason: str = ''):
+    def __init__(self, passed: bool, reason: str = ""):
         super().__init__()
         self.passed = Data(passed)
         self.reason = Data(value=str(reason))
@@ -240,9 +356,11 @@ class TestSummary(Message):
 
     def atom_failed(self, idx, loop, test_name, reason):
         self.failed.value += 1
-        self.failed_ids.value.append({
-            KEY_ATOM_INDEX: idx,
-            KEY_ATOM_LOOP: loop,
-            KEY_ATOM_NAME: test_name,
-            REASON: reason
-        })
+        self.failed_ids.value.append(
+            {
+                KEY_ATOM_INDEX: idx,
+                KEY_ATOM_LOOP: loop,
+                KEY_ATOM_NAME: test_name,
+                REASON: reason,
+            }
+        )

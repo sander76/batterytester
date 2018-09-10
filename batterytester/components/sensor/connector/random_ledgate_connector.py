@@ -25,7 +25,8 @@ class RandomLedgateConnector(AsyncSensorConnector):
                         self._ports[key] = 0
 
                     _message = (
-                        '{}:{}'.format(key, self._ports[key])).encode()
+                        "{}s:{}:{}{}".format("{", key, self._ports[key], "}")
+                    ).encode()
                     await self.raw_sensor_data_queue.put(_message)
                     await asyncio.sleep(self._delay)
         except CancelledError:

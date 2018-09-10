@@ -12,7 +12,7 @@ from batterytester.core.bus import Bus
 from batterytester.core.helpers.message_data import (
     ActorResponse,
     AtomResult,
-    FatalData,
+    TestFatal,
 )
 from test.private_keys import telegram_token, chat_id
 

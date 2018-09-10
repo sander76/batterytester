@@ -8,8 +8,8 @@ from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers.message_data import (
     Data,
     TYPE_TIME,
-    TestData,
-    FatalData,
+    TestWarmup,
+    TestFatal,
 )
 from test.fake_components import (
     FakeBaseTest,
@@ -77,14 +77,14 @@ def fake_influx_nobus(fake_influx):
 
 @pytest.fixture
 def test_warmup_data(fake_time_stamp):
-    warmup = TestData("test_test", 1)
+    warmup = TestWarmup("test_test", 1)
     warmup.started = fake_time_stamp
     return warmup
 
 
 @pytest.fixture
 def fatal_data(fake_time_stamp):
-    ft = FatalData("fatal reason unknown.")
+    ft = TestFatal("fatal reason unknown.")
     ft.time = fake_time_stamp
     ft.time_finished = fake_time_stamp
     return ft

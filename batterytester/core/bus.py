@@ -10,7 +10,7 @@ from batterytester.core.helpers.helpers import (
     FatalTestFailException,
     TestSetupException,
 )
-from batterytester.core.helpers.message_data import FatalData
+from batterytester.core.helpers.message_data import TestFatal
 
 LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ class Bus:
         except Exception as err:
             LOGGER.error("A background task has an error: {}".format(err))
             LOGGER.exception(err)
-            self.notify(subj.TEST_FATAL, FatalData(err))
+            self.notify(subj.TEST_FATAL, TestFatal(err))
             """An exception is raised. Meaning one of the long running 
             tasks has encountered an error. Cancelling the main task and
             subsequently cancelling all other long running tasks."""
@@ -137,12 +137,12 @@ class Bus:
             LOGGER.error("Main test loop cancelled.")
         except FatalTestFailException as err:
             LOGGER.error("FATAL ERROR: {}".format(err))
-            self.notify(subj.TEST_FATAL, FatalData(err))
+            self.notify(subj.TEST_FATAL, TestFatal(err))
         except KeyboardInterrupt:
             LOGGER.info("Test stopped due to keyboard interrupt.")
         except Exception as err:
             LOGGER.exception(err)
-            self.notify(subj.TEST_FATAL, FatalData(err))
+            self.notify(subj.TEST_FATAL, TestFatal(err))
         finally:
             self.loop.run_until_complete(self.shutdown_test())
 

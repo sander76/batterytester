@@ -10,10 +10,10 @@ from batterytester.components.datahandlers.base_data_handler import (
 from batterytester.core.helpers.constants import RESULT_FAIL, RESULT_PASS
 from batterytester.core.helpers.helpers import get_time_string
 from batterytester.core.helpers.message_data import (
-    FatalData,
+    TestFatal,
     TestFinished,
-    TestData,
-    AtomData,
+    TestWarmup,
+    AtomWarmup,
     AtomResult,
     TestSummary,
 )

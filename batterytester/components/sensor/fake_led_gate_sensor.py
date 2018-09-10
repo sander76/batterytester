@@ -35,5 +35,9 @@ class FakeLedGateSensor(BaseSquidSensor):
 
     async def setup(self, test_name: str, bus: Bus):
         self._connector = RandomLedgateConnector(bus=bus, delay=self._delay)
-        self._sensor_data_parser = BooleanParser(bus, self.sensor_prefix)
+        self._sensor_data_parser = BooleanParser(
+            bus=bus,
+            sensor_queue=self.sensor_data_queue,
+            sensor_prefix=self.sensor_prefix,
+        )
         await super().setup(test_name, bus)

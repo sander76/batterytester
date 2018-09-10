@@ -19,7 +19,7 @@ from batterytester.core.helpers.constants import (
     ATTR_SENSOR_NAME,
 )
 from batterytester.core.helpers.message_data import (
-    AtomData,
+    AtomWarmup,
     Data,
     ActorResponse,
 )
@@ -49,7 +49,7 @@ def fake_tag():
 
 @pytest.fixture
 def fake_atom_data():
-    atom = AtomData("atom 1", 0, 0, 5)
+    atom = AtomWarmup("atom 1", 0, 0, 5)
     atom.started = Data(value=12345678)
     return atom
 
@@ -119,7 +119,7 @@ def test_get_time_stamp():
     assert isinstance(ts, int)
 
 
-def test_atom_warmup(fake_influx: Influx, fake_atom_data: AtomData):
+def test_atom_warmup(fake_influx: Influx, fake_atom_data: AtomWarmup):
     fake_influx.event_atom_warmup(fake_atom_data)
 
     assert len(fake_influx.data) == 1

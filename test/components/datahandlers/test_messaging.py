@@ -4,7 +4,7 @@ import pytest
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.components.datahandlers.messaging import Messaging
-from batterytester.core.helpers.message_data import TestData
+from batterytester.core.helpers.message_data import TestWarmup
 
 
 @pytest.fixture
