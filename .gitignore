@@ -8,6 +8,6 @@ summary-report.md
 .cache
 build
 reports
-dist
+/dist
 .pytest_cache
 secret.py
