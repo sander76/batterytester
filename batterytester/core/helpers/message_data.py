@@ -11,7 +11,7 @@ from batterytester.core.helpers.constants import (
     REASON,
 )
 from batterytester.core.helpers.helpers import get_current_timestamp
-from core.helpers.message_subjects import (
+from batterytester.core.helpers.message_subjects import (
     PROCESS_STARTED,
     PROCESS_FINISHED,
     PROCESS_MESSAGE,
@@ -62,22 +62,6 @@ class ListData:
 
     def add(self, value):
         self._value.append(value)
-
-
-# class DeQueData:
-#     def __init__(self, max_len=100):
-#         self._value = deque(maxlen=max_len)
-#         self.type = TYPE_STR_LIST
-#
-#     def __len__(self):
-#         return len(self._value)
-#
-#     @property
-#     def value(self):
-#         return self._value
-#
-#     def add(self, value):
-#         self._value.append(value)
 
 
 class Message:
