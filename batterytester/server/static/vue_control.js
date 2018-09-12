@@ -60,8 +60,7 @@ function changeFav(state) {
             break
 
     }
-    //favIcon.href = fav
-    //currentFavicon = fav
+
 }
 
 function testData() {
@@ -83,16 +82,18 @@ function atomData() {
         loop: UNKNOWN,
         status: UNKNOWN,
         started: UNKNOWN,
-        duration: UNKNOWN
+        duration: UNKNOWN,
+        reference_data: UNKNOWN
     }
 }
 
 function processData() {
     return {
-        _process_name: UNKNOWN,
-        _process_id: UNKNOWN,
-        _status: UNKNOWN,
-        _messages: []
+        process_name: '-',
+        process_id: '-',
+        status: '-',
+        messages: [],
+        message: '-'
     }
 }
 
@@ -165,7 +166,7 @@ var vm = new Vue({
             // Load url query data (test=<testname>) and match it with the available tests
             let queryString = new URLSearchParams(document.location.search.substring(1))
             let test = queryString.get('test')
-            this.test_select = test
+            this.current_test = test
         },
         clearData: function (event) {
             this.test = testData()
@@ -220,26 +221,20 @@ var vm = new Vue({
         },
         ws_message: function (event) {
             parseWsMessage(JSON.parse(event.data))
+        },
+        set_current_test: function (event) {
+            this.current_test = this.process._process_name.v
+            this.setRoute()
+
+            document.title = this.current_test
         }
     },
     mounted: function () {
         this.get_tests()
         this.openSocket()
         this.getStatus()
-    },
-    computed: {
-        test_select: {
-            get: function () {
-                return this.current_test
-            },
-            set: function (newValue) {
-                this.current_test = newValue
-                this.setRoute()
-                console.log('new value set.')
-                document.title = this.current_test
-            }
-        }
     }
+
 })
 
 function merge(source, target) {
@@ -262,32 +257,79 @@ function parseSensor(source, target) {
 
 function parseWsMessage(js) {
     let subj = js['subj']
-    let identity = js['identity']
     console.log(subj)
-
-
-    if (identity === 'test_data') {
-
-        merge(js, vm.test)
-        changeFav(subj)
-    } else if (identity === 'atom_data') {
-        merge(js, vm.atom)
-    }
     switch (subj) {
         case 'sensor_data':
             parseSensor(js, vm.sensor_data)
             break
-
+        case 'result_summary':
+            merge(js, vm.summary)
+            break
         case 'process_started':
-            vm.process = js
+            merge(js, vm.process)
+            vm.set_current_test()
             break
         case 'process_info':
-            vm.process = js
+            merge(js, vm.process)
             break
-        case 'result_summary':
-            console.log('summary info')
-            merge(js, vm.summary)
-
+        case 'process_message':
+            vm.process.messages.push(js['message'])
+            break
+        case 'process_finished':
+            merge(js, vm.process)
+            break
+        case 'atom_warmup':
+            vm.atom = atomData()
+            merge(js, vm.atom)
+            break
+        case 'atom_execute':
+            merge(js, vm.atom)
+            break
+        case 'atom_collecting':
+            merge(js, vm.atom)
+            break
+        case 'test_warmup':
+            merge(js, vm.test)
+            changeFav(subj)
+            break
+        case 'test_finished':
+            merge(js, vm.test)
+            changeFav(subj)
+            break
+        case 'test_fatal':
+            merge(js, vm.test)
+            changeFav(subj)
+            break
+        case 'test_result':
+            merge(js, vm.test)
+            changeFav(subj)
+            break
     }
-
+    // } else {
+    //     switch (identity) {
+    //         case 'test_data':
+    //             merge(js, vm.test)
+    //             changeFav(subj)
+    //             break
+    //         case 'atom_data':
+    //             if (subj === 'atom_warmup') {
+    //                 vm.atom = atomData()
+    //             }
+    //             merge(js, vm.atom)
+    //             break
+    //         case 'process':
+    //             merge(js, vm.process)
+    //             switch (subj) {
+    //                 case 'process_started':
+    //                     //vm.process = js
+    //                     vm.set_current_test()
+    //                     break
+    //                 case 'process_message':
+    //                     var msg = js['_message']['v']
+    //                     console.log(msg)
+    //                     vm.process._messages.push(msg)
+    //                     break
+    //             }
+    //     }
+    // }
 }

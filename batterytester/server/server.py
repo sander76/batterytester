@@ -14,18 +14,8 @@ from aiohttp import web, WSCloseCode
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.helpers.constants import KEY_SUBJECT
-from batterytester.core.helpers.message_data import (
-    to_serializable,
-    Data,
-    ProcessData,
-    STATUS_FINISHED,
-    STATUS_RUNNING,
-    STATUS_STARTING,
-)
-from batterytester.core.helpers.message_subjects import (
-    PROCESS_STARTED,
-    PROCESS_INFO,
-)
+from batterytester.core.helpers.message_data import to_serializable, Data
+from core.helpers.message_data import BaseProcessData
 
 ATTR_MESSAGE_BUS_ADDRESS = "0.0.0.0"
 ATTR_MESSAGE_BUS_PORT = 8567
@@ -75,7 +65,9 @@ class Server:
         self.server = None
         self.test_cache = {}
         self.test_process = None
-        self.process_data = ProcessData()
+
+        # self.process_data = ProcessData()
+        self.p_data = BaseProcessData.base_process()
         set_current_working_folder()
 
     @property
@@ -130,17 +122,27 @@ class Server:
                 text="There is another test running. Stop that one first."
             )
         else:
+            self.clear_cache()
+
+            # self.process_data.status = STATUS_STARTING
+            # self.process_data.subj = PROCESS_STARTED
+            # self.process_data.process_name = data["test"]
             await self._start_test_process(p)
-            self.process_data.process_name = data["test"]
-            await self.ws_send_to_clients(self.process_data.to_json())
+            p_started = BaseProcessData.process_started(
+                data["test"], self.test_process.pid
+            )
+            self.p_data.update(p_started)
+
+            await self.ws_send_to_clients(self.p_data.to_json())
         return web.Response()
 
     async def _start_test_process(self, p):
         """Start a process containing a new test to run."""
-        self.clear_cache()
-        self.process_data.status = STATUS_STARTING
-        self.process_data.subj = PROCESS_STARTED
-        await self.ws_send_to_clients(self.process_data.to_json())
+        # self.clear_cache()
+
+        # self.process_data.status = STATUS_STARTING
+        # self.process_data.subj = PROCESS_STARTED
+        # await self.ws_send_to_clients(self.process_data.to_json())
 
         self.test_process = await asyncio.create_subprocess_exec(
             sys.executable,
@@ -150,9 +152,9 @@ class Server:
             stderr=asyncio.subprocess.STDOUT,
             loop=self.loop,
         )
-        self.process_data.status = STATUS_RUNNING
-        self.process_data.subj = PROCESS_INFO
-        self.process_data.process_id = self.test_process.pid
+        # self.process_data.status = STATUS_RUNNING
+        # self.process_data.subj = PROCESS_INFO
+        # self.process_data.process_id = self.test_process.pid
 
         self.process_task = asyncio.ensure_future(self.manage_process())
 
@@ -160,16 +162,26 @@ class Server:
         try:
             while not self.test_process.stdout.at_eof():
                 line = await self.test_process.stdout.readline()
-                self.process_data.add_message(line.decode("utf-8"))
-                await self.ws_send_to_clients(self.process_data.to_json())
+
+                p_message = BaseProcessData.process_message(
+                    line.decode("utf-8")
+                )
+                self.p_data.update(p_message)
+                await self.ws_send_to_clients(p_message.to_json())
+
             code = await self.test_process.wait()
 
             LOGGER.debug("exit code: {}".format(code))
 
-            self.process_data.return_code = int(code)
-            self.process_data.status = STATUS_FINISHED
+            # self.process_data.return_code = int(code)
+
+            p_finished = BaseProcessData.process_finished(int(code))
+            self.p_data.update(p_finished)
+
+            # self.process_data.status = STATUS_FINISHED
             try:
-                await self.ws_send_to_clients(self.process_data.to_json())
+                await self.ws_send_to_clients(p_finished.to_json())
+                # await self.ws_send_to_clients(self.process_data.to_json())
             except Exception as err:
                 LOGGER.exception(err)
 
@@ -184,7 +196,8 @@ class Server:
         return web.json_response({"running": False})
 
     async def get_status_handler(self, request):
-        self.test_cache["process_info"] = self.process_data.to_dict()
+        # self.test_cache["process_info"] = self.process_data.to_dict()
+        self.test_cache["process_info"] = self.p_data.to_dict()
         LOGGER.info("test cache: %s", self.test_cache)
 
         return web.json_response(self.test_cache)
@@ -314,6 +327,7 @@ class Server:
             elif _subj == subj.RESULT_SUMMARY:
                 self._update_test_cache(data, subj.RESULT_SUMMARY)
             elif _subj == subj.SENSOR_DATA:
+                #fixme: sensor data is not properly cached. Only one item is stored.
                 self._update_test_cache(data, subj.SENSOR_DATA)
 
     def _update_test_cache(self, data, cache_key):
@@ -324,7 +338,8 @@ class Server:
 
     def clear_cache(self):
         self.test_cache = {}
-        self.process_data = ProcessData()
+        self.p_data = BaseProcessData.base_process()
+        # self.process_data = ProcessData()
 
     async def ws_send_to_clients(self, raw):
         # todo: catch connection errors.

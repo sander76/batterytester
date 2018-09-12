@@ -17,7 +17,7 @@ from core.atom.reference_atom import ReferenceAtom
 
 set_test_config("../dev_config.json")
 
-test = BaseTest(test_name="empty test", loop_count=1)
+test = BaseTest(test_name="empty test", loop_count=2)
 
 # Add actors to the test.
 test.add_actor(ExampleActor())
@@ -42,7 +42,7 @@ def get_sequence(_actors):
             duration=4,
             reference={"6": True}
         ),
-        Atom(name="open shade", duration=10, command=example_actor.open),
+        Atom(name="open shade", duration=4, command=example_actor.open),
     )
     return _val
 

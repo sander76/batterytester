@@ -13,6 +13,10 @@ PROCESS_INFO = "process_info"
 
 PROCESS_STARTED = "process_started"
 
+PROCESS_FINISHED = "process_finished"
+
+PROCESS_MESSAGE = "process_message"
+
 TEST_WARMUP = "test_warmup"
 """Emitted at the start of the test."""
 

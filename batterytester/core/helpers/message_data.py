@@ -11,6 +11,11 @@ from batterytester.core.helpers.constants import (
     REASON,
 )
 from batterytester.core.helpers.helpers import get_current_timestamp
+from core.helpers.message_subjects import (
+    PROCESS_STARTED,
+    PROCESS_FINISHED,
+    PROCESS_MESSAGE,
+)
 
 TYPE_STR = "str"
 TYPE_TIME = "time"
@@ -59,20 +64,20 @@ class ListData:
         self._value.append(value)
 
 
-class DeQueData:
-    def __init__(self, max_len=100):
-        self._value = deque(maxlen=max_len)
-        self.type = TYPE_STR_LIST
-
-    def __len__(self):
-        return len(self._value)
-
-    @property
-    def value(self):
-        return self._value
-
-    def add(self, value):
-        self._value.append(value)
+# class DeQueData:
+#     def __init__(self, max_len=100):
+#         self._value = deque(maxlen=max_len)
+#         self.type = TYPE_STR_LIST
+#
+#     def __len__(self):
+#         return len(self._value)
+#
+#     @property
+#     def value(self):
+#         return self._value
+#
+#     def add(self, value):
+#         self._value.append(value)
 
 
 class Message:
@@ -114,9 +119,14 @@ def data_serializable(val):
     return {"v": val.value, "type": val.type}
 
 
-@to_serializable.register(DeQueData)
+@to_serializable.register(deque)
 def data_serializable(val):
-    return {"v": val.value, "type": val.type}
+    return list(val)
+
+
+# @to_serializable.register(DeQueData)
+# def data_serializable(val):
+#     return {"v": list(val.value), "type": val.type}
 
 
 @to_serializable.register(Message)
@@ -130,96 +140,131 @@ def message_serializable(val):
 
 
 class BaseProcessData(Message):
-    def __init__(self):
-        super().__init__()
-        self.identity = "process"
-        self._process_name = None
-        self._process_id = None
-        self._status = None
-        self._return_code = None
-        self._message = None
-        self._messages = DeQueData()
+    identity = "process"
+    process_name = None
+    process_id = None
+    status = None
+    return_code = None
+    message = None
+    messages = None
+    subj = subj.PROCESS_INFO
 
     def update(self, process_data):
-        if process_data._status:
-            self._status = process_data._status
+        if process_data.status:
+            self.status = process_data.status
 
-        if process_data._process_name:
-            self._process_name = process_data._process_name
+        if process_data.process_name:
+            self.process_name = process_data.process_name
 
-        if process_data._process_id:
-            self._process_id = process_data._process_id
+        if process_data.process_id:
+            self.process_id = process_data.process_id
 
-        if process_data._message:
-            self._message = process_data._message
-            self._messages.add(process_data._message)
+        if process_data.message:
+            self.message = process_data.message
+            self.messages.append(process_data.message)
+
+    @classmethod
+    def base_process(cls, max_len=100):
+        cl = cls()
+        cl.subj = subj.PROCESS_INFO
+        cl.messages = deque(maxlen=max_len)
+        return cl
+
+    @classmethod
+    def process_started(cls, process_name, process_id):
+        cl = cls()
+        cl.subj = PROCESS_STARTED
+        cl.status = STATUS_RUNNING
+        cl.process_name = process_name
+        cl.process_id = process_id
+        return cl
+
+    @classmethod
+    def process_finished(cls, return_code):
+        cl = cls()
+        cl.subj = PROCESS_FINISHED
+        cl.status = STATUS_FINISHED
+        cl.return_code = return_code
+        return cl
+
+    @classmethod
+    def process_message(cls, message):
+        cl = cls()
+        cl.subj = PROCESS_MESSAGE
+        cl.message = message
+        return cl
 
 
-class ProcessStarted(BaseProcessData):
-    def __init__(self, process_name, process_id):
-        super().__init__()
-        self._status = Data(STATUS_RUNNING)
-        self._process_name = Data(process_name)
-        self._process_id = Data(process_id)
+# class ProcessStarted(Message):
+#     def __init__(self, process_name, process_id):
+#         super().__init__()
+#
+#         self.subj = PROCESS_STARTED
+#         self._status = Data(STATUS_RUNNING)
+#         self._process_name = Data(process_name)
+#         self._process_id = Data(process_id)
+#
+#
+# class ProcessMessage(BaseProcessData):
+#     def __init__(self, message):
+#         super().__init__()
+#         self.subj = PROCESS_MESSAGE
+#         self._message = Data(message)
+#
+#
+# class ProcessFinished(BaseProcessData):
+#     def __init__(self, return_code):
+#         super().__init__()
+#         self.subj = PROCESS_FINISHED
+#         self._status = Data(STATUS_FINISHED)
+#         self._return_code = Data(return_code)
 
 
-class ProcessMessage(BaseProcessData):
-    def __init__(self, message):
-        super().__init__()
-        self._message = Data(message)
-
-
-class ProcessFinished(BaseProcessData):
-    def __init__(self):
-        super().__init__()
-        self._status = Data(STATUS_FINISHED)
-
-
-class ProcessData(Message):
-    def __init__(self):
-        super().__init__()
-        self.subj = subj.PROCESS_INFO
-        self._process_name = Data()
-        self._process_id = Data(type_=TYPE_INT)
-        self._status = Data(STATUS_UNKOWN, TYPE_STATUS)
-        self._return_code = Data(type_=TYPE_INT)
-        # todo: make this a cyclic buffer of length 100 (?)
-        self._messages = ListData()
-
-    @property
-    def process_name(self):
-        return self._process_name.value
-
-    @process_name.setter
-    def process_name(self, value):
-        self._process_name.value = value
-
-    @property
-    def process_id(self):
-        return self._process_id.value
-
-    @process_id.setter
-    def process_id(self, value):
-        self._process_id.value = value
-
-    @property
-    def status(self):
-        return self._status.value
-
-    @status.setter
-    def status(self, value):
-        self._status.value = value
-
-    @property
-    def return_code(self):
-        return self._return_code.value
-
-    @return_code.setter
-    def return_code(self, value):
-        self._return_code.value = value
-
-    def add_message(self, message: str):
-        self._messages.add(message)
+# class ProcessData(Message):
+#     def __init__(self):
+#         super().__init__()
+#         self.subj = subj.PROCESS_INFO
+#         self._process_name = Data()
+#         self._process_id = Data(type_=TYPE_INT)
+#         self._status = Data(STATUS_UNKOWN, TYPE_STATUS)
+#         self._return_code = Data(type_=TYPE_INT)
+#         # todo: make this a cyclic buffer of length 100 (?)
+#         self._messages = ListData()
+#
+#     @property
+#     def process_name(self):
+#         return self._process_name.value
+#
+#     @process_name.setter
+#     def process_name(self, value):
+#         self._process_name.value = value
+#
+#     @property
+#     def process_id(self):
+#         return self._process_id.value
+#
+#     @process_id.setter
+#     def process_id(self, value):
+#         self._process_id.value = value
+#
+#     @property
+#     def status(self):
+#         return self._status.value
+#
+#     @status.setter
+#     def status(self, value):
+#         self._status.value = value
+#
+#     @property
+#     def return_code(self):
+#         return self._return_code.value
+#
+#     @return_code.setter
+#     def return_code(self, value):
+#         self._return_code.value = value
+#
+#     def add_message(self, message: str):
+#         self._messages.add(message)
 
 
 class BaseTestData(Message):
@@ -288,13 +333,14 @@ class BaseAtomData(Message):
         self.status = None
         self.started = None
         self.duration = None
+        self.reference_data = None
 
 
-# todo: to be obsolete.
 class AtomWarmup(BaseAtomData):
     def __init__(self, name, idx, loop, duration):
         super().__init__()
         self.atom_name = Data(name)
+        self.subj = subj.ATOM_WARMUP
         self.idx = Data(idx)
         self.loop = Data(loop)
         self.status = Data()
