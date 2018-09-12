@@ -14,8 +14,12 @@ from aiohttp import web, WSCloseCode
 
 import batterytester.core.helpers.message_subjects as subj
 from batterytester.core.helpers.constants import KEY_SUBJECT
-from batterytester.core.helpers.message_data import to_serializable, Data
-from core.helpers.message_data import BaseProcessData
+from batterytester.core.helpers.message_data import (
+    to_serializable,
+    Data,
+    BaseProcessData,
+)
+
 
 ATTR_MESSAGE_BUS_ADDRESS = "0.0.0.0"
 ATTR_MESSAGE_BUS_PORT = 8567
@@ -327,7 +331,7 @@ class Server:
             elif _subj == subj.RESULT_SUMMARY:
                 self._update_test_cache(data, subj.RESULT_SUMMARY)
             elif _subj == subj.SENSOR_DATA:
-                #fixme: sensor data is not properly cached. Only one item is stored.
+                # fixme: sensor data is not properly cached. Only one item is stored.
                 self._update_test_cache(data, subj.SENSOR_DATA)
 
     def _update_test_cache(self, data, cache_key):
