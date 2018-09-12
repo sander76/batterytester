@@ -223,7 +223,7 @@ var vm = new Vue({
             parseWsMessage(JSON.parse(event.data))
         },
         set_current_test: function (event) {
-            this.current_test = this.process._process_name.v
+            this.current_test = this.process.process_name
             this.setRoute()
 
             document.title = this.current_test
@@ -271,6 +271,7 @@ function parseWsMessage(js) {
             break
         case 'process_info':
             merge(js, vm.process)
+            vm.set_current_test()
             break
         case 'process_message':
             vm.process.messages.push(js['message'])
