@@ -1,272 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
+<html>
 
 <head>
     <meta charset="utf-8">
-    <title>Tester dashboard</title>
-    <link rel="stylesheet" href="spectre.min.css.gz">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link id="favicon" rel="icon" href="icons/thumb-up.png"/>
-
+    <link rel="stylesheet" href="css/dist/mini-default.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+    <link id="favicon" rel="icon" href="icons/thumb-up.png" />
 </head>
-<style>
-    .column {
-        padding: .4rem;
-        
-    }
-
-._messages{
-    height:400px;
-    overflow:scroll;
-}
-
-    .sensor_container {
-        background-color: aliceblue;
-        margin: 5px;
-
-    }
-
-    .sensor_prop {
-        display: inline-block;
-        min-width: 130px;
-        vertical-align: top;
-    }
-
-    .sensor_val {
-        display: inline-block;
-    }
-
-    #all_tests_list {
-        padding: 0;
-    }
-    .process_info_item{
-        font-size: 0.8em;
-    }
-    .process_info_item pre {
-        margin-top : 0.5em;
-        margin-bottom: 0.5em;
-    }
-    .code code {
-        line-height: 1.3;
-        font-size: 0.8em;
-    }
-    
-
-</style>
 
 <body>
-    <div class="container grid-lg">
-        <div class="columns">
-            <div class="column col-12">
+    <style>
+        html {
+            height: 100%;
+            background: #eee;
+        }
 
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <h5>
-                                Connection status
-                            </h5>
+        body {
+            height: 100%;
+        }
+
+        #app {
+            height: 100%;
+            background: #eee;
+        }
+
+        #all_tests {
+            width: 100%;
+        }
+
+
+        .status_connected {
+            --card-back-color: #689f38;
+        }
+
+        .running {
+            --card-back-color: #689f38;
+        }
+
+        .status_disconnected {
+            --card-back-color: #e53935;
+        }
+
+        #process_messages {
+            line-height: 1 !important;
+            margin: 1;
+            font-size: 0.75rem;
+            border-left: 0;
+            border-radius: 0;
+            padding: 0;
+        }
+
+    </style>
+    <div id="app">
+        <div class="container">
+
+            <div class="row cols-md-4 cols-sm-12">
+                <div>
+                    <div class="card fluid" v-bind:class="connection.status.class">
+                        <div class="section">
+                            <div>server: {{connection.status.value}}</div>
                         </div>
                     </div>
+                </div>
+                <div>
+                    <div class="card fluid" v-bind:class="process.status">
+                        <div class="section">
+                            <div>process: {{process.status}}</div>
+                        </div>
+                    </div>
+                </div>
 
-                    <div class="card-body">
-                        <div class="columns">
-                            <div class="column col-6">
-                                <button type="button" class="btn" id="connect">Connect</button>
-                            </div>
-                            <div class="column col-6">
-                                <div id="status">not connected.</div>
+                <div>
+                    <div class="card fluid" v-bind:class="test.status.v">
+                        <div class="section">
+                            <div>test: {{test.status.v}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="row">
+
+                <div class="col-md-5 col-sm-12">
+                    <div class="card fluid">
+                        <h1>Test control</h1>
+                        <div class="section">
+                            <select id="all_tests" v-model="current_test">
+                                <option value="" disabled>Select a test</option>
+                                <option v-for="option in available_tests">
+                                    {{option}}
+                                </option>
+                            </select>
+                            <div>
+                                <button v-on:click="startTest">start test</button>
+                                <button v-on:click="stopTest">stop test</button>
                             </div>
                         </div>
-                        <div class="columns">
-                            <div class="column col-6">
-                                <button type="button" class="btn" id="shutdown">
-                                    Shutdown rpi
-                                </button>
+                    </div>
+                    <div class="card fluid">
+                        <h1>Test data</h1>
+                        <div class="section">
+                            <label-value label="Name" v-bind:value="test.test_name.v"></label-value>
+                            <label-value label="Loopcount" v-bind:value="test.loop_count.v"></label-value>
+                            <label-value label="Start" v-bind:value="test.started.v | time"></label-value>
+                            <label-value label="Stopped" v-bind:value="test.time_finished.v | time"></label-value>
+                            <label-value label="Reason" v-bind:value="test.reason.v"></label-value>
+                        </div>
+                    </div>
+                    <div class="card fluid">
+                        <h1>Atom data</h1>
+                        <div class="section">
+                            <label-value label="Name" v-bind:value="atom.atom_name.v"></label-value>
+                            <label-value label="idx" v-bind:value="atom.idx.v"></label-value>
+                            <label-value label="loop" v-bind:value="atom.loop.v"></label-value>
+                            <label-value label="status" v-bind:value="atom.status.v"></label-value>
+                            <label-value label="started" v-bind:value="atom.started.v | time"></label-value>
+                            <label-value label="duration [s.]" v-bind:value="atom.duration.v"></label-value>
+                            <label-value label="reference" v-bind:value="atom.reference_data.v | json"></label-value>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-7 col-sm-12">
+                    <div class="card fluid">
+                        <h1>Sensor data</h1>
+                        <div class="section" v-for="sensor in sensor_data">
+                            <div class="row">
+                                <div class="col-sm-12 col-md-5">
+                                    <div>{{ sensor.n }}</div>
+                                    <div>
+                                        <small>{{ sensor.t.v | time }}</small>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 col-md-7">
+                                    <pre class="code" data-lang="JSON"><code>{{sensor.v.v | json}}</code></pre>
+                                </div>
+                                <!-- <div>{{ sensor.v }}</div> -->
+                                <!-- <div class="col-sm-12 col-md-6">time: {{ sensor.t.v | time }}</div> -->
                             </div>
 
                         </div>
                     </div>
                 </div>
-
-                <div class="panel">
-                    <div class="panel-header">
-                        <h5>Test control</h5>
-                        <div class="columns">
-                            <div class="column col-md-12 col-8">
-                                <select id='all_tests_list' class="form-select"></select>
-                            </div>
-                            <div class="column col-md-12 col-4">
-                                <button type="button" class='btn btn-block' id="all_tests">Refresh</button>
-                            </div>
-                        </div>
-                        <div class="columns">
-                            <div class="column col-md-12 col-6">
-                                <button type="button" id="stop_test_button" class='btn btn-block'>Stop test</button>
-                            </div>
-                            <div class="column col-md-12 col-6">
-                                <button type="button" id="start_test_button" class='btn btn-block'>Start test</button>
-                            </div>
-                        </div>
-                        <button type="button" id="clear_button">clear</button>
-
-                    </div>
-                </div>
-
-                <h2>PROCESS INFO</h2>
-                <div id="process_info">
-                    <div class="columns">
-                        <div class="column col-6">Process name</div>
-                        <div class="column col-6">
-                            <div class="value _process_name">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Process id</div>
-                        <div class="column col-6">
-                            <div class="value _process_id">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Status</div>
-                        <div class="column col-6">
-                            <div class="value _status">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-2 col-sm-12">Info</div>
-                        <div class="column col-10 col-sm-12">
-                            <div class="value _messages">
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card fluid">
+                        <h1>Test summary</h1>
+                        <div class="section">
+                            <label-value label="passed" v-bind:value="summary.passed.v"></label-value>
+                            <label-value label="failed" v-bind:value="summary.failed.v"></label-value>
+                            <div>
+                                <pre class="code" data-lang="JSON"><code>{{summary.failed_ids.v | json }}</code></pre>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <h2>TEST INFO</h2>
-                <div id="test_info">
-                    <div class="columns">
-                        <div class="column col-6">Test name</div>
-                        <div class="column col-6">
-                            <div class='test_name value'>no name</div>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Status</div>
-                        <div class="column col-6">
-                            <div class="status value">unknown</div>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Reason</div>
-                        <div class="column col-6">
-                            <span class="reason value">
-                            </span>
-                        </div>
-
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Total loop count</div>
-                        <div class="column col-6">
-                            <span class="loop_count value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Started</div>
-                        <div class="column col-6">
-                            <span class="started value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Stopped</div>
-                        <div class="column col-6">
-                            <span class="time_finished value">unknown</span>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card fluid">
+                        <h1>Process data</h1>
+                        <div class="section" >
+                            <div v-for="message in process.messages">
+                                <code id="process_messages" class="code">{{message}}</code>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <h2>ATOM INFO</h2>
-                <div id="atom_info">
-                    <div class="columns">
-                        <div class="column col-6">Name</div>
-                        <div class="column col-6">
-                            <span class="atom_name value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Index</div>
-                        <div class="column col-6 idx value">unknown
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Loop</div>
-                        <div class="column col-6">
-                            <span class="loop value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">status</div>
-                        <div class="column col-6">
-                            <span class="status value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">reference data</div>
-                        <div class="column col-6">
-                            <span class="reference_data value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">started</div>
-                        <div class="column col-6">
-                            <span class="started value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Duration</div>
-                        <div class="column col-6">
-                            <span class="duration value">unknown</span>
-                        </div>
-                    </div>
-
-                </div>
-                <!-- <div id="atom_data"></div> -->
-                <h2>SENSOR DATA</h2>
-                <div id="sensor_info">
-
-                </div>
-
-                <h2>SUMMARY</h2>
-                <div id="summary_info">
-                    <div class="columns">
-                        <div class="column col-6">Tests failed</div>
-                        <div class="column col-6">
-                            <span class="failed value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Tests passed</div>
-                        <div class="column col-6">
-                            <span class="passed value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-2 col-sm-12">Failed tests</div>
-                        <div class="column col-10 col-sm-12">
-                            <span class="failed_ids value">unknown</span>
-                        </div>
-
-                    </div>
-
-                </div>
-                <div id="summary"></div>
 
             </div>
-        </div>
-    </div>
-    <script type="text/javascript" src=ui_js.js></script>
 
+        </div>
+
+
+        <button v-on:click="clearData">Clear data</button>
+        <button v-on:click="get_tests">get all tests</button>
+        <button v-on:click="openSocket">Open connection</button>
+        <button v-on:click="shutdown">Shutdown tester</button>
+    </div>
+    <script src="vue_control.js"></script>
 </body>
 
 </html>
