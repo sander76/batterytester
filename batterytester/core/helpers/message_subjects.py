@@ -73,10 +73,30 @@ class Subscriptions:
         self.atom_finished = True
         self.atom_warmup = True
         self.atom_execute = True
-        self.atom_collecting=True
+        self.atom_collecting = True
         self.atom_result = True
         self.result_summary = True
         self.loop_warmup = True
         self.loop_finished = True
         self.sensor_data = True
         self.test_fatal = True
+
+    @classmethod
+    def all_false(cls):
+        sub = cls()
+        sub.test_finished = False
+        sub.test_result = False
+        sub.test_warmup = False
+        sub.actor_executed = False
+        sub.actor_response_received = False
+        sub.atom_finished = False
+        sub.atom_warmup = False
+        sub.atom_execute = False
+        sub.atom_collecting = False
+        sub.atom_result = False
+        sub.result_summary = False
+        sub.loop_warmup = False
+        sub.loop_finished = False
+        sub.sensor_data = False
+        sub.test_fatal = False
+        return sub

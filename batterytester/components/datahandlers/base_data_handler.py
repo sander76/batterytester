@@ -78,8 +78,10 @@ class BaseDataHandler(metaclass=ABCMeta):
 
         elif subj == message_subjects.ATOM_FINISHED:
             self.event_atom_finished(testdata)
+
         elif subj == message_subjects.ATOM_WARMUP:
-            self.event_atom_warmup(testdata)
+            if self._subscriptions.atom_warmup:
+                self.event_atom_warmup(testdata)
         elif subj == message_subjects.ATOM_COLLECTING:
             self.event_atom_collecting(testdata)
         elif subj == message_subjects.ATOM_RESULT:
