@@ -114,6 +114,16 @@
                         </div>
                     </div>
                     <div class="card fluid">
+                        <h1>Test summary</h1>
+                        <div class="section">
+                            <label-value label="passed" v-bind:value="summary.passed.v"></label-value>
+                            <label-value label="failed" v-bind:value="summary.failed.v"></label-value>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-7 col-sm-12">
+                    <div class="card fluid">
                         <h1>Atom data</h1>
                         <div class="section">
                             <label-value label="Name" v-bind:value="atom.atom_name.v"></label-value>
@@ -125,8 +135,7 @@
                             <label-value label="reference" v-bind:value="atom.reference_data.v | json"></label-value>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-7 col-sm-12">
+
                     <div class="card fluid">
                         <h1>Sensor data</h1>
                         <div class="section" v-for="sensor in sensor_data">
@@ -151,10 +160,8 @@
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card fluid">
-                        <h1>Test summary</h1>
+                        <h1>Failed test data</h1>
                         <div class="section">
-                            <label-value label="passed" v-bind:value="summary.passed.v"></label-value>
-                            <label-value label="failed" v-bind:value="summary.failed.v"></label-value>
                             <div>
                                 <pre class="code" data-lang="JSON"><code>{{summary.failed_ids.v | json }}</code></pre>
                             </div>
@@ -166,7 +173,7 @@
                 <div class="col-sm-12">
                     <div class="card fluid">
                         <h1>Process data</h1>
-                        <div class="section" >
+                        <div class="section">
                             <div v-for="message in process.messages">
                                 <code id="process_messages" class="code">{{message}}</code>
                             </div>
