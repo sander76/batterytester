@@ -16,8 +16,8 @@ from batterytester.core.helpers.constants import (
 from batterytester.core.helpers.helpers import FatalTestFailException
 
 # todo: finish these tests.
-from components.sensor.incoming_parser import get_measurement
-from components.sensor.incoming_parser.volt_amps_ir_parser import (
+from batterytester.components.sensor.incoming_parser import get_measurement
+from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import (
     DownSampledVoltsAmpsParser
 )
 

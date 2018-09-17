@@ -65,6 +65,12 @@ function changeFav(state) {
     }
 }
 
+function loopData() {
+    return {
+        duration: UNKNOWN
+    }
+}
+
 function testData() {
     return {
         started: UNKNOWN,

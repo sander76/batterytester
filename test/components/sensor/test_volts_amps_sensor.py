@@ -5,7 +5,7 @@ from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import 
     VoltAmpsIrParser
 )
 from batterytester.components.sensor.volts_amps_sensor import VoltsAmpsSensor
-from components.sensor.incoming_parser.volt_amps_ir_parser import (
+from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import (
     DownSampledVoltsAmpsParser
 )
 
