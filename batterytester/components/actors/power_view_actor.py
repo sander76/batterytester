@@ -40,7 +40,9 @@ class PowerViewActor(BaseActor):
 
     actor_type = ACTOR_TYPE_POWER_VIEW
 
-    def __init__(self, *, hub_ip: str):
+    def __init__(
+        self, *, hub_ip: str, shade_id: int = None, room_id: int = None
+    ):
         """
 
         :param hub_ip: The Powerview hub ip address. like: 192.168.2.4
@@ -57,6 +59,8 @@ class PowerViewActor(BaseActor):
         self.scenes = []  # A list of scene instances
         self.shades = []  # A list of shade instances
         self.rooms = []  # A list of room instances
+        self.shade_id = shade_id
+        self.room_id = room_id
 
     async def setup(self, test_name, bus):
         self.test_name = test_name
@@ -68,6 +72,11 @@ class PowerViewActor(BaseActor):
         self._shades_entry_point = Shades(self.request)
         self._scene_members_entry_point = SceneMembers(self.request)
 
+        if self.shade_id:
+            await self.get_shade(self.shade_id)
+        if self.room_id:
+            await self.get_room(self.room_id)
+
     @catch_exceptions
     async def get_scene(self, scene_id) -> Scene:
         """Get a scene resource instance."""
@@ -75,7 +84,7 @@ class PowerViewActor(BaseActor):
         return _scene
 
     @catch_exceptions
-    async def get_room(self, room_id, fatal=True):
+    async def get_room(self, room_id):
         """Get a scene resource instance."""
         self.room = await self._rooms_entry_point.get_instance(room_id)
 
