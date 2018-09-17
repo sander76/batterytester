@@ -21,16 +21,17 @@ from batterytester.core.helpers.helpers import (
     FatalTestFailException,
 )
 from batterytester.core.helpers.message_data import (
-    LoopData,
+    LoopWarmup,
     AtomCollecting,
     TestWarmup,
     TestFinished,
     ActorResponse,
     AtomResult,
     LoopFinished,
-    AtomExecute
+    AtomExecute,
 )
-#from core.helpers.message_data import AtomExecute
+
+# from core.helpers.message_data import AtomExecute
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,8 +40,7 @@ class BaseTest:
     """Main test."""
 
     def __init__(
-            self, *, test_name: str, loop_count: int,
-            learning_mode: bool = False
+        self, *, test_name: str, loop_count: int, learning_mode: bool = False
     ):
 
         self.bus = Bus()
@@ -131,7 +131,7 @@ class BaseTest:
 
         self.bus.notify(
             subj.LOOP_WARMUP,
-            LoopData([_atom.get_atom_data() for _atom in _seq]),
+            LoopWarmup([_atom.get_atom_data() for _atom in _seq]),
         )
         _stored_atom_results = {}
         for _idx, _atom in enumerate(_seq):
@@ -142,7 +142,7 @@ class BaseTest:
 
     async def perform_test(self):
         """The test to be performed"""
-        self.bus.notify(subj.ATOM_EXECUTE,AtomExecute(ATOM_STATUS_EXECUTING))
+        self.bus.notify(subj.ATOM_EXECUTE, AtomExecute(ATOM_STATUS_EXECUTING))
         try:
             _result = await self._active_atom.execute()
         except NonFatalTestFailException as err:
@@ -165,7 +165,7 @@ class BaseTest:
             await asyncio.sleep(self._active_atom.duration)
 
             if not self._learning_mode and isinstance(
-                    self._active_atom, ReferenceAtom
+                self._active_atom, ReferenceAtom
             ):
                 # Actual testing mode. reference data
                 # and testing data can be compared.

@@ -333,6 +333,8 @@ class Server:
             elif _subj == subj.SENSOR_DATA:
                 # fixme: sensor data is not properly cached. Only one item is stored.
                 self._update_test_cache(data, subj.SENSOR_DATA)
+            elif _subj == subj.LOOP_WARMUP:
+                self._update_test_cache(data, subj.LOOP_WARMUP)
 
     def _update_test_cache(self, data, cache_key):
         if cache_key not in self.test_cache:

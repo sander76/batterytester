@@ -293,7 +293,7 @@ def test_non_fatal_actor_boolean_reference_atom():
 
     subjects = [
         (subj.TEST_WARMUP, md.TestWarmup),
-        (subj.LOOP_WARMUP, md.LoopData),
+        (subj.LOOP_WARMUP, md.LoopWarmup),
         (subj.ATOM_WARMUP, md.AtomWarmup),
         (subj.ATOM_EXECUTE, md.AtomExecute),
         (subj.ATOM_RESULT, md.AtomResult),

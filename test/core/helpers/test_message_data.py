@@ -5,9 +5,9 @@ from batterytester.core.helpers.message_data import (
     to_serializable,
     TestFatal,
     Message,
-
 )
-from core.helpers.message_data import TestFinished, BaseProcessData
+from batterytester.core.atom import Atom
+from batterytester.core.helpers.message_data import TestFinished, BaseProcessData, LoopWarmup
 
 
 def test_simple():
@@ -53,10 +53,19 @@ def test_test_finished():
     assert "test_name" not in _js
 
 
-
 def test_dequedata_json():
     message = BaseProcessData.base_process(max_len=3)
     js = message.to_json()
     dct = json.loads(js)
-    assert isinstance(dct["messages"],list)
+    assert isinstance(dct["messages"], list)
 
+
+def test_loop_warmup():
+    def fake():
+        pass
+
+    atom1 = (Atom(name="test", command=fake, duration=10)).get_atom_data()
+    atom2 = (Atom(name="test2", command=fake, duration=12)).get_atom_data()
+
+    loop_data = LoopWarmup([atom1, atom2])
+    assert loop_data.duration == 22

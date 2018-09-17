@@ -23,7 +23,7 @@ from batterytester.core.helpers.message_data import (
     AtomWarmup,
     TestSummary,
     Message,
-    LoopData,
+    LoopWarmup,
 )
 from batterytester.core.helpers.message_subjects import Subscriptions
 from batterytester.server.server import URL_TEST, MSG_TYPE_STOP_TEST
@@ -67,7 +67,7 @@ class Messaging(BaseDataHandler):
         super().__init__(subscriptions=subscriptions)
         self.ws_connection = None
         self.session = None
-        #todo: move the test summary to the server part.
+        # todo: move the test summary to the server part.
         self.test_summary = TestSummary()
         self.test_summary.cache = True
         self._host = host
@@ -82,7 +82,7 @@ class Messaging(BaseDataHandler):
         await self._ws_close()
         # self._ws_reader_cancel()
 
-    def event_loop_warmup(self, testdata: LoopData):
+    def event_loop_warmup(self, testdata: LoopWarmup):
         testdata.subj = subj.LOOP_WARMUP
         self._send_to_ws(testdata)
 
@@ -111,6 +111,8 @@ class Messaging(BaseDataHandler):
     #     LOGGER.debug("warmup test: {} data: {}".format(subject, data))
     #     data.subj = subject
     #     self._send_to_ws(data)
+
+
 
     def event_test_fatal(self, testdata):
         testdata.subj = subj.TEST_FATAL

@@ -293,11 +293,14 @@ class BaseLoopData(Message):
     def __init__(self):
         super().__init__()
         self.identity = "loop_data"
+        self.atoms = None
 
 
-class LoopData(BaseLoopData):
+class LoopWarmup(BaseLoopData):
     def __init__(self, atoms):
         super().__init__()
+        self.subj = subj.LOOP_WARMUP
+        self.duration = sum((_atom.duration.value for _atom in atoms))
         self.atoms = atoms
 
 
