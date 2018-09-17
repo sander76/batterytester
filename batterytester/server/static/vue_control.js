@@ -39,28 +39,30 @@ const favError = 'icons/alert-circle.png'
 const favRunning = 'icons/rocket.png'
 const favFinished = 'icons/thumb-up.png'
 const favDisconnected = 'icons/power-plug-off.png'
-var currentFavicon = favFinished
 
 function changeFav(state) {
     switch (state) {
         case stateConnected:
+            console.log('Icon to: ' + favFinished)
             favIcon.href = favFinished
             break
         case stateDisconnected:
+            console.log('Icon to: ' + favDisconnected)
             favIcon.href = favDisconnected
             break
         case subjTestFatal:
+            console.log('Icon to: ' + favError)
             favIcon.href = favError
             break
         case subjTestFinished:
+            console.log('Icon to: ' + favFinished)
             favIcon.href = favFinished
             break
         case subjTestWarmup:
+            console.log('Icon to: ' + favRunning)
             favIcon.href = favRunning
             break
-
     }
-
 }
 
 function testData() {
@@ -306,31 +308,4 @@ function parseWsMessage(js) {
             changeFav(subj)
             break
     }
-    // } else {
-    //     switch (identity) {
-    //         case 'test_data':
-    //             merge(js, vm.test)
-    //             changeFav(subj)
-    //             break
-    //         case 'atom_data':
-    //             if (subj === 'atom_warmup') {
-    //                 vm.atom = atomData()
-    //             }
-    //             merge(js, vm.atom)
-    //             break
-    //         case 'process':
-    //             merge(js, vm.process)
-    //             switch (subj) {
-    //                 case 'process_started':
-    //                     //vm.process = js
-    //                     vm.set_current_test()
-    //                     break
-    //                 case 'process_message':
-    //                     var msg = js['_message']['v']
-    //                     console.log(msg)
-    //                     vm.process._messages.push(msg)
-    //                     break
-    //             }
-    //     }
-    // }
 }
