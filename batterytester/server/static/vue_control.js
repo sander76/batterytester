@@ -215,6 +215,8 @@ var vm = new Vue({
             console.log('ws opened')
             this.connection.status = STATUS_CONNECTED
             changeFav(stateConnected)
+            this.get_tests()
+            this.getStatus()
         },
         ws_close: function (event) {
             console.log('ws close')
@@ -232,9 +234,9 @@ var vm = new Vue({
         }
     },
     mounted: function () {
-        this.get_tests()
+        //this.get_tests()
         this.openSocket()
-        this.getStatus()
+        //this.getStatus()
     }
 
 })
