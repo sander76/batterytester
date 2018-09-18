@@ -84,7 +84,7 @@ class PowerViewActor(BaseActor):
         return _scene
 
     @catch_exceptions
-    async def get_room(self, room_id):
+    async def get_room(self, room_id, fatal=False):
         """Get a scene resource instance."""
         self.room = await self._rooms_entry_point.get_instance(room_id)
 
