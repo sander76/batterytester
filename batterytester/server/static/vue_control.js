@@ -67,7 +67,8 @@ function changeFav(state) {
 
 function loopData() {
     return {
-        duration: UNKNOWN
+        duration: UNKNOWN,
+        atoms: []
     }
 }
 
@@ -119,7 +120,7 @@ function initialState() {
             status: STATUS_DISCONNECTED
         },
         test: testData(),
-        loop: {},
+        loop: loopData(),
         atom: atomData(),
         available_tests: [],
         current_test: '',
@@ -134,6 +135,23 @@ var data = initialState()
 Vue.component('label-value', {
     props: ['label', 'value'],
     template: '<div class="row"><div class="col-sm-6">{{ label }} </div><div class="col-sm-6">{{ value }}</div></div>'
+})
+
+Vue.component('atom-item', {
+    props: ['atom', 'index', 'activeidx'],
+    data: function () {
+        return {
+            current: true
+        }
+    },
+    computed: {
+        selected: function () {
+            return {
+                current_atom: this.index === this.activeidx
+            }
+        }
+    },
+    template: '<div v-bind:class="selected" class="atoms"><div class="circular">{{index}}</div> {{ atom.atom_name.v}} </div>'
 })
 
 Vue.filter('time', function (value) {
@@ -298,6 +316,9 @@ function parseWsMessage(js) {
             break
         case 'atom_collecting':
             merge(js, vm.atom)
+            break
+        case 'loop_warmup':
+            merge(js, vm.loop)
             break
         case 'test_warmup':
             merge(js, vm.test)

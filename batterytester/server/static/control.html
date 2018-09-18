@@ -45,6 +45,21 @@
             --card-back-color: #e53935;
         }
 
+        .atoms div {
+            vertical-align: middle;
+            text-align: center;
+            min-width: 20px;
+            height:20px;
+            text-anchor: middle;
+            display:inline-block;
+            line-height: 20px;
+        }
+
+        .current_atom div{
+            background-color:#1565c0;
+            color:white;
+        }
+
         #process_messages {
             line-height: 1 !important;
             margin: 1;
@@ -118,6 +133,18 @@
                         <div class="section">
                             <label-value label="passed" v-bind:value="summary.passed.v"></label-value>
                             <label-value label="failed" v-bind:value="summary.failed.v"></label-value>
+                        </div>
+                    </div>
+                    <div class="card fluid">
+                        <h1>Loop data</h1>
+                        <div class="section">
+                            <label-value label="Total duration" v-bind:value="loop.duration.v"></label-value>
+
+                        </div>
+                        <div class="section">
+                            <div v-for="(cur_atom,index) in loop.atoms">
+                                <atom-item v-bind:activeidx="atom.idx.v" v-bind:index="index" v-bind:atom="cur_atom"></atom-item>
+                            </div>
                         </div>
                     </div>
 
