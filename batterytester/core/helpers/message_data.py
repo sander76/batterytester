@@ -300,7 +300,10 @@ class LoopWarmup(BaseLoopData):
     def __init__(self, atoms):
         super().__init__()
         self.subj = subj.LOOP_WARMUP
-        self.duration = sum((_atom.duration.value for _atom in atoms))
+        self.duration = Data(
+            value=sum((_atom.duration.value for _atom in atoms)),
+            type_=TYPE_INT,
+        )
         self.atoms = atoms
 
 
@@ -334,18 +337,6 @@ class AtomWarmup(BaseAtomData):
         self.status_updated = Data()
         self.started = Data(get_current_timestamp(), type_=TYPE_TIME)
         self.duration = Data(duration, type_=TYPE_TIME_DELTA)
-
-
-# class AtomWarmup(BaseAtomData):
-#     def __init__(self, name, idx, loop, duration):
-#         super().__init__()
-#         self.atom_name = Data(name)
-#         self.idx = Data(idx)
-#         self.loop = Data(loop)
-#         self.status = Data()
-#         self.status_updated = Data()
-#         self.started = Data(get_current_timestamp(), type_=TYPE_TIME)
-#         self.duration = Data(duration, type_=TYPE_TIME_DELTA)
 
 
 class AtomExecute(BaseAtomData):

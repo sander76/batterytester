@@ -68,4 +68,4 @@ def test_loop_warmup():
     atom2 = (Atom(name="test2", command=fake, duration=12)).get_atom_data()
 
     loop_data = LoopWarmup([atom1, atom2])
-    assert loop_data.duration == 22
+    assert loop_data.duration.value == 22

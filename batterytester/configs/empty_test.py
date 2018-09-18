@@ -2,18 +2,18 @@
 from batterytester.components.actors.example_actor import ExampleActor
 from batterytester.components.actors.tools import get_example_actor
 from batterytester.components.datahandlers.messaging import Messaging
+from batterytester.components.sensor.fake_led_gate_sensor import \
+    FakeLedGateSensor
 from batterytester.components.sensor.fake_volts_amps_sensor import (
     FakeVoltsAmpsSensor
 )
-from batterytester.core.atom import Atom
+from batterytester.core.atom import Atom, BooleanReferenceAtom
 from batterytester.core.base_test import BaseTest
 
 # Define a test. Give it a proper name and define the amount
 # of loops to run.
 from batterytester.core.helpers.helpers import set_test_config
-from components.sensor.fake_led_gate_sensor import FakeLedGateSensor
-from core.atom import BooleanReferenceAtom
-from core.atom.reference_atom import ReferenceAtom
+
 
 set_test_config("../dev_config.json")
 
