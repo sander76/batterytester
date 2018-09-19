@@ -87,14 +87,18 @@ class Server:
         )
         # Test connects here.
         self.app.router.add_get(URL_TEST, self.test_connection_handler)
+
         self.app.router.add_static("/static/", path="static", name="static")
         self.app.router.add_post(URL_TEST_START, self.test_start_handler)
         self.app.router.add_post(URL_TEST_STOP, self.stop_test_handler)
         self.app.router.add_get("/get_status", self.get_status_handler)
         self.app.router.add_get("/get_tests", self.get_tests_handler)
+
         self.app.router.add_post(
             "/system_shutdown", self.system_shutdown_handler
         )
+        self.app.router.add_get("", self.dashboard_handler)
+        self.app.router.add_get("/",self.dashboard_handler)
 
     def start_server(self):
         """Create a web server"""
@@ -109,6 +113,10 @@ class Server:
             p = Path(self.config_folder)
             data["data"] = [pth.name for pth in p.glob("*.py")]
         return data
+
+    async def dashboard_handler(self, request):
+        location = "/static/control.html"
+        raise web.HTTPFound(location=location)
 
     async def get_tests_handler(self, request):
         return web.json_response(self.list_configs())
