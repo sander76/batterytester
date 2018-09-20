@@ -33,7 +33,7 @@ class SquidParser(IncomingParser):
         self.chop_state = STATE_UNDEFINED
 
     def chop(self, chunk):
-        LOGGER.debug("Parsing chunk: %s", chunk)
+        # LOGGER.debug("Parsing chunk: %s", chunk)
         for _val in chunk:
             if self.chop_state == STATE_UNDEFINED:
                 if _val == opening_char:
