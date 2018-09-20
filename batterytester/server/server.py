@@ -54,6 +54,8 @@ def set_current_working_folder():
 
 
 class Server:
+    configs_blacklist = ["__init__.py"]
+
     def __init__(self, config_folder=None, loop_=None):
         """Test server
 
@@ -98,7 +100,7 @@ class Server:
             "/system_shutdown", self.system_shutdown_handler
         )
         self.app.router.add_get("", self.dashboard_handler)
-        self.app.router.add_get("/",self.dashboard_handler)
+        self.app.router.add_get("/", self.dashboard_handler)
 
     def start_server(self):
         """Create a web server"""
@@ -107,19 +109,30 @@ class Server:
         except Exception as err:
             LOGGER.error(err)
 
-    def list_configs(self):
-        data = {"data": [], KEY_SUBJECT: MSG_TYPE_ALL_TESTS}
+    def list_configs(self) -> list:
+        # todo: make the glob be recursive and skip __init__ files
+
+        configs = []
+
         if self.config_folder:
+
             p = Path(self.config_folder)
-            data["data"] = [pth.name for pth in p.glob("*.py")]
-        return data
+            for pth in p.glob("**/*.py"):
+                if pth.name in self.configs_blacklist:
+                    continue
+                rel = pth.relative_to(p)
+                configs.append(
+                    {"name": pth.stem, "parts": rel.parts, "str": str(rel)}
+                )
+        return configs
 
     async def dashboard_handler(self, request):
         location = "/static/control.html"
         raise web.HTTPFound(location=location)
 
     async def get_tests_handler(self, request):
-        return web.json_response(self.list_configs())
+        data = {"data": self.list_configs(), KEY_SUBJECT: MSG_TYPE_ALL_TESTS}
+        return web.json_response(data)
 
     async def system_shutdown_handler(self, request):
         os.system("sudo shutdown now -h")
@@ -127,7 +140,7 @@ class Server:
     async def test_start_handler(self, request):
         LOGGER.debug("Start test handler")
         data = await request.json()
-        p = str(Path(self.config_folder).joinpath(data["test"]))
+        p = str(Path(self.config_folder).joinpath(data["str"]))
 
         if self.test_is_running:
             return web.Response(
@@ -136,12 +149,9 @@ class Server:
         else:
             self.clear_cache()
 
-            # self.process_data.status = STATUS_STARTING
-            # self.process_data.subj = PROCESS_STARTED
-            # self.process_data.process_name = data["test"]
             await self._start_test_process(p)
             p_started = BaseProcessData.process_started(
-                data["test"], self.test_process.pid
+                data['name'], self.test_process.pid
             )
             self.p_data.update(p_started)
 

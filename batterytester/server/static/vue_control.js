@@ -114,6 +114,10 @@ function summaryData() {
     }
 }
 
+function currentTest() {
+    return {}
+}
+
 function initialState() {
     return {
         connection: {
@@ -123,7 +127,7 @@ function initialState() {
         loop: loopData(),
         atom: atomData(),
         available_tests: [],
-        current_test: '',
+        current_test: currentTest(),
         sensor_data: [],
         process: processData(),
         summary: summaryData()
@@ -163,6 +167,7 @@ Vue.filter('time', function (value) {
 
     return [date.getHours(), date.getMinutes(), date.getSeconds()].join(':') + ' (' + date.toDateString() + ')'
 })
+
 Vue.filter('json', function (value) {
     return JSON.stringify(value, undefined, 4)
 })
@@ -188,11 +193,22 @@ var vm = new Vue({
                 })
             })
         },
+        find_test_by_name: function (name) {
+            console.log("finding test name: " + name)
+            for (var i = 0; i < this.available_tests.length; i++) {
+                if (this.available_tests[i].name === name) {
+                    return this.available_tests[i]
+                }
+            }
+            return {}
+        },
         sync_test: function (event) {
             // Load url query data (test=<testname>) and match it with the available tests
             let queryString = new URLSearchParams(document.location.search.substring(1))
             let test = queryString.get('test')
-            this.current_test = test
+            if (test != null) {
+                this.current_test = this.find_test_by_name(test)
+            }
         },
         clearData: function (event) {
             this.test = testData()
@@ -202,14 +218,12 @@ var vm = new Vue({
             this.sensor_data = []
         },
         startTest: function (event) {
-            if (this.current_test === '') {
+            if (this.current_test === {}) {
                 window.alert('select a test first')
                 return
             }
             this.clearData()
-            this.$http.post(baseUrl + '/test_start', {
-                test: this.current_test
-            }).then(
+            this.$http.post(baseUrl + '/test_start', this.current_test).then(
                 response => {}
             )
         },
@@ -222,7 +236,7 @@ var vm = new Vue({
             // Set the current test as a url query parameter.
             history.pushState({
                 tst: this.current_test
-            }, 'no title', '?test=' + this.current_test)
+            }, 'no title', '?test=' + this.current_test.name)
         },
         shutdown: function (event) {
             if (window.confirm('This will cancel the running tests. \n\n Do you want to continue? ')) {
@@ -251,10 +265,11 @@ var vm = new Vue({
             parseWsMessage(JSON.parse(event.data))
         },
         set_current_test: function (event) {
-            this.current_test = this.process.process_name
+            console.log("test process name: " + this.process.process_name)
+            this.current_test = this.find_test_by_name(this.process.process_name)
             this.setRoute()
 
-            document.title = this.current_test
+            document.title = this.current_test.name
         }
     },
     mounted: function () {

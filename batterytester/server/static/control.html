@@ -46,13 +46,13 @@
         }
 
         .atoms div {
-            vertical-align: middle;
+            
             text-align: center;
             min-width: 20px;
             height:20px;
             text-anchor: middle;
             display:inline-block;
-            line-height: 20px;
+            line-height: 19px;
         }
 
         .current_atom div{
@@ -108,8 +108,8 @@
                         <div class="section">
                             <select id="all_tests" v-model="current_test">
                                 <option value="" disabled>Select a test</option>
-                                <option v-for="option in available_tests">
-                                    {{option}}
+                                <option v-for="option in available_tests" v-bind:value="option">
+                                    {{option.name}}
                                 </option>
                             </select>
                             <div>
