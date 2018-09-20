@@ -72,7 +72,7 @@ class DownSampledVoltsAmpsParser(VoltAmpsIrParser):
         bus,
         sensor_queue,
         sensor_prefix=None,
-        buffer=60,
+        buffer=120,
         delta_v=0.1,
         delta_a=0.5,
     ):
@@ -98,12 +98,16 @@ class DownSampledVoltsAmpsParser(VoltAmpsIrParser):
         volt = measurement["v"]["v"]["volts"]
         amps = measurement["v"]["v"]["amps"]
 
-        LOGGER.debug("***incoming measurement : %f %f", volt, amps)
-        LOGGER.debug("buffer position : %s", self.buffer_pos)
+        # LOGGER.debug("***incoming measurement : %f %f", volt, amps)
+        # LOGGER.debug("buffer position : %s", self.buffer_pos)
         if self.previous_measurement is None or self.buffer_pos == self.buffer:
             LOGGER.debug(
-                "Adding measurement to queue. Start or buffer full detected."
+                "{}  {}".format(
+                    measurement,
+                    "Adding measurement to queue. Start or buffer full detected.",
+                )
             )
+
             self.sensor_queue.put_nowait(measurement)
             self.buffer_pos = 0
             self.reference_measurement = measurement
@@ -111,28 +115,34 @@ class DownSampledVoltsAmpsParser(VoltAmpsIrParser):
             prev_volts = self.reference_measurement["v"]["v"]["volts"]
             prev_amps = self.reference_measurement["v"]["v"]["amps"]
 
-            abs_v = abs(round(prev_volts - volt,1))
-            abs_a = abs(round(prev_amps - amps,1))
-            LOGGER.debug("abs_v %f   abs_a %f", abs_v, abs_a)
+            abs_v = abs(round(prev_volts - volt, 1))
+            abs_a = abs(round(prev_amps - amps, 1))
+            # LOGGER.debug("abs_v %f   abs_a %f", abs_v, abs_a)
             if abs_v >= self.delta_v or abs_a >= self.delta_a:
-                LOGGER.debug(
-                    "delta exceeds ref difference %f %f", abs_v, abs_a
-                )
+                # LOGGER.debug(
+                #     "delta exceeds ref difference %f %f", abs_v, abs_a
+                # )
                 if self.buffer_pos > 1:
-                    LOGGER.debug("Adding previous measurement to queue")
+                    LOGGER.debug(
+                        "{}  {}".format(
+                            self.previous_measurement,
+                            "Adding previous measurement to queue",
+                        )
+                    )
                     self.sensor_queue.put_nowait(self.previous_measurement)
-                LOGGER.debug("Adding current measurement to queue")
+                LOGGER.debug(
+                    "{}  {}".format(
+                        measurement, "Adding current measurement to queue"
+                    )
+                )
                 self.sensor_queue.put_nowait(measurement)
                 LOGGER.debug("New reference measurement %s", measurement)
                 self.reference_measurement = measurement
-                self.buffer_pos=0
-            else:
-                LOGGER.debug("skipping measurement")
+                self.buffer_pos = 0
+            # else:
+            #     pass
+                # LOGGER.debug("skipping measurement")
         self.previous_measurement = measurement
         self.buffer_pos += 1
 
 
-state_no_measurement = 1
-state_measurement_no_delta = 2
-state_measurement_delta = 3
-state_measurement_buffer_reached = 4

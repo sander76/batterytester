@@ -16,7 +16,7 @@ class VoltsAmpsSensor(BaseSquidSensor):
         serial_port,
         serial_speed=115200,
         sensor_prefix=None,
-        buffer=60,
+        buffer=120,
         delta_v=0.1,
         delta_a=0.5,
     ):
