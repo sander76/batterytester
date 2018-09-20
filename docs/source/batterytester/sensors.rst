@@ -1,7 +1,7 @@
 Sensors
 =======
 
-.. automodule:: batterytester.core.sensor
+.. automodule:: batterytester.components.sensor
     :members:
 
 After a sensor has parsed his data it calls
@@ -10,14 +10,14 @@ After a sensor has parsed his data it calls
 Led gate sensor
 ---------------
 
-.. autoclass:: batterytester.core.sensor.led_gate_sensor.LedGateSensor
+.. autoclass:: batterytester.components.sensor.led_gate_sensor.LedGateSensor
     :members:
 
     .. automethod:: __init__
 
-Fake volts amps sensor
+Volts amps sensor
 ----------------------
 
-.. autoclass:: batterytester.core.sensor.fake_volts_ir_sensor.FakeVoltsAmpsSensor
+.. autoclass:: batterytester.components.sensor.volts_amps_sensor.VoltsAmpsSensor
     :members:
 

@@ -2,7 +2,7 @@ Data handlers
 =============
 
 
-.. automodule:: battertester.core.datahandlers
+.. automodule:: batterytester.components.datahandlers
     :members:
 
 Available event subjects:
@@ -16,7 +16,7 @@ Available event subjects:
 Report data handler
 -------------------
 
-.. autoclass:: batterytester.core.datahandlers.report.Report
+.. autoclass:: batterytester.components.datahandlers.report.Report
     :members:
 
     .. automethod:: __init__
@@ -24,12 +24,12 @@ Report data handler
 Messaging data handler
 ----------------------
 
-.. autoclass:: batterytester.core.datahandlers.messaging.Messaging
+.. autoclass:: batterytester.components.datahandlers.messaging.Messaging
     :members:
 
 Influx data handler
 -------------------
 
-.. autoclass:: batterytester.core.datahandlers.influx.Influx
+.. autoclass:: batterytester.components.datahandlers.influx.Influx
     :members:
 

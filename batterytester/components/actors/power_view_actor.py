@@ -6,6 +6,7 @@ from aiopvapi.rooms import Rooms
 from aiopvapi.scene_members import SceneMembers
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
+from functools import wraps
 
 from batterytester.components.actors.base_actor import (
     ACTOR_TYPE_POWER_VIEW,
@@ -18,6 +19,7 @@ from batterytester.core.helpers.helpers import (
 
 
 def catch_exceptions(func):
+    @wraps(func)
     async def wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)

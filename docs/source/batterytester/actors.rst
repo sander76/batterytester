@@ -3,23 +3,23 @@
 Actors
 ======
 
-.. automodule:: batterytester.core.actors
+.. automodule:: batterytester.components.actors
     :members:
 
 Example actor
 -------------
 
-.. autoclass:: batterytester.core.actors.example_actor.ExampleActor
+.. autoclass:: batterytester.components.actors.example_actor.ExampleActor
     :members:
 
 PowerView actor
 ---------------
 
-.. autoclass:: batterytester.core.actors.power_view_actor.PowerViewActor
+.. autoclass:: batterytester.components.actors.power_view_actor.PowerViewActor
     :members:
 
 Relay actor
 -----------
 
-.. autoclass:: batterytester.core.actors.relay_actor.RelayActor
+.. autoclass:: batterytester.components.actors.relay_actor.RelayActor
     :members:
