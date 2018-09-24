@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+echo "updating test frame configs"
+cd ~/test_configs/test_frame_configs
+git pull
+
 echo "stopping tester server"
 sudo systemctl stop tester-server
 
