@@ -165,9 +165,25 @@ Vue.filter('time', function (value) {
     var date = new Date(value * 1000)
     // return date.toISOString()
 
-    return [date.getHours(), date.getMinutes(), date.getSeconds()].join(':') + ' (' + date.toDateString() + ')'
+    // return [date.getHours(), date.getMinutes(), date.getSeconds()].join(':') + ' (' + date.toDateString() + ')'
+    return moment.unix(value).format('MMMM Do YYYY, HH:mm:ss')
 })
-
+Vue.filter('duration', function (value) {
+    if (value === UNKNOWN.v || value === 'unknown') {
+        return UNKNOWN.v
+    }
+    var hr = Math.floor(value / 3600)
+    var rem = value % 3600
+    var min = Math.floor(rem / 60)
+    var sec = rem % 60
+    if (hr) {
+        return hr + "hr " + min + "min " + sec + "sec"
+    }
+    if (min) {
+        return min + "min " + sec + "sec"
+    }
+    return sec + "sec"
+})
 Vue.filter('json', function (value) {
     return JSON.stringify(value, undefined, 4)
 })

@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
     <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+    <script src="js/moment.js"></script>
     <link id="favicon" rel="icon" href="icons/thumb-up.png" />
 </head>
 
@@ -138,7 +139,7 @@
                     <div class="card fluid">
                         <h1>Loop data</h1>
                         <div class="section">
-                            <label-value label="Total duration" v-bind:value="loop.duration.v"></label-value>
+                            <label-value label="Total duration" v-bind:value="loop.duration.v | duration" ></label-value>
 
                         </div>
                         <div class="section">
