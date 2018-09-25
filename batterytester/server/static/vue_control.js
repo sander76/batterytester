@@ -367,5 +367,12 @@ function parseWsMessage(js) {
             merge(js, vm.test)
             changeFav(subj)
             break
+        case 'sensor_cache':
+            for (var sensor in js) {
+                if (sensor !== 'subj') {
+                    parseSensor(js[sensor], vm.sensor_data)
+                }
+            }
+            break
     }
 }

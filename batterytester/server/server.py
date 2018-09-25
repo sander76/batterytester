@@ -13,13 +13,12 @@ import async_timeout
 from aiohttp import web, WSCloseCode
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.core.helpers.constants import KEY_SUBJECT
+from batterytester.core.helpers.constants import KEY_SUBJECT, ATTR_SENSOR_NAME
 from batterytester.core.helpers.message_data import (
     to_serializable,
     Data,
     BaseProcessData,
 )
-
 
 ATTR_MESSAGE_BUS_ADDRESS = "0.0.0.0"
 ATTR_MESSAGE_BUS_PORT = 8567
@@ -47,6 +46,8 @@ URL_ALL_TESTS = "/all_tests"
 DEFAULT_CONFIG_PATH = "/home/pi/test_configs"
 DEFAULT_LOGGING_PATH = "/home/pi/test_configs/logs"
 
+SUB_SENSOR_CACHE = "sensor_cache"
+
 
 def set_current_working_folder():
     pth = os.path.dirname(os.path.abspath(__file__))
@@ -69,12 +70,12 @@ class Server:
         self.app = web.Application(loop=self.loop)
         self.runner = None
         self.server = None
-        self.test_cache = {}
         self.test_process = None
 
-        # self.process_data = ProcessData()
-        self.p_data = BaseProcessData.base_process()
         set_current_working_folder()
+        self.test_cache = None
+        self.p_data = None
+        self.clear_cache()
 
     @property
     def test_is_running(self):
@@ -151,7 +152,7 @@ class Server:
 
             await self._start_test_process(p)
             p_started = BaseProcessData.process_started(
-                data['name'], self.test_process.pid
+                data["name"], self.test_process.pid
             )
             self.p_data.update(p_started)
 
@@ -349,8 +350,7 @@ class Server:
             elif _subj == subj.RESULT_SUMMARY:
                 self._update_test_cache(data, subj.RESULT_SUMMARY)
             elif _subj == subj.SENSOR_DATA:
-                # fixme: sensor data is not properly cached. Only one item is stored.
-                self._update_test_cache(data, subj.SENSOR_DATA)
+                self._update_sensor_data_cache(data)
             elif _subj == subj.LOOP_WARMUP:
                 self._update_test_cache(data, subj.LOOP_WARMUP)
 
@@ -360,8 +360,11 @@ class Server:
         for key, value in data.items():
             self.test_cache[cache_key][key] = value
 
+    def _update_sensor_data_cache(self, data):
+        self.test_cache[SUB_SENSOR_CACHE][data[ATTR_SENSOR_NAME]] = data
+
     def clear_cache(self):
-        self.test_cache = {}
+        self.test_cache = {"sensor_cache": {"subj":SUB_SENSOR_CACHE}}
         self.p_data = BaseProcessData.base_process()
         # self.process_data = ProcessData()
 
