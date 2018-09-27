@@ -215,12 +215,12 @@ class Messaging(BaseDataHandler):
                 self._connection_state.value
             )
         )
-        try:
-            await self.ws_connection.close()
-        except Exception as err:
-            LOGGER.exception(err)
-        finally:
-            self.ws_connection = None
+        if self.ws_connection is not None:
+            try:
+                await self.ws_connection.close()
+            except Exception as err:
+                LOGGER.exception(err)
+        self.ws_connection = None
 
     async def _ws_connect(self):
         try:
