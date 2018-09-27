@@ -141,6 +141,11 @@ Vue.component('label-value', {
     template: '<div class="row"><div class="col-sm-6">{{ label }} </div><div class="col-sm-6">{{ value }}</div></div>'
 })
 
+Vue.component('key-val', {
+    props: ['label'],
+    template: '<div class="row"><div class="col-sm-6">{{ label }} </div><div class="col-sm-6"><slot></slot></div></div>'
+})
+
 Vue.component('atom-item', {
     props: ['atom', 'index', 'activeidx'],
     data: function () {
@@ -153,9 +158,57 @@ Vue.component('atom-item', {
             return {
                 current_atom: this.index === this.activeidx
             }
+        },
+        mounted() {
+            this.timer = setInterval(this.updateDateTime, 1000)
         }
     },
     template: '<div v-bind:class="selected" class="atoms"><div class="circular">{{index}}</div> {{ atom.atom_name.v}} </div>'
+})
+
+Vue.component('timer', {
+    props: ['start'],
+    data: function () {
+        return {
+            time: 0,
+            timer: undefined
+        }
+    },
+    // mounted() {
+    //     this.timer = setInterval(this.updateTimer, 1000)
+    // },
+    beforeDestroy() {
+        clearInterval(this.timer)
+    },
+    watch: {
+        start: function (val) {
+            this.time = val
+            this.startTimer()
+        }
+    },
+    methods: {
+        startTimer() {
+            if (this.timer === undefined) {
+                this.timer = setInterval(this.updateTimer, 1000)
+                console.log("starting timer: ", this.timer)
+            }
+
+        },
+        stopTimer() {
+            clearInterval(this.timer)
+            console.log("stopping timer ", this.timer)
+            this.timer = undefined
+        },
+        updateTimer() {
+            //console.log("updating timer")
+            if (this.time === 0) {
+                this.stopTimer()
+            } else {
+                this.time -= 1
+            }
+        }
+    },
+    template: '<span> {{ time }} </span>'
 })
 
 Vue.filter('time', function (value) {
@@ -165,8 +218,8 @@ Vue.filter('time', function (value) {
     var date = new Date(value * 1000)
     // return date.toISOString()
 
-    // return [date.getHours(), date.getMinutes(), date.getSeconds()].join(':') + ' (' + date.toDateString() + ')'
-    return moment.unix(value).format('MMMM Do YYYY, HH:mm:ss')
+    return [date.getHours(), date.getMinutes(), date.getSeconds()].join(':') + ' (' + date.toDateString() + ')'
+    //return moment.unix(value).format('MMMM Do YYYY, HH:mm:ss')
 })
 Vue.filter('duration', function (value) {
     if (value === UNKNOWN.v || value === 'unknown') {
