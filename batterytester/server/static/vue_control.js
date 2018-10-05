@@ -342,9 +342,7 @@ var vm = new Vue({
         }
     },
     mounted: function () {
-        //this.get_tests()
         this.openSocket()
-        //this.getStatus()
     }
 
 })

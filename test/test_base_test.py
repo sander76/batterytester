@@ -121,7 +121,7 @@ def test_notifications_fatal_test_fail(base_test):
         subj.LOOP_WARMUP,
         subj.ATOM_WARMUP,
         subj.ATOM_EXECUTE,
-        subj.TEST_FATAL
+        subj.TEST_FATAL,
     ]
 
     assert len(base_test.bus.notify.call_args_list) == len(subjects)
