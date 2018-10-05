@@ -53,11 +53,11 @@ class Messaging(BaseDataHandler):
     Needs a running websocket server to connect and interact with."""
 
     def __init__(
-        self,
-        *,
-        host="127.0.0.1",
-        port=8567,
-        subscriptions: Optional[Subscriptions] = None
+            self,
+            *,
+            host="127.0.0.1",
+            port=8567,
+            subscriptions: Optional[Subscriptions] = None
     ):
         """
 
@@ -111,8 +111,6 @@ class Messaging(BaseDataHandler):
     #     LOGGER.debug("warmup test: {} data: {}".format(subject, data))
     #     data.subj = subject
     #     self._send_to_ws(data)
-
-
 
     def event_test_fatal(self, testdata):
         testdata.subj = subj.TEST_FATAL
@@ -256,9 +254,9 @@ class Messaging(BaseDataHandler):
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     await self.parser(msg)
                 elif msg.type in (
-                    aiohttp.WSMsgType.CLOSED,
-                    aiohttp.WSMsgType.CLOSING,
-                    aiohttp.WSMsgType.CLOSE,
+                        aiohttp.WSMsgType.CLOSED,
+                        aiohttp.WSMsgType.CLOSING,
+                        aiohttp.WSMsgType.CLOSE,
                 ):
                     break
                 elif msg.type == aiohttp.WSMsgType.ERROR:

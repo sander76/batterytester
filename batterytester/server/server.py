@@ -364,7 +364,7 @@ class Server:
         self.test_cache[SUB_SENSOR_CACHE][data[ATTR_SENSOR_NAME]] = data
 
     def clear_cache(self):
-        self.test_cache = {"sensor_cache": {"subj":SUB_SENSOR_CACHE}}
+        self.test_cache = {"sensor_cache": {"subj": SUB_SENSOR_CACHE}}
         self.p_data = BaseProcessData.base_process()
         # self.process_data = ProcessData()
 

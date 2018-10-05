@@ -189,10 +189,10 @@ class BaseDataHandler(metaclass=ABCMeta):
 
 class FileBasedDataHandler(BaseDataHandler):
     def __init__(
-        self,
-        report_name,
-        output_path,
-        subscriptions: Optional[Subscriptions] = None,
+            self,
+            report_name,
+            output_path,
+            subscriptions: Optional[Subscriptions] = None,
     ):
         """
 

@@ -1,4 +1,3 @@
-
 from batterytester.components.actors.base_actor import ACTOR_TYPE_RELAY_ACTOR, \
     ACTOR_TYPE_POWER_VIEW, ACTOR_TYPE_EXAMPLE, \
     ACTOR_TYPE_POWERVIEW_VERSION_CHECKER

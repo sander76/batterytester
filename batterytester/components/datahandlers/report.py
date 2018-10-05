@@ -46,10 +46,10 @@ def block_quote(content):
 
 class MarkDownReport(FileBasedDataHandler):
     def __init__(
-        self,
-        report_name=None,
-        output_path="reports",
-        subscriptions: Optional[Subscriptions] = None,
+            self,
+            report_name=None,
+            output_path="reports",
+            subscriptions: Optional[Subscriptions] = None,
     ):
         """
 

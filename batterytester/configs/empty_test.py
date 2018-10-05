@@ -14,7 +14,6 @@ from batterytester.core.base_test import BaseTest
 # of loops to run.
 from batterytester.core.helpers.helpers import set_test_config
 
-
 set_test_config("../dev_config.json")
 
 test = BaseTest(test_name="empty test", loop_count=2)

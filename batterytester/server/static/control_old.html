@@ -52,220 +52,221 @@
     }
     
 
+
 </style>
 
 <body>
-    <div class="container grid-lg">
-        <div class="columns">
-            <div class="column col-12">
+<div class="container grid-lg">
+    <div class="columns">
+        <div class="column col-12">
 
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <h5>
-                                Connection status
-                            </h5>
-                        </div>
-                    </div>
-
-                    <div class="card-body">
-                        <div class="columns">
-                            <div class="column col-6">
-                                <button type="button" class="btn" id="connect">Connect</button>
-                            </div>
-                            <div class="column col-6">
-                                <div id="status">not connected.</div>
-                            </div>
-                        </div>
-                        <div class="columns">
-                            <div class="column col-6">
-                                <button type="button" class="btn" id="shutdown">
-                                    Shutdown rpi
-                                </button>
-                            </div>
-
-                        </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <h5>
+                            Connection status
+                        </h5>
                     </div>
                 </div>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <h5>Test control</h5>
-                        <div class="columns">
-                            <div class="column col-md-12 col-8">
-                                <select id='all_tests_list' class="form-select"></select>
-                            </div>
-                            <div class="column col-md-12 col-4">
-                                <button type="button" class='btn btn-block' id="all_tests">Refresh</button>
-                            </div>
+                <div class="card-body">
+                    <div class="columns">
+                        <div class="column col-6">
+                            <button type="button" class="btn" id="connect">Connect</button>
                         </div>
-                        <div class="columns">
-                            <div class="column col-md-12 col-6">
-                                <button type="button" id="stop_test_button" class='btn btn-block'>Stop test</button>
-                            </div>
-                            <div class="column col-md-12 col-6">
-                                <button type="button" id="start_test_button" class='btn btn-block'>Start test</button>
-                            </div>
+                        <div class="column col-6">
+                            <div id="status">not connected.</div>
                         </div>
-                        <button type="button" id="clear_button">clear</button>
+                    </div>
+                    <div class="columns">
+                        <div class="column col-6">
+                            <button type="button" class="btn" id="shutdown">
+                                Shutdown rpi
+                            </button>
+                        </div>
 
                     </div>
                 </div>
+            </div>
 
-                <h2>PROCESS INFO</h2>
-                <div id="process_info">
+            <div class="panel">
+                <div class="panel-header">
+                    <h5>Test control</h5>
                     <div class="columns">
-                        <div class="column col-6">Process name</div>
-                        <div class="column col-6">
-                            <div class="value _process_name">
-                            </div>
+                        <div class="column col-md-12 col-8">
+                            <select id='all_tests_list' class="form-select"></select>
+                        </div>
+                        <div class="column col-md-12 col-4">
+                            <button type="button" class='btn btn-block' id="all_tests">Refresh</button>
                         </div>
                     </div>
                     <div class="columns">
-                        <div class="column col-6">Process id</div>
-                        <div class="column col-6">
-                            <div class="value _process_id">
-                            </div>
+                        <div class="column col-md-12 col-6">
+                            <button type="button" id="stop_test_button" class='btn btn-block'>Stop test</button>
+                        </div>
+                        <div class="column col-md-12 col-6">
+                            <button type="button" id="start_test_button" class='btn btn-block'>Start test</button>
                         </div>
                     </div>
-                    <div class="columns">
-                        <div class="column col-6">Status</div>
-                        <div class="column col-6">
-                            <div class="value _status">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-2 col-sm-12">Info</div>
-                        <div class="column col-10 col-sm-12">
-                            <div class="value _messages">
-                            </div>
+                    <button type="button" id="clear_button">clear</button>
+
+                </div>
+            </div>
+
+            <h2>PROCESS INFO</h2>
+            <div id="process_info">
+                <div class="columns">
+                    <div class="column col-6">Process name</div>
+                    <div class="column col-6">
+                        <div class="value _process_name">
                         </div>
                     </div>
                 </div>
+                <div class="columns">
+                    <div class="column col-6">Process id</div>
+                    <div class="column col-6">
+                        <div class="value _process_id">
+                        </div>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-6">Status</div>
+                    <div class="column col-6">
+                        <div class="value _status">
+                        </div>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-2 col-sm-12">Info</div>
+                    <div class="column col-10 col-sm-12">
+                        <div class="value _messages">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <h2>TEST INFO</h2>
-                <div id="test_info">
-                    <div class="columns">
-                        <div class="column col-6">Test name</div>
-                        <div class="column col-6">
-                            <div class='test_name value'>no name</div>
-                        </div>
+            <h2>TEST INFO</h2>
+            <div id="test_info">
+                <div class="columns">
+                    <div class="column col-6">Test name</div>
+                    <div class="column col-6">
+                        <div class='test_name value'>no name</div>
                     </div>
-                    <div class="columns">
-                        <div class="column col-6">Status</div>
-                        <div class="column col-6">
-                            <div class="status value">unknown</div>
-                        </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-6">Status</div>
+                    <div class="column col-6">
+                        <div class="status value">unknown</div>
                     </div>
-                    <div class="columns">
-                        <div class="column col-6">Reason</div>
-                        <div class="column col-6">
+                </div>
+                <div class="columns">
+                    <div class="column col-6">Reason</div>
+                    <div class="column col-6">
                             <span class="reason value">
                             </span>
-                        </div>
-
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Total loop count</div>
-                        <div class="column col-6">
-                            <span class="loop_count value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Started</div>
-                        <div class="column col-6">
-                            <span class="started value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Stopped</div>
-                        <div class="column col-6">
-                            <span class="time_finished value">unknown</span>
-                        </div>
-                    </div>
-                </div>
-
-                <h2>ATOM INFO</h2>
-                <div id="atom_info">
-                    <div class="columns">
-                        <div class="column col-6">Name</div>
-                        <div class="column col-6">
-                            <span class="atom_name value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Index</div>
-                        <div class="column col-6 idx value">unknown
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Loop</div>
-                        <div class="column col-6">
-                            <span class="loop value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">status</div>
-                        <div class="column col-6">
-                            <span class="status value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">reference data</div>
-                        <div class="column col-6">
-                            <span class="reference_data value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">started</div>
-                        <div class="column col-6">
-                            <span class="started value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-6">Duration</div>
-                        <div class="column col-6">
-                            <span class="duration value">unknown</span>
-                        </div>
                     </div>
 
                 </div>
-                <!-- <div id="atom_data"></div> -->
-                <h2>SENSOR DATA</h2>
-                <div id="sensor_info">
-
+                <div class="columns">
+                    <div class="column col-6">Total loop count</div>
+                    <div class="column col-6">
+                        <span class="loop_count value">unknown</span>
+                    </div>
                 </div>
-
-                <h2>SUMMARY</h2>
-                <div id="summary_info">
-                    <div class="columns">
-                        <div class="column col-6">Tests failed</div>
-                        <div class="column col-6">
-                            <span class="failed value">unknown</span>
-                        </div>
+                <div class="columns">
+                    <div class="column col-6">Started</div>
+                    <div class="column col-6">
+                        <span class="started value">unknown</span>
                     </div>
-                    <div class="columns">
-                        <div class="column col-6">Tests passed</div>
-                        <div class="column col-6">
-                            <span class="passed value">unknown</span>
-                        </div>
-                    </div>
-                    <div class="columns">
-                        <div class="column col-2 col-sm-12">Failed tests</div>
-                        <div class="column col-10 col-sm-12">
-                            <span class="failed_ids value">unknown</span>
-                        </div>
-
-                    </div>
-
                 </div>
-                <div id="summary"></div>
+                <div class="columns">
+                    <div class="column col-6">Stopped</div>
+                    <div class="column col-6">
+                        <span class="time_finished value">unknown</span>
+                    </div>
+                </div>
+            </div>
+
+            <h2>ATOM INFO</h2>
+            <div id="atom_info">
+                <div class="columns">
+                    <div class="column col-6">Name</div>
+                    <div class="column col-6">
+                        <span class="atom_name value">unknown</span>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-6">Index</div>
+                    <div class="column col-6 idx value">unknown
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-6">Loop</div>
+                    <div class="column col-6">
+                        <span class="loop value">unknown</span>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-6">status</div>
+                    <div class="column col-6">
+                        <span class="status value">unknown</span>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-6">reference data</div>
+                    <div class="column col-6">
+                        <span class="reference_data value">unknown</span>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-6">started</div>
+                    <div class="column col-6">
+                        <span class="started value">unknown</span>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-6">Duration</div>
+                    <div class="column col-6">
+                        <span class="duration value">unknown</span>
+                    </div>
+                </div>
 
             </div>
+            <!-- <div id="atom_data"></div> -->
+            <h2>SENSOR DATA</h2>
+            <div id="sensor_info">
+
+            </div>
+
+            <h2>SUMMARY</h2>
+            <div id="summary_info">
+                <div class="columns">
+                    <div class="column col-6">Tests failed</div>
+                    <div class="column col-6">
+                        <span class="failed value">unknown</span>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-6">Tests passed</div>
+                    <div class="column col-6">
+                        <span class="passed value">unknown</span>
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column col-2 col-sm-12">Failed tests</div>
+                    <div class="column col-10 col-sm-12">
+                        <span class="failed_ids value">unknown</span>
+                    </div>
+
+                </div>
+
+            </div>
+            <div id="summary"></div>
+
         </div>
     </div>
-    <script type="text/javascript" src=ui_js.js></script>
+</div>
+<script type="text/javascript" src=ui_js.js></script>
 
 </body>
 

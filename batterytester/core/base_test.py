@@ -40,7 +40,8 @@ class BaseTest:
     """Main test."""
 
     def __init__(
-        self, *, test_name: str, loop_count: int, learning_mode: bool = False
+            self, *, test_name: str, loop_count: int,
+            learning_mode: bool = False
     ):
 
         self.bus = Bus()
@@ -165,7 +166,7 @@ class BaseTest:
             await asyncio.sleep(self._active_atom.duration)
 
             if not self._learning_mode and isinstance(
-                self._active_atom, ReferenceAtom
+                    self._active_atom, ReferenceAtom
             ):
                 # Actual testing mode. reference data
                 # and testing data can be compared.

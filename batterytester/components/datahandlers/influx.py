@@ -45,7 +45,8 @@ class InfluxLineProtocol:
     write_protocols/line_protocol_tutorial/"""
 
     def __init__(
-        self, measurement, time_stamp, tags: dict = None, fields: dict = None
+            self, measurement, time_stamp, tags: dict = None,
+            fields: dict = None
     ):
         """
 
@@ -137,12 +138,12 @@ class Influx(BaseDataHandler):
     """Writes data to an InfluxDB database."""
 
     def __init__(
-        self,
-        *,
-        host=None,
-        database="menc",
-        buffer_size=5,
-        subscription_filters=None
+            self,
+            *,
+            host=None,
+            database="menc",
+            buffer_size=5,
+            subscription_filters=None
     ):
         """
         :param host: ip address of the influx database

@@ -68,13 +68,13 @@ class DownSampledVoltsAmpsParser(VoltAmpsIrParser):
     and evaluates adding to queue depending on delta values."""
 
     def __init__(
-        self,
-        bus,
-        sensor_queue,
-        sensor_prefix=None,
-        buffer=120,
-        delta_v=0.1,
-        delta_a=0.5,
+            self,
+            bus,
+            sensor_queue,
+            sensor_prefix=None,
+            buffer=120,
+            delta_v=0.1,
+            delta_a=0.5,
     ):
         """
 
@@ -141,8 +141,6 @@ class DownSampledVoltsAmpsParser(VoltAmpsIrParser):
                 self.buffer_pos = 0
             # else:
             #     pass
-                # LOGGER.debug("skipping measurement")
+            # LOGGER.debug("skipping measurement")
         self.previous_measurement = measurement
         self.buffer_pos += 1
-
-

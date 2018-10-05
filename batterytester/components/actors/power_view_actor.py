@@ -44,7 +44,7 @@ class PowerViewActor(BaseActor):
     actor_type = ACTOR_TYPE_POWER_VIEW
 
     def __init__(
-        self, *, hub_ip: str, shade_id: int = None, room_id: int = None
+            self, *, hub_ip: str, shade_id: int = None, room_id: int = None
     ):
         """
 

@@ -47,4 +47,3 @@ class IncomingParser:
         if self.sensor_prefix:
             return '{}_{}'.format(self.sensor_prefix, sensor_name)
         return sensor_name
-
