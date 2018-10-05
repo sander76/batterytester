@@ -9,7 +9,7 @@ from typing import Optional
 from aiotg import Bot, BotApiError
 
 from batterytester.components.datahandlers.base_data_handler import (
-    BaseDataHandler
+    BaseDataHandler,
 )
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.message_subjects import Subscriptions
@@ -29,8 +29,7 @@ def clean_for_markdown(string):
 
 class Telegram(BaseDataHandler):
     def __init__(
-            self, *, token, chat_id,
-            subscriptions: Optional[Subscriptions] = None
+        self, *, token, chat_id, subscriptions: Optional[Subscriptions] = None
     ):
         super().__init__(subscriptions)
         self._token = token
@@ -41,13 +40,6 @@ class Telegram(BaseDataHandler):
         self.sending = False
 
         self.subscriptions = []
-        # self.subscriptions = (
-        #     # (subj.TEST_WARMUP, self._test_start),
-        #     #(subj.TEST_FINISHED, self._test_finished),
-        #     # (subj.ACTOR_RESPONSE_RECEIVED, self._actor_response_received),
-        #     #(subj.ATOM_RESULT, self._atom_result),
-        #     (subj.TEST_FATAL, self._test_fatal),
-        # )
 
     async def setup(self, test_name: str, bus: Bus):
         self._bus = bus
@@ -102,17 +94,11 @@ class Telegram(BaseDataHandler):
         )
         self._send_message(self._make_message(_resp, testdata.time.value))
 
-    # def _actor_response_received(self, subject, data: ActorResponse):
-    #     _resp = "\n".join(
-    #         "{}: {}".format(key, value)
-    #         for key, value in data.response.value.items()
-    #     )
-    #     self._send_message(self._make_message(_resp, data.time.value))
-
     def event_test_fatal(self, testdata):
         _info = testdata.reason.value
         self._send_message(
-            self._make_message(_info, testdata.time_finished.value))
+            self._make_message("FATAL: " + _info, testdata.time_finished.value)
+        )
 
     def event_test_finished(self, testdata):
         _message = self._make_message("FINISHED", testdata.time_finished.value)
