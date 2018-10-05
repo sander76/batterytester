@@ -1,12 +1,13 @@
 """PowerView actor"""
 
+from functools import wraps
+
 from aiopvapi.helpers.aiorequest import AioRequest, PvApiError
 from aiopvapi.resources.scene import Scene
 from aiopvapi.rooms import Rooms
 from aiopvapi.scene_members import SceneMembers
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
-from functools import wraps
 
 from batterytester.components.actors.base_actor import (
     ACTOR_TYPE_POWER_VIEW,

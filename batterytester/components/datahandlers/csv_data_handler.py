@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-
 from asyncio import CancelledError
 from concurrent.futures import ThreadPoolExecutor
 

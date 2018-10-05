@@ -4,9 +4,6 @@ from batterytester.components.actors.tools import get_example_actor
 from batterytester.components.datahandlers.messaging import Messaging
 from batterytester.components.sensor.fake_led_gate_sensor import \
     FakeLedGateSensor
-from batterytester.components.sensor.fake_volts_amps_sensor import (
-    FakeVoltsAmpsSensor
-)
 from batterytester.core.atom import Atom, BooleanReferenceAtom
 from batterytester.core.base_test import BaseTest
 

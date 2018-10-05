@@ -2,7 +2,6 @@ import logging
 from abc import ABCMeta, abstractmethod
 from asyncio import CancelledError
 
-
 from batterytester.core.bus import Bus
 
 _LOGGER = logging.getLogger(__name__)

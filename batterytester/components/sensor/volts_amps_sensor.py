@@ -1,11 +1,10 @@
 from batterytester.components.sensor.connector.squid_connector import (
     AltArduinoConnector
 )
-
-from batterytester.components.sensor.squid_sensor import BaseSquidSensor
-from batterytester.core.bus import Bus
 from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import \
     DownSampledVoltsAmpsParser
+from batterytester.components.sensor.squid_sensor import BaseSquidSensor
+from batterytester.core.bus import Bus
 
 
 class VoltsAmpsSensor(BaseSquidSensor):
