@@ -97,9 +97,7 @@ class PowerViewActor(BaseActor):
 
     @catch_exceptions
     async def move_to(self, position):
-        await self.shade._move(
-            self.shade._create_shade_data(position_data=position)
-        )
+        await self.shade.mov(position_data=position)
 
     @catch_exceptions
     async def open_shade(self):
@@ -110,6 +108,21 @@ class PowerViewActor(BaseActor):
     async def close_shade(self):
         """Close a shade."""
         await self.shade.close()
+
+    @catch_exceptions
+    async def stop_shade(self):
+        """Stop a moving shade."""
+        await self.shade.stop()
+
+    @catch_exceptions
+    async def tilt_open(self):
+        """Tilt a shade to the open position."""
+        await self.shade.tilt_open()
+
+    @catch_exceptions
+    async def tilt_close(self):
+        """Tilt a shade to the close position."""
+        await self.shade.tilt_close()
 
     @catch_exceptions
     async def jog_shade(self):

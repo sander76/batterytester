@@ -12,7 +12,6 @@ from batterytester.core.bus import Bus
 from batterytester.core.helpers.message_data import (
     ActorResponse,
     AtomResult,
-    TestFatal,
 )
 from test.private_keys import telegram_token, chat_id
 
@@ -41,9 +40,7 @@ def test_telegram_response_received(tg, response):
 
 
 def test_telegram_test_data(tg, fatal_data):
-    _message = (
-        "*None*\n\n```\nfatal reason unknown.\n```\n\n22:33:09, Nov 29, 1973 "
-    )
+    _message = "*None*\n\n```\nFATAL: fatal reason unknown.\n```\n\n22:33:09, Nov 29, 1973 "
     tg.handle_event(subj.TEST_FATAL, fatal_data)
 
     tg._send_message.assert_called_once_with(_message)
