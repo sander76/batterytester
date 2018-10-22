@@ -24,7 +24,7 @@ VERSION = None
 REQUIRED = [
     "pyserial",
     "aiopvapi",
-    "aiohttp=3.3.2",
+    "aiohttp==3.3.2",
     "python-slugify",
     "aiotg",
     "telepot",
