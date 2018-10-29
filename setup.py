@@ -14,7 +14,6 @@ from setuptools import find_packages, setup, Command
 # Package meta-data.
 NAME = "batterytester"
 DESCRIPTION = "Batterytester framework"
-URL = "https://github.com/sander76/aio-powerview-api"
 EMAIL = None
 AUTHOR = "Sander Teunissen"
 REQUIRES_PYTHON = ">=3.5.0"
@@ -62,7 +61,7 @@ class UploadCommand(Command):
     @staticmethod
     def status(s):
         """Prints things in bold."""
-        print("\033[1m{0}\033[0m".format(s))
+        print(s)
 
     def initialize_options(self):
         pass
@@ -72,17 +71,17 @@ class UploadCommand(Command):
 
     def run(self):
         try:
-            self.status("Removing previous builds…")
+            self.status("Removing previous builds...")
             rmtree(os.path.join(here, "dist"))
         except OSError:
             pass
 
-        self.status("Building Source and Wheel (universal) distribution…")
+        self.status("Building Source and Wheel (universal) distribution")
         os.system(
             "{0} setup.py sdist bdist_wheel --universal".format(sys.executable)
         )
 
-        self.status("Uploading the package to PyPI via Twine…")
+        self.status("Uploading the package to PyPI via Twine")
         os.system("twine upload dist/*")
 
         sys.exit()

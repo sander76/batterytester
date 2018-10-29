@@ -13,6 +13,12 @@ git pull
 cd ~
 echo "updating batterytester"
 sudo pip3 install batterytester/ --upgrade
+
+cd ~/test-frame-configs
+git pull
+cd ~
+sudo pip3 install test-frame-configs/ --upgrade
+
 echo "starting tester-server"
 sudo systemctl start tester-server
 echo "ready"
