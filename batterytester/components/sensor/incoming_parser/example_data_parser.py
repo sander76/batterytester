@@ -16,5 +16,4 @@ class ExampleDataParser(IncomingParser):
         Raw incoming is a chunk of data that can be decorated and
         forwarded to the database immediately.
         """
-        return ["{} at {}".format(raw_incoming,
-                                  datetime.datetime.now().isoformat())]
+        return ["{} at {}".format(raw_incoming, datetime.datetime.now().isoformat())]

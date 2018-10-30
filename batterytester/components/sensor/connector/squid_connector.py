@@ -59,8 +59,7 @@ class AltArduinoConnector(AsyncSensorConnector):
 
     def _connect(self):
         try:
-            LOGGER.debug(
-                "Connecting to serial port {}.".format(self.serial_port))
+            LOGGER.debug("Connecting to serial port {}.".format(self.serial_port))
             # timeout is required as on linux serial.read(1) keeps blocking
             # even when serial port is closed.
             self.s = Serial(
@@ -88,8 +87,7 @@ class AltArduinoConnector(AsyncSensorConnector):
                     break
                 else:
                     LOGGER.error("error reading from serial port")
-                    raise FatalTestFailException(
-                        "Problem reading serial port.")
+                    raise FatalTestFailException("Problem reading serial port.")
             except Exception as err:
                 raise FatalTestFailException("Unknown problem: {}".format(err))
 

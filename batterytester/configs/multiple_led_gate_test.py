@@ -2,8 +2,7 @@
 from batterytester.components.actors.example_actor import ExampleActor
 from batterytester.components.actors.tools import get_example_actor
 from batterytester.components.datahandlers.messaging import Messaging
-from batterytester.components.sensor.fake_led_gate_sensor import \
-    FakeLedGateSensor
+from batterytester.components.sensor.fake_led_gate_sensor import FakeLedGateSensor
 from batterytester.core.atom import Atom, BooleanReferenceAtom
 from batterytester.core.base_test import BaseTest
 
@@ -19,8 +18,7 @@ test = BaseTest(test_name="multi ledgate test", loop_count=2)
 test.add_actor(ExampleActor())
 
 # Add sensors to the test.
-test.add_sensors(FakeLedGateSensor(sensor_prefix="squid_1"),
-                 FakeLedGateSensor())
+test.add_sensors(FakeLedGateSensor(sensor_prefix="squid_1"), FakeLedGateSensor())
 
 # Add data handlers to the test.
 test.add_data_handlers(Messaging())

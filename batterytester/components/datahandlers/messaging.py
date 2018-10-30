@@ -52,11 +52,11 @@ class Messaging(BaseDataHandler):
     Needs a running websocket server to connect and interact with."""
 
     def __init__(
-            self,
-            *,
-            host="127.0.0.1",
-            port=8567,
-            subscriptions: Optional[Subscriptions] = None
+        self,
+        *,
+        host="127.0.0.1",
+        port=8567,
+        subscriptions: Optional[Subscriptions] = None
     ):
         """
 
@@ -100,8 +100,7 @@ class Messaging(BaseDataHandler):
     #     self._send_to_ws(data)
 
     def event_test_warmup(self, testdata):
-        LOGGER.debug(
-            "warmup test: {} data: {}".format(subj.TEST_WARMUP, testdata))
+        LOGGER.debug("warmup test: {} data: {}".format(subj.TEST_WARMUP, testdata))
         testdata.subj = subj.TEST_WARMUP
         self._send_to_ws(testdata)
 
@@ -188,8 +187,7 @@ class Messaging(BaseDataHandler):
 
     async def setup(self, test_name, bus):
         self._bus = bus
-        self._server_address = "http://{}:{}{}".format(self._host, self._port,
-                                                       URL_TEST)
+        self._server_address = "http://{}:{}{}".format(self._host, self._port, URL_TEST)
         self._connection_state = ConnectionState.CONNECTING
         await self._ws_connect()
         self._bus.add_async_task(self.ws_loop())
@@ -227,8 +225,7 @@ class Messaging(BaseDataHandler):
         except asyncio.TimeoutError:
             self._connection_state = ConnectionState.RESETTING
             raise TestSetupException(
-                "Connection to the server timed out: {}".format(
-                    self._server_address)
+                "Connection to the server timed out: {}".format(self._server_address)
             )
 
         except ClientConnectionError:
@@ -250,9 +247,9 @@ class Messaging(BaseDataHandler):
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     await self.parser(msg)
                 elif msg.type in (
-                        aiohttp.WSMsgType.CLOSED,
-                        aiohttp.WSMsgType.CLOSING,
-                        aiohttp.WSMsgType.CLOSE,
+                    aiohttp.WSMsgType.CLOSED,
+                    aiohttp.WSMsgType.CLOSING,
+                    aiohttp.WSMsgType.CLOSE,
                 ):
                     break
                 elif msg.type == aiohttp.WSMsgType.ERROR:
@@ -286,7 +283,6 @@ class Messaging(BaseDataHandler):
                 _connect_attempts += 1
                 await asyncio.sleep(1)
 
-            raise FatalTestFailException(
-                "Unable to connect to message server.")
+            raise FatalTestFailException("Unable to connect to message server.")
         except asyncio.CancelledError:
             LOGGER.info("Closing ws reader.")

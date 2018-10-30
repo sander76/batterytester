@@ -105,8 +105,7 @@ class Bus:
 
         LOGGER.info("Setting up handlers.")
         await asyncio.gather(
-            *(_handler.setup(test_name, self) for _handler in
-              self._data_handlers)
+            *(_handler.setup(test_name, self) for _handler in self._data_handlers)
         )
         LOGGER.info("Setting up actors.")
         await asyncio.gather(
@@ -125,8 +124,7 @@ class Bus:
 
     def _start_test(self, test_runner, test_name):
         try:
-            self.loop.run_until_complete(
-                self.start_main_test(test_runner, test_name))
+            self.loop.run_until_complete(self.start_main_test(test_runner, test_name))
         except TestSetupException as err:
             LOGGER.error(err)
             self._exception = err
@@ -165,8 +163,7 @@ class Bus:
             *(_actor.shutdown(self) for _actor in self.actors.values())
         )
         LOGGER.info("Shutting down sensors")
-        await asyncio.gather(
-            *(_sensor.shutdown(self) for _sensor in self.sensors))
+        await asyncio.gather(*(_sensor.shutdown(self) for _sensor in self.sensors))
 
         self.running = False
 
@@ -185,8 +182,7 @@ class Bus:
             current_try += 1
             LOGGER.debug("current try %s", current_try)
             if current_try > tries:
-                LOGGER.info(
-                    "Unable to close all tasks gracefully. Just closing now.")
+                LOGGER.info("Unable to close all tasks gracefully. Just closing now.")
                 # giving up cancelling gracefully
                 break
 

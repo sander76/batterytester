@@ -1,6 +1,5 @@
 """Example actor"""
-from batterytester.components.actors.base_actor import BaseActor, \
-    ACTOR_TYPE_EXAMPLE
+from batterytester.components.actors.base_actor import BaseActor, ACTOR_TYPE_EXAMPLE
 from batterytester.core.bus import Bus
 
 

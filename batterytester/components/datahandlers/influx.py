@@ -43,8 +43,7 @@ class InfluxLineProtocol:
     """https://docs.influxdata.com/influxdb/v1.5/
     write_protocols/line_protocol_tutorial/"""
 
-    def __init__(self, measurement, time_stamp, tags: dict = None,
-                 fields: dict = None):
+    def __init__(self, measurement, time_stamp, tags: dict = None, fields: dict = None):
         """
 
         :param measurement:
@@ -87,8 +86,7 @@ def line_protocol_fields(tags: dict):
                 yield key, value
 
     return ",".join(
-        ("{}={}".format(key, value) for key, value in
-         key_value_generator(tags.items()))
+        ("{}={}".format(key, value) for key, value in key_value_generator(tags.items()))
     )
 
 
@@ -112,8 +110,7 @@ def to_nanoseconds(timestamp):
         return val
     except Exception as err:
         LOGGER.error(err)
-        raise FatalTestFailException(
-            "Unable to convert milliseconds to nanoseconds.")
+        raise FatalTestFailException("Unable to convert milliseconds to nanoseconds.")
 
 
 def get_annotation_tags(data: dict):
@@ -132,8 +129,7 @@ class Influx(BaseDataHandler):
     """Writes data to an InfluxDB database."""
 
     def __init__(
-            self, *, host=None, database="menc", buffer_size=5,
-            subscription_filters=None
+        self, *, host=None, database="menc", buffer_size=5, subscription_filters=None
     ):
         """
         :param host: ip address of the influx database
@@ -183,8 +179,7 @@ class Influx(BaseDataHandler):
         _influx = InfluxLineProtocol(
             self.measurement,
             testdata.time.value,
-            fields={"title": testdata.subj, "text": _text,
-                    "tags": _annotation_tags},
+            fields={"title": testdata.subj, "text": _text, "tags": _annotation_tags},
         )
         self.add_to_buffer(_influx)
 
@@ -236,8 +231,7 @@ class Influx(BaseDataHandler):
             self.measurement,
             testdata[ATTR_TIMESTAMP][ATTR_VALUES],
             tags=self._tags,
-            fields={testdata[ATTR_SENSOR_NAME]: testdata[ATTR_VALUES][
-                ATTR_VALUES]},
+            fields={testdata[ATTR_SENSOR_NAME]: testdata[ATTR_VALUES][ATTR_VALUES]},
         )
         self.add_to_buffer(influx)
 

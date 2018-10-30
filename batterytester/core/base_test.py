@@ -38,8 +38,7 @@ LOGGER = logging.getLogger(__name__)
 class BaseTest:
     """Main test."""
 
-    def __init__(self, *, test_name: str, loop_count: int,
-                 learning_mode: bool = False):
+    def __init__(self, *, test_name: str, loop_count: int, learning_mode: bool = False):
 
         self.bus = Bus()
         self.test_name = test_name
@@ -128,13 +127,11 @@ class BaseTest:
         _seq = self.get_sequence(self.bus.actors)
 
         self.bus.notify(
-            subj.LOOP_WARMUP,
-            LoopWarmup([_atom.get_atom_data() for _atom in _seq])
+            subj.LOOP_WARMUP, LoopWarmup([_atom.get_atom_data() for _atom in _seq])
         )
         _stored_atom_results = {}
         for _idx, _atom in enumerate(_seq):
-            _atom.prepare_test_atom(_idx, self._active_loop,
-                                    _stored_atom_results)
+            _atom.prepare_test_atom(_idx, self._active_loop, _stored_atom_results)
         self._test_sequence = _seq
 
     async def perform_test(self):
@@ -143,13 +140,11 @@ class BaseTest:
         try:
             _result = await self._active_atom.execute()
         except NonFatalTestFailException as err:
-            self.bus.notify(subj.ATOM_RESULT,
-                            AtomResult(passed=False, reason=str(err)))
+            self.bus.notify(subj.ATOM_RESULT, AtomResult(passed=False, reason=str(err)))
             await asyncio.sleep(self._active_atom.duration)
         else:
             if _result:
-                self.bus.notify(subj.ACTOR_RESPONSE_RECEIVED,
-                                ActorResponse(_result))
+                self.bus.notify(subj.ACTOR_RESPONSE_RECEIVED, ActorResponse(_result))
             self.bus.notify(
                 subj.ATOM_COLLECTING, AtomCollecting(ATOM_STATUS_COLLECTING)
             )
@@ -159,8 +154,7 @@ class BaseTest:
             # command
             await asyncio.sleep(self._active_atom.duration)
 
-            if not self._learning_mode and isinstance(self._active_atom,
-                                                      ReferenceAtom):
+            if not self._learning_mode and isinstance(self._active_atom, ReferenceAtom):
                 # Actual testing mode. reference data
                 # and testing data can be compared.
                 _atom_result = self._active_atom.reference_compare()
@@ -180,8 +174,7 @@ class BaseTest:
 
     async def async_test(self):
         LOGGER.info("STARTING async_test")
-        self.bus.notify(subj.TEST_WARMUP,
-                        TestWarmup(self.test_name, self._loopcount))
+        self.bus.notify(subj.TEST_WARMUP, TestWarmup(self.test_name, self._loopcount))
         await self.test_warmup()
 
         for _current_loop in self._get_current_loop():
@@ -198,8 +191,7 @@ class BaseTest:
                     await self.perform_test()
                 except NonFatalTestFailException as err:
                     self.bus.notify(
-                        subj.ATOM_RESULT,
-                        AtomResult(passed=False, reason=str(err))
+                        subj.ATOM_RESULT, AtomResult(passed=False, reason=str(err))
                     )
 
             self.bus.notify(subj.LOOP_FINISHED, LoopFinished())
@@ -229,5 +221,4 @@ class BaseTest:
                 return
             except Exception as err:
                 LOGGER.exception(err)
-                raise FatalTestFailException(
-                    "Something wrong with the sensor queue")
+                raise FatalTestFailException("Something wrong with the sensor queue")

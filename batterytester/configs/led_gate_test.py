@@ -34,8 +34,7 @@ def get_sequence(_actors):
     example_actor = actor_tools.get_example_actor(_actors)
 
     _val = (
-        atoms.Atom(name="close shade", command=example_actor.close,
-                   duration=5),
+        atoms.Atom(name="close shade", command=example_actor.close, duration=5),
         atoms.Atom(name="open shade", duration=5, command=example_actor.open),
     )
     return _val

@@ -9,8 +9,7 @@ from batterytester.components.actors.relay_actor import RelayActor
 from batterytester.components.datahandlers.influx import Influx
 from batterytester.components.datahandlers.messaging import Messaging
 from batterytester.components.datahandlers.report import Report
-from batterytester.components.sensor.fake_volts_amps_sensor import \
-    FakeVoltsAmpsSensor
+from batterytester.components.sensor.fake_volts_amps_sensor import FakeVoltsAmpsSensor
 from batterytester.components.sensor.led_gate_sensor import LedGateSensor
 from batterytester.core.base_test import BaseTest
 from batterytester.core.helpers.helpers import set_test_config
@@ -29,12 +28,10 @@ test.add_actor(
 )
 
 # Add sensors to the test.
-test.add_sensors(FakeVoltsAmpsSensor(),
-                 LedGateSensor(serial_port="/dev/port_1"))
+test.add_sensors(FakeVoltsAmpsSensor(), LedGateSensor(serial_port="/dev/port_1"))
 
 # Add data handlers to the test.
-test.add_data_handlers(Report(), Influx(host="172.22.3.6"),
-                       Messaging(host="172.0.0.1"))
+test.add_data_handlers(Report(), Influx(host="172.22.3.6"), Messaging(host="172.0.0.1"))
 
 
 # Each test (each loop) runs a sequence of tests to perform.
@@ -44,8 +41,7 @@ def get_sequence(_actors):
     example_actor = actor_tools.get_example_actor(_actors)
 
     _val = (
-        atoms.Atom(name="close shade", command=example_actor.close,
-                   duration=2),
+        atoms.Atom(name="close shade", command=example_actor.close, duration=2),
         atoms.Atom(name="open shade", duration=2, command=example_actor.open),
     )
     return _val

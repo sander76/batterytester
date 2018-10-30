@@ -27,8 +27,7 @@ def catch_exceptions(func):
             _fatal = kwargs.get("fatal")
             if _fatal is None or _fatal is True:
                 raise FatalTestFailException(
-                    "problem executing command: {} {}".format(func.__name__,
-                                                              err)
+                    "problem executing command: {} {}".format(func.__name__, err)
                 )
             raise NonFatalTestFailException(err)
 
@@ -40,8 +39,7 @@ class PowerViewActor(BaseActor):
 
     actor_type = ACTOR_TYPE_POWER_VIEW
 
-    def __init__(self, *, hub_ip: str, shade_id: int = None,
-                 room_id: int = None):
+    def __init__(self, *, hub_ip: str, shade_id: int = None, room_id: int = None):
         """
 
         :param hub_ip: The Powerview hub ip address. like: 192.168.2.4
@@ -63,8 +61,7 @@ class PowerViewActor(BaseActor):
 
     async def setup(self, test_name, bus):
         self.test_name = test_name
-        self.request = AioRequest(self.hub_ip, loop=bus.loop,
-                                  websession=bus.session)
+        self.request = AioRequest(self.hub_ip, loop=bus.loop, websession=bus.session)
         self._scenes_entry_point = Scenes(self.request)
         self._rooms_entry_point = Rooms(self.request)
         self._shades_entry_point = Shades(self.request)

@@ -28,8 +28,7 @@ def clean_for_markdown(string):
 
 class Telegram(BaseDataHandler):
     def __init__(
-            self, *, token, chat_id,
-            subscriptions: Optional[Subscriptions] = None
+        self, *, token, chat_id, subscriptions: Optional[Subscriptions] = None
     ):
         super().__init__(subscriptions)
         self._token = token

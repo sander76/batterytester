@@ -43,10 +43,10 @@ def block_quote(content):
 
 class MarkDownReport(FileBasedDataHandler):
     def __init__(
-            self,
-            report_name=None,
-            output_path="reports",
-            subscriptions: Optional[Subscriptions] = None,
+        self,
+        report_name=None,
+        output_path="reports",
+        subscriptions: Optional[Subscriptions] = None,
     ):
         """
 
@@ -140,8 +140,7 @@ class Report(MarkDownReport):
         LOGGER.debug("atom_warmup called")
         super().event_atom_warmup(testdata)
         self.header2("TEST ATOM")
-        self.create_property("STARTED",
-                             datetime.fromtimestamp(testdata.started.value))
+        self.create_property("STARTED", datetime.fromtimestamp(testdata.started.value))
         self.create_property("ATOMNAME", self._atom_name)
         self.create_property("CURRENT LOOP", self._current_loop)
         self.create_property("CURRENT INDEX", self._current_idx)

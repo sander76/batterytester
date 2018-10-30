@@ -12,14 +12,14 @@ class ReferenceAtom(Atom):
     """
 
     def __init__(
-            self,
-            *,
-            name,
-            command,
-            duration,
-            reference,
-            arguments=None,
-            result_key: str = None
+        self,
+        *,
+        name,
+        command,
+        duration,
+        reference,
+        arguments=None,
+        result_key: str = None
     ):
         super().__init__(
             name=name,

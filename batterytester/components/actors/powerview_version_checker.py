@@ -34,8 +34,7 @@ class PowerViewVersionChecker(BaseActor):
         self.processor_version = None
 
     async def setup(self, test_name: str, bus: Bus):
-        self.request = AioRequest(self.hub_ip, loop=bus.loop,
-                                  websession=bus.session)
+        self.request = AioRequest(self.hub_ip, loop=bus.loop, websession=bus.session)
         self.hub = Hub(self.request)
 
     async def get_version(self):
@@ -46,16 +45,15 @@ class PowerViewVersionChecker(BaseActor):
             if ver is not None:
                 return ver
         except (PvApiConnectionError, PvApiError):
-            raise NonFatalTestFailException(
-                "Unable to connect to PowerView hub.")
+            raise NonFatalTestFailException("Unable to connect to PowerView hub.")
 
     def _check_version(self):
         _resp = None
         if self.processor_version is None:
             _resp = self._make_response()
         elif (
-                not self.radio_version == self.hub.radio_version
-                or not self.processor_version == self.hub.main_processor_version
+            not self.radio_version == self.hub.radio_version
+            or not self.processor_version == self.hub.main_processor_version
         ):
             _resp = self._make_response(include_old=True)
 

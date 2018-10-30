@@ -37,13 +37,11 @@ class BooleanParser(SquidParser):
 
                 self.sensor_queue.put_nowait(
                     get_measurement(
-                        self.decorate_sensor_name(sensor_name.decode("utf-8")),
-                        value
+                        self.decorate_sensor_name(sensor_name.decode("utf-8")), value
                     )
                 )
         except (IndexError, ValueError):
 
             raise FatalTestFailException(
-                "Incorrect measurement format: {}".format(
-                    self.current_measurement)
+                "Incorrect measurement format: {}".format(self.current_measurement)
             )

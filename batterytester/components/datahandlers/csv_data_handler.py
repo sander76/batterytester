@@ -38,8 +38,7 @@ class CsvSensorData:
 
     async def threaded_file_writer(self, *args):
         with ThreadPoolExecutor(max_workers=1) as executor:
-            res = await self.bus.loop.run_in_executor(executor,
-                                                      self.file_writer)
+            res = await self.bus.loop.run_in_executor(executor, self.file_writer)
             return res
 
     def create_file_name(self, sensor_name):
@@ -118,8 +117,7 @@ class CsvDataHandler(BaseDataHandler):
         self.current_buffer += 1
 
         if data[ATTR_SENSOR_NAME] not in self.sensor_data:
-            _sensor_data = CsvSensorData(self.test_name, self.output_path,
-                                         self.bus)
+            _sensor_data = CsvSensorData(self.test_name, self.output_path, self.bus)
             _sensor_data.create_file_name(data[ATTR_SENSOR_NAME])
             _sensor_data.create_columns(data)
 
