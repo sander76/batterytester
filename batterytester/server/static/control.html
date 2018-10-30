@@ -47,18 +47,18 @@
         }
 
         .atoms div {
-            
+
             text-align: center;
             min-width: 20px;
-            height:20px;
+            height: 20px;
             text-anchor: middle;
-            display:inline-block;
+            display: inline-block;
             line-height: 19px;
         }
 
-        .current_atom div{
-            background-color:#1565c0;
-            color:white;
+        .current_atom div {
+            background-color: #1565c0;
+            color: white;
         }
 
         #process_messages {
@@ -69,7 +69,6 @@
             border-radius: 0;
             padding: 0;
         }
-
 
 
 </style>
@@ -163,7 +162,7 @@
                         <label-value label="started" v-bind:value="atom.started.v | time"></label-value>
                         <label-value label="reference" v-bind:value="atom.reference_data.v | json"></label-value>
                         <key-val label="duration [s.]">
-                            <timer v-bind:start="atom.duration.v"></timer>
+                            <timer v-bind:start="atom.duration.v" v-bind:started="atom.started.v"></timer>
                             \ {{atom.duration.v}}
                         </key-val>
                     </div>

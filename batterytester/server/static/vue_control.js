@@ -167,7 +167,7 @@ Vue.component('atom-item', {
 })
 
 Vue.component('timer', {
-    props: ['start'],
+    props: ['start', 'started'],
     data: function () {
         return {
             time: 0,
@@ -182,7 +182,11 @@ Vue.component('timer', {
     },
     watch: {
         start: function (val) {
-            this.time = val
+            var now = Date.now() / 1000
+            var diff = now - this.started
+            console.debug("seconds already passed: ", diff)
+
+            this.time = val - Math.floor(diff)
             this.startTimer()
         }
     },
@@ -192,7 +196,6 @@ Vue.component('timer', {
                 this.timer = setInterval(this.updateTimer, 1000)
                 console.log("starting timer: ", this.timer)
             }
-
         },
         stopTimer() {
             clearInterval(this.timer)
@@ -201,7 +204,7 @@ Vue.component('timer', {
         },
         updateTimer() {
             //console.log("updating timer")
-            if (this.time === 0) {
+            if (this.time < 0) {
                 this.stopTimer()
             } else {
                 this.time -= 1
