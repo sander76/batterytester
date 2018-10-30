@@ -12,12 +12,22 @@ class ReferenceAtom(Atom):
     """
 
     def __init__(
-            self, *, name, command,
-            duration, reference, arguments=None,
-            result_key: str = None):
+            self,
+            *,
+            name,
+            command,
+            duration,
+            reference,
+            arguments=None,
+            result_key: str = None
+    ):
         super().__init__(
-            name=name, command=command, arguments=arguments, duration=duration,
-            result_key=result_key)
+            name=name,
+            command=command,
+            arguments=arguments,
+            duration=duration,
+            result_key=result_key,
+        )
         # sensor data is stored here.
         # reference sensor data to be stored here.
         self.reference_data = reference

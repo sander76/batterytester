@@ -8,9 +8,8 @@ from typing import Optional
 
 from aiotg import Bot, BotApiError
 
-from batterytester.components.datahandlers.base_data_handler import (
-    BaseDataHandler,
-)
+from batterytester.components.datahandlers.base_data_handler import \
+    BaseDataHandler
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.message_subjects import Subscriptions
 

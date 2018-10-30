@@ -19,27 +19,22 @@ set_test_config("../dev_config.json")
 
 # Define a test. Give it a proper name and define the amount
 # of loops to run.
-test = BaseTest(test_name='empty test', loop_count=3)
+test = BaseTest(test_name="empty test", loop_count=3)
 
 # Add actors to the test.
 test.add_actor(
     ExampleActor(),
-    RelayActor(serial_port='/dev/port_2'),
-    PowerViewActor(hub_ip='172.22.3.4')
+    RelayActor(serial_port="/dev/port_2"),
+    PowerViewActor(hub_ip="172.22.3.4"),
 )
 
 # Add sensors to the test.
-test.add_sensors(
-    FakeVoltsAmpsSensor(),
-    LedGateSensor(serial_port='/dev/port_1')
-)
+test.add_sensors(FakeVoltsAmpsSensor(),
+                 LedGateSensor(serial_port="/dev/port_1"))
 
 # Add data handlers to the test.
-test.add_data_handlers(
-    Report(),
-    Influx(host='172.22.3.6'),
-    Messaging(host='172.0.0.1')
-)
+test.add_data_handlers(Report(), Influx(host="172.22.3.6"),
+                       Messaging(host="172.0.0.1"))
 
 
 # Each test (each loop) runs a sequence of tests to perform.
@@ -49,16 +44,9 @@ def get_sequence(_actors):
     example_actor = actor_tools.get_example_actor(_actors)
 
     _val = (
-        atoms.Atom(
-            name='close shade',
-            command=example_actor.close,
-            duration=2
-        ),
-        atoms.Atom(
-            name='open shade',
-            duration=2,
-            command=example_actor.open
-        )
+        atoms.Atom(name="close shade", command=example_actor.close,
+                   duration=2),
+        atoms.Atom(name="open shade", duration=2, command=example_actor.open),
     )
     return _val
 

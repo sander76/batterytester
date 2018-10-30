@@ -4,11 +4,10 @@ When the sensor is open it will return True.
 if sensor is blocked it will return False.
 """
 from batterytester.components.sensor.connector.squid_connector import (
-    AltArduinoConnector
+    AltArduinoConnector,
 )
-from batterytester.components.sensor.incoming_parser.boolean_parser import (
+from batterytester.components.sensor.incoming_parser.boolean_parser import \
     BooleanParser
-)
 
 from batterytester.components.sensor.squid_sensor import BaseSquidSensor
 from batterytester.core.bus import Bus

@@ -3,14 +3,11 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from batterytester.components.datahandlers.base_data_handler import (
+from batterytester.components.datahandlers.base_data_handler import \
     FileBasedDataHandler
-)
 from batterytester.core.helpers.constants import RESULT_FAIL, RESULT_PASS
 from batterytester.core.helpers.helpers import get_time_string
-from batterytester.core.helpers.message_data import (
-    TestSummary,
-)
+from batterytester.core.helpers.message_data import TestSummary
 from batterytester.core.helpers.message_subjects import Subscriptions
 
 SUMMARY_FILE_FORMAT = "{}.md"
@@ -143,9 +140,8 @@ class Report(MarkDownReport):
         LOGGER.debug("atom_warmup called")
         super().event_atom_warmup(testdata)
         self.header2("TEST ATOM")
-        self.create_property(
-            "STARTED", datetime.fromtimestamp(testdata.started.value)
-        )
+        self.create_property("STARTED",
+                             datetime.fromtimestamp(testdata.started.value))
         self.create_property("ATOMNAME", self._atom_name)
         self.create_property("CURRENT LOOP", self._current_loop)
         self.create_property("CURRENT INDEX", self._current_idx)

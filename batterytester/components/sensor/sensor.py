@@ -50,8 +50,7 @@ class Sensor(metaclass=ABCMeta):
             while True:  # self.bus.running:
                 _raw_data = await self._connector.raw_sensor_data_queue.get()
                 for _measurement in self._sensor_data_parser.process(
-                        _raw_data
-                ):
+                        _raw_data):
                     if _measurement:
                         await self.sensor_data_queue.put(_measurement)
         except CancelledError:

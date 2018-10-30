@@ -2,11 +2,16 @@ import logging
 import os
 from typing import Union
 
-from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiError, \
-    PvApiResponseStatusError
+from aiopvapi.helpers.aiorequest import (
+    PvApiConnectionError,
+    PvApiError,
+    PvApiResponseStatusError,
+)
 
-from batterytester.core.helpers.helpers import TestSetupException, \
-    NonFatalTestFailException
+from batterytester.core.helpers.helpers import (
+    TestSetupException,
+    NonFatalTestFailException,
+)
 from batterytester.core.helpers.message_data import AtomWarmup
 
 LOGGING = logging.getLogger(__name__)
@@ -15,8 +20,15 @@ LOGGING = logging.getLogger(__name__)
 class Atom:
     """Basic test atom."""
 
-    def __init__(self, *, name, command, duration, arguments=None,
-                 result_key: Union[str, None] = None):
+    def __init__(
+            self,
+            *,
+            name,
+            command,
+            duration,
+            arguments=None,
+            result_key: Union[str, None] = None
+    ):
 
         if not callable(command):
             raise TestSetupException("atom command is not callable")
@@ -26,7 +38,7 @@ class Atom:
         self._duration = duration
         self._idx = None
         self._loop = None
-        self._result = ''
+        self._result = ""
         self.sensor_data = []
 
         # used for storing a global property to be used by other
@@ -62,20 +74,10 @@ class Atom:
         self._stored_atom_results = stored_atom_results
 
     def get_atom_warmup_data(self):
-        return AtomWarmup(
-            self.name,
-            self._idx,
-            self._loop,
-            self._duration
-        )
+        return AtomWarmup(self.name, self._idx, self._loop, self._duration)
 
     def get_atom_data(self):
-        return AtomWarmup(
-            self.name,
-            self._idx,
-            self._loop,
-            self._duration
-        )
+        return AtomWarmup(self.name, self._idx, self._loop, self._duration)
 
     def _check_args(self):
         """Checks method arguments"""
@@ -98,21 +100,21 @@ class Atom:
         # todo: move the below exceptions to their actors. The actors should
         # raise an Fatal or NonFatal TestFailException on fail.
         except (
-                PvApiConnectionError, PvApiError,
-                PvApiResponseStatusError) as err:
+        PvApiConnectionError, PvApiError, PvApiResponseStatusError) as err:
             LOGGING.error(err)
             raise NonFatalTestFailException(
-                "A problem occurred executing the atom command.")
+                "A problem occurred executing the atom command."
+            )
 
 
-SENSOR_FILE_FORMAT = 'loop_{}-idx_{}.json'
+SENSOR_FILE_FORMAT = "loop_{}-idx_{}.json"
 
 
-def get_sensor_data_name(save_location, test_sequence_number,
-                         current_loop=0):
+def get_sensor_data_name(save_location, test_sequence_number, current_loop=0):
     _fname = os.path.join(
-        save_location, SENSOR_FILE_FORMAT.format(
-            current_loop, test_sequence_number))
+        save_location,
+        SENSOR_FILE_FORMAT.format(current_loop, test_sequence_number)
+    )
     LOGGING.debug("saving data to %s" % _fname)
     return _fname
 

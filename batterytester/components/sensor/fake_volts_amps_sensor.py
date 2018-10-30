@@ -1,7 +1,9 @@
-from batterytester.components.sensor.connector.random_volt_amps_connector import \
-    RandomVoltAmpsConnector
-from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import \
-    VoltAmpsIrParser
+from batterytester.components.sensor.connector.random_volt_amps_connector import (
+    RandomVoltAmpsConnector,
+)
+from batterytester.components.sensor.incoming_parser.volt_amps_ir_parser import (
+    VoltAmpsIrParser,
+)
 from batterytester.components.sensor.squid_sensor import BaseSquidSensor
 from batterytester.core.bus import Bus
 

@@ -1,10 +1,14 @@
-from batterytester.components.actors.base_actor import ACTOR_TYPE_RELAY_ACTOR, \
-    ACTOR_TYPE_POWER_VIEW, ACTOR_TYPE_EXAMPLE, \
-    ACTOR_TYPE_POWERVIEW_VERSION_CHECKER
+from batterytester.components.actors.base_actor import (
+    ACTOR_TYPE_RELAY_ACTOR,
+    ACTOR_TYPE_POWER_VIEW,
+    ACTOR_TYPE_EXAMPLE,
+    ACTOR_TYPE_POWERVIEW_VERSION_CHECKER,
+)
 from batterytester.components.actors.example_actor import ExampleActor
 from batterytester.components.actors.power_view_actor import PowerViewActor
-from batterytester.components.actors.powerview_version_checker import \
-    PowerViewVersionChecker
+from batterytester.components.actors.powerview_version_checker import (
+    PowerViewVersionChecker,
+)
 from batterytester.components.actors.relay_actor import RelayActor
 from batterytester.core.helpers.helpers import TestSetupException
 
@@ -14,7 +18,8 @@ def _get_actor(actors, actor_type):
     if _actor:
         return _actor
     raise TestSetupException(
-        "Actor {} not available in test".format(ACTOR_TYPE_RELAY_ACTOR))
+        "Actor {} not available in test".format(ACTOR_TYPE_RELAY_ACTOR)
+    )
 
 
 def get_relay_actor(actors) -> RelayActor:

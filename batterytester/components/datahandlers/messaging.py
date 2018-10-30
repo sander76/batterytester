@@ -11,9 +11,8 @@ import aiohttp
 from aiohttp import ClientConnectionError, client_exceptions
 
 import batterytester.core.helpers.message_subjects as subj
-from batterytester.components.datahandlers.base_data_handler import (
+from batterytester.components.datahandlers.base_data_handler import \
     BaseDataHandler
-)
 from batterytester.core.helpers.helpers import (
     FatalTestFailException,
     TestSetupException,
@@ -102,8 +101,7 @@ class Messaging(BaseDataHandler):
 
     def event_test_warmup(self, testdata):
         LOGGER.debug(
-            "warmup test: {} data: {}".format(subj.TEST_WARMUP, testdata)
-        )
+            "warmup test: {} data: {}".format(subj.TEST_WARMUP, testdata))
         testdata.subj = subj.TEST_WARMUP
         self._send_to_ws(testdata)
 
@@ -190,9 +188,8 @@ class Messaging(BaseDataHandler):
 
     async def setup(self, test_name, bus):
         self._bus = bus
-        self._server_address = "http://{}:{}{}".format(
-            self._host, self._port, URL_TEST
-        )
+        self._server_address = "http://{}:{}{}".format(self._host, self._port,
+                                                       URL_TEST)
         self._connection_state = ConnectionState.CONNECTING
         await self._ws_connect()
         self._bus.add_async_task(self.ws_loop())
@@ -231,8 +228,7 @@ class Messaging(BaseDataHandler):
             self._connection_state = ConnectionState.RESETTING
             raise TestSetupException(
                 "Connection to the server timed out: {}".format(
-                    self._server_address
-                )
+                    self._server_address)
             )
 
         except ClientConnectionError:
@@ -291,7 +287,6 @@ class Messaging(BaseDataHandler):
                 await asyncio.sleep(1)
 
             raise FatalTestFailException(
-                "Unable to connect to message server."
-            )
+                "Unable to connect to message server.")
         except asyncio.CancelledError:
             LOGGER.info("Closing ws reader.")

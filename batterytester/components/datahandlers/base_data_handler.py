@@ -15,9 +15,8 @@ LOGGER = logging.getLogger(__name__)
 def create_report_file(test_name, report_name, output_path, extension="md"):
     """Create a report file."""
     _base_filename = report_name or test_name
-    _filename = "{}_{}.{}".format(
-        _base_filename, get_current_time_string(), extension
-    )
+    _filename = "{}_{}.{}".format(_base_filename, get_current_time_string(),
+                                  extension)
 
     _path = check_output_folder(output_path)
     # converting the Path object to string for Python 3.5 compatibility.
@@ -177,9 +176,8 @@ class BaseDataHandler(metaclass=ABCMeta):
         """
         if self.subscription_filters:
             subs = (
-                sub
-                for sub in self.subscriptions
-                if sub[0] in self.subscription_filters
+                sub for sub in self.subscriptions if
+            sub[0] in self.subscription_filters
             )
 
             return subs
@@ -189,10 +187,8 @@ class BaseDataHandler(metaclass=ABCMeta):
 
 class FileBasedDataHandler(BaseDataHandler):
     def __init__(
-            self,
-            report_name,
-            output_path,
-            subscriptions: Optional[Subscriptions] = None,
+            self, report_name, output_path,
+            subscriptions: Optional[Subscriptions] = None
     ):
         """
 

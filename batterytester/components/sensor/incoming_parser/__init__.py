@@ -7,10 +7,16 @@ from typing import Sequence
 from slugify import slugify
 
 from batterytester.core.bus import Bus
-from batterytester.core.helpers.constants import KEY_VALUE, ATTR_TIMESTAMP, \
-    KEY_SUBJECT, ATTR_SENSOR_NAME
-from batterytester.core.helpers.helpers import FatalTestFailException, \
-    get_current_timestamp
+from batterytester.core.helpers.constants import (
+    KEY_VALUE,
+    ATTR_TIMESTAMP,
+    KEY_SUBJECT,
+    ATTR_SENSOR_NAME,
+)
+from batterytester.core.helpers.helpers import (
+    FatalTestFailException,
+    get_current_timestamp,
+)
 from batterytester.core.helpers.message_subjects import SENSOR_DATA
 
 
@@ -19,7 +25,8 @@ def get_measurement(sensor_name, value) -> dict:
         ATTR_SENSOR_NAME: sensor_name,
         KEY_VALUE: {KEY_VALUE: value},
         ATTR_TIMESTAMP: {KEY_VALUE: get_current_timestamp()},
-        KEY_SUBJECT: SENSOR_DATA}
+        KEY_SUBJECT: SENSOR_DATA,
+    }
 
 
 class IncomingParser:
@@ -45,5 +52,5 @@ class IncomingParser:
 
     def decorate_sensor_name(self, sensor_name):
         if self.sensor_prefix:
-            return '{}_{}'.format(self.sensor_prefix, sensor_name)
+            return "{}_{}".format(self.sensor_prefix, sensor_name)
         return sensor_name

@@ -7,14 +7,11 @@ from batterytester.core.helpers.helpers import set_test_config
 
 set_test_config("../dev_config.json")
 
-test = BaseTest(test_name='relay test', loop_count=20)
+test = BaseTest(test_name="relay test", loop_count=20)
 
-test.add_sensors(
-)
+test.add_sensors()
 
-test.add_actor(
-    RelayActor(serial_port='COM6')
-)
+test.add_actor(RelayActor(serial_port="COM6"))
 
 test.add_data_handlers(
     # Messaging()
@@ -29,10 +26,10 @@ def get_sequence(actors):
 
     _val = (
         atoms.Atom(
-            name='activate 1',
+            name="activate 1",
             command=relay.activate,
             arguments={"pin": actor1},
-            duration=3
+            duration=3,
         ),
         # atoms.Atom(
         #     name='activate 2',

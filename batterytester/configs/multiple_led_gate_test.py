@@ -19,10 +19,8 @@ test = BaseTest(test_name="multi ledgate test", loop_count=2)
 test.add_actor(ExampleActor())
 
 # Add sensors to the test.
-test.add_sensors(
-    FakeLedGateSensor(sensor_prefix='squid_1'),
-    FakeLedGateSensor()
-)
+test.add_sensors(FakeLedGateSensor(sensor_prefix="squid_1"),
+                 FakeLedGateSensor())
 
 # Add data handlers to the test.
 test.add_data_handlers(Messaging())
@@ -39,7 +37,7 @@ def get_sequence(_actors):
             name="close shade",
             command=example_actor.close,
             duration=5,
-            reference={"6": True}
+            reference={"6": True},
         ),
         Atom(name="open shade", duration=5, command=example_actor.open),
     )

@@ -9,13 +9,8 @@ LOGGER = logging.getLogger(__name__)
 
 class BooleanReferenceAtom(ReferenceAtom):
     def __init__(
-            self,
-            name,
-            command,
-            duration,
-            reference,
-            arguments=None,
-            result_key: str = None,
+            self, name, command, duration, reference, arguments=None,
+            result_key: str = None
     ):
         super().__init__(
             name=name,
@@ -33,9 +28,10 @@ class BooleanReferenceAtom(ReferenceAtom):
         _result = {}
         if self.sensor_data:
             for _measurement in self.sensor_data:
-                _result[_measurement[ATTR_SENSOR_NAME]] = _measurement[
+                _result[_measurement[ATTR_SENSOR_NAME]] = \
+                _measurement[KEY_VALUE][
                     KEY_VALUE
-                ][KEY_VALUE]
+                ]
 
         return _result
 

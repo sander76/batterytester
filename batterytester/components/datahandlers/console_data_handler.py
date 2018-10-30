@@ -1,8 +1,7 @@
 from pprint import pprint
 
-from batterytester.components.datahandlers.base_data_handler import (
+from batterytester.components.datahandlers.base_data_handler import \
     BaseDataHandler
-)
 
 
 class ConsoleDataHandler(BaseDataHandler):

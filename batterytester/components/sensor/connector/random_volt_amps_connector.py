@@ -20,8 +20,7 @@ class RandomVoltAmpsConnector(AsyncSensorConnector):
                 _volts = random()
                 _amps = random()
                 _message = (
-                    "{}s:v:{}:a:{}{}".format("{", _volts, _amps, "}")
-                ).encode()
+                    "{}s:v:{}:a:{}{}".format("{", _volts, _amps, "}")).encode()
                 await self.raw_sensor_data_queue.put(_message)
                 await asyncio.sleep(self._delay)
         except CancelledError:

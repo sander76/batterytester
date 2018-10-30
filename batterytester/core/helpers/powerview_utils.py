@@ -25,8 +25,7 @@ class PowerView:
         self.scenes = await self._scenes_entry_point.get_instances()
 
     async def create_scene(self, scene_name, room_id):
-        _raw = await self._scenes_entry_point.create_scene(
-            room_id, scene_name)
+        _raw = await self._scenes_entry_point.create_scene(room_id, scene_name)
         if _raw:
             result = Scene(_raw, self.request)
             return result

@@ -110,8 +110,7 @@ class DictParser(SquidParser):
         }
         if self.current_measurement[0] == INFO_TYPE_INFO:
             self.sensor_queue.put_nowait(
-                get_measurement(self.sensor_prefix, dct)
-            )
+                get_measurement(self.sensor_prefix, dct))
         elif self.current_measurement[0] == INFO_TYPE_SENSOR:
             self.sensor_queue.put_nowait(
                 get_measurement(self.sensor_prefix + "_data", dct)

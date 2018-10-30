@@ -85,9 +85,8 @@ class Server:
 
     def _add_routes(self):
         # User interface(s) connects here.
-        self.app.router.add_get(
-            URL_INTERFACE, self.client_ws_connection_handler
-        )
+        self.app.router.add_get(URL_INTERFACE,
+                                self.client_ws_connection_handler)
         # Test connects here.
         self.app.router.add_get(URL_TEST, self.test_connection_handler)
 
@@ -97,9 +96,8 @@ class Server:
         self.app.router.add_get("/get_status", self.get_status_handler)
         self.app.router.add_get("/get_tests", self.get_tests_handler)
 
-        self.app.router.add_post(
-            "/system_shutdown", self.system_shutdown_handler
-        )
+        self.app.router.add_post("/system_shutdown",
+                                 self.system_shutdown_handler)
         self.app.router.add_get("", self.dashboard_handler)
         self.app.router.add_get("/", self.dashboard_handler)
 
@@ -123,8 +121,7 @@ class Server:
                     continue
                 rel = pth.relative_to(p)
                 configs.append(
-                    {"name": pth.stem, "parts": rel.parts, "str": str(rel)}
-                )
+                    {"name": pth.stem, "parts": rel.parts, "str": str(rel)})
         return configs
 
     async def dashboard_handler(self, request):
@@ -187,8 +184,7 @@ class Server:
                 line = await self.test_process.stdout.readline()
 
                 p_message = BaseProcessData.process_message(
-                    line.decode("utf-8")
-                )
+                    line.decode("utf-8"))
                 self.p_data.update(p_message)
                 await self.ws_send_to_clients(p_message.to_json())
 
@@ -253,8 +249,7 @@ class Server:
                     await self.test_ws.close()
             except asyncio.TimeoutError:
                 LOGGER.warning(
-                    "unable to close the tester websocket connection"
-                    "gracefully"
+                    "unable to close the tester websocket connection" "gracefully"
                 )
             finally:
                 self.test_ws = None
@@ -262,8 +257,7 @@ class Server:
         if _data:
             _data["status"] = Data("tester disconnected")
             await self.ws_send_to_clients(
-                json.dumps(_data, default=to_serializable)
-            )
+                json.dumps(_data, default=to_serializable))
 
     async def test_connection_handler(self, request):
         """Handle incoming data from the running test."""
@@ -294,9 +288,8 @@ class Server:
         await ws.prepare(request)
 
         self.client_sockets.append(ws)
-        LOGGER.debug(
-            "Websocket clients connected: %s", len(self.client_sockets)
-        )
+        LOGGER.debug("Websocket clients connected: %s",
+                     len(self.client_sockets))
         try:
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
@@ -382,9 +375,8 @@ class Server:
 
     async def shutdown(self):
         for ws in self.client_sockets:
-            await ws.close(
-                code=WSCloseCode.GOING_AWAY, message="server shutdown"
-            )
+            await ws.close(code=WSCloseCode.GOING_AWAY,
+                           message="server shutdown")
 
     async def start(self):
         """Initialize this data handler"""
@@ -393,9 +385,8 @@ class Server:
 
         await self.runner.setup()
         self.server = web.TCPSite(
-            self.runner,
-            host=ATTR_MESSAGE_BUS_ADDRESS,
-            port=ATTR_MESSAGE_BUS_PORT,
+            self.runner, host=ATTR_MESSAGE_BUS_ADDRESS,
+            port=ATTR_MESSAGE_BUS_PORT
         )
         await self.server.start()
 

@@ -230,7 +230,7 @@ class LoopWarmup(BaseLoopData):
         self.subj = subj.LOOP_WARMUP
         self.duration = Data(
             value=sum((_atom.duration.value for _atom in atoms)),
-            type_=TYPE_INT,
+            type_=TYPE_INT
         )
         self.atoms = atoms
 

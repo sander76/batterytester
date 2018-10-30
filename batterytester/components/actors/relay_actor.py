@@ -7,10 +7,8 @@ Activate pin2 for 33 seconds.
 
 from serial import Serial
 
-from batterytester.components.actors.base_actor import (
-    BaseActor,
-    ACTOR_TYPE_RELAY_ACTOR,
-)
+from batterytester.components.actors.base_actor import BaseActor, \
+    ACTOR_TYPE_RELAY_ACTOR
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.helpers import FatalTestFailException
 

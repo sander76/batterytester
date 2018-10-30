@@ -13,10 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SensorConnector:
-    def __init__(
-            self,
-            bus
-    ):
+    def __init__(self, bus):
         self.bus = bus
         self.raw_sensor_data_queue = asyncio.Queue(loop=self.bus.loop)
 

@@ -4,9 +4,8 @@ from batterytester.components.actors.tools import get_example_actor
 from batterytester.components.datahandlers.messaging import Messaging
 from batterytester.components.sensor.fake_led_gate_sensor import \
     FakeLedGateSensor
-from batterytester.components.sensor.fake_volts_amps_sensor import (
+from batterytester.components.sensor.fake_volts_amps_sensor import \
     FakeVoltsAmpsSensor
-)
 from batterytester.core.atom import Atom, BooleanReferenceAtom
 from batterytester.core.base_test import BaseTest
 
@@ -39,7 +38,7 @@ def get_sequence(_actors):
             name="close shade",
             command=example_actor.close,
             duration=50,
-            reference={"6": True}
+            reference={"6": True},
         ),
         Atom(name="open shade", duration=12, command=example_actor.open),
     )

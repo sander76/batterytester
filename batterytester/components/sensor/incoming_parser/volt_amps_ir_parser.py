@@ -22,8 +22,7 @@ class VoltAmpsIrParser(SquidParser):
     def __init__(self, bus, sensor_queue, sensor_prefix=None):
         super().__init__(bus, sensor_queue, sensor_prefix=sensor_prefix)
         self.sensor_name = self.decorate_sensor_name(
-            VoltAmpsIrParser.sensor_name
-        )
+            VoltAmpsIrParser.sensor_name)
 
     def finalize(self):
         """Cast parsed squid data to the correct type.
@@ -131,9 +130,8 @@ class DownSampledVoltsAmpsParser(VoltAmpsIrParser):
                     )
                     self.sensor_queue.put_nowait(self.previous_measurement)
                 LOGGER.debug(
-                    "{}  {}".format(
-                        measurement, "Adding current measurement to queue"
-                    )
+                    "{}  {}".format(measurement,
+                                    "Adding current measurement to queue")
                 )
                 self.sensor_queue.put_nowait(measurement)
                 LOGGER.debug("New reference measurement %s", measurement)
