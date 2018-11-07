@@ -9,7 +9,13 @@ LOGGER = logging.getLogger(__name__)
 
 class BooleanReferenceAtom(ReferenceAtom):
     def __init__(
-        self, name, command, duration, reference, arguments=None, result_key: str = None
+        self,
+        name,
+        command,
+        duration,
+        reference,
+        arguments=None,
+        result_key: str = None,
     ):
         super().__init__(
             name=name,
@@ -27,11 +33,22 @@ class BooleanReferenceAtom(ReferenceAtom):
         _result = {}
         if self.sensor_data:
             for _measurement in self.sensor_data:
-                _result[_measurement[ATTR_SENSOR_NAME]] = _measurement[KEY_VALUE][
+                _result[_measurement[ATTR_SENSOR_NAME]] = _measurement[
                     KEY_VALUE
-                ]
+                ][KEY_VALUE]
 
         return _result
+
+    def _make_message(self, message: str, sensor_data):
+        return "\n".join(
+            (
+                message,
+                "- ref:    {}".format(str(sensor_data)),
+                "- sensor: {}".format(str(self.reference_data)),
+                "- index:  {}".format(self.idx),
+                "- loop:   {}".format(self.loop),
+            )
+        )
 
     def reference_compare(self) -> AtomResult:
         _sensor_data = self._process_sensor_data()
@@ -41,15 +58,17 @@ class BooleanReferenceAtom(ReferenceAtom):
                 if not _sensor_data[key] == value:
                     _atom_result.passed = Data(False, type_=TYPE_BOOL)
                     _atom_result.reason = Data(
-                        "Ref values don't match. ref: {} sensor: {}"
-                        "".format(str(_sensor_data), str(self.reference_data))
+                        self._make_message(
+                            "Reference values don't match sensor data.",
+                            _sensor_data,
+                        )
                     )
-                    return _atom_result
             except KeyError:
                 _atom_result.passed = Data(False, type_=TYPE_BOOL)
                 _atom_result.reason = Data(
-                    "Ref data not in sensor data. ref: {} sensor: {}".format(
-                        str(self.reference_data), str(_sensor_data)
+                    self._make_message(
+                        "Reference data not in actual sensor data.",
+                        _sensor_data,
                     )
                 )
 
