@@ -35,10 +35,10 @@ def get_sequence(_actors):
         BooleanReferenceAtom(
             name="close shade",
             command=example_actor.close,
-            duration=50,
+            duration=5,
             reference={"6": True},
         ),
-        Atom(name="open shade", duration=12, command=example_actor.open),
+        Atom(name="open shade", duration=6, command=example_actor.open),
     )
     return _val
 

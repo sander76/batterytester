@@ -1,5 +1,8 @@
 """Example actor"""
-from batterytester.components.actors.base_actor import BaseActor, ACTOR_TYPE_EXAMPLE
+import asyncio
+
+from batterytester.components.actors.base_actor import BaseActor, \
+    ACTOR_TYPE_EXAMPLE
 from batterytester.core.bus import Bus
 
 
@@ -16,6 +19,7 @@ class ExampleActor(BaseActor):
 
         *Actor command*
         """
+        await asyncio.sleep(1)
         pass
         # print("open {}".format(self.test_name))
 
@@ -24,6 +28,7 @@ class ExampleActor(BaseActor):
 
         *Actor command*
         """
+        await asyncio.sleep(1)
         pass
         # print("close {}".format(self.test_name))
 

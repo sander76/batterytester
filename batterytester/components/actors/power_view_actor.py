@@ -98,7 +98,7 @@ class PowerViewActor(BaseActor):
 
     @catch_exceptions
     async def move_to(self, position, fatal=True):
-        await self.shade.mov(position_data=position)
+        await self.shade.move(position_data=position)
 
     @catch_exceptions
     async def open_shade(self, fatal=True):

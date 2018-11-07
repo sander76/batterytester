@@ -204,7 +204,7 @@ Vue.component('timer', {
         },
         updateTimer() {
             //console.log("updating timer")
-            if (this.time < 0) {
+            if (this.time <= 0) {
                 this.stopTimer()
             } else {
                 this.time -= 1
