@@ -106,11 +106,27 @@ function processData() {
     }
 }
 
+// function summaryData() {
+//     return {
+//         passed: UNKNOWN,
+//         failed: UNKNOWN,
+//         failed_ids: undefined
+//     }
+// }
+
 function summaryData() {
     return {
         passed: UNKNOWN,
         failed: UNKNOWN,
-        failed_ids: UNKNOWN
+        failed_ids: {
+            "v": [{
+                "idx": undefined,
+                "loop": undefined,
+                "reason": undefined,
+                "atom_name": undefined,
+                "data": {}
+            }]
+        }
     }
 }
 
@@ -266,7 +282,7 @@ var vm = new Vue({
             })
         },
         find_test_by_name: function (name) {
-            console.log("finding test name: " + name)
+            console.log('finding test name: ' + name)
             for (var i = 0; i < this.available_tests.length; i++) {
                 if (this.available_tests[i].name === name) {
                     return this.available_tests[i]

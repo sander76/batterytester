@@ -229,7 +229,8 @@ class LoopWarmup(BaseLoopData):
         super().__init__()
         self.subj = subj.LOOP_WARMUP
         self.duration = Data(
-            value=sum((_atom.duration.value for _atom in atoms)), type_=TYPE_INT
+            value=sum((_atom.duration.value for _atom in atoms)),
+            type_=TYPE_INT,
         )
         self.atoms = atoms
 
@@ -288,10 +289,11 @@ class ActorResponse(Message):
 
 
 class AtomResult(Message):
-    def __init__(self, passed: bool, reason: str = ""):
+    def __init__(self, passed: bool, reason: str = "", data=None):
         super().__init__()
         self.passed = Data(passed)
         self.reason = Data(value=str(reason))
+        self.data = Data(value=data)
 
 
 class TestSummary(Message):
@@ -305,7 +307,7 @@ class TestSummary(Message):
     def atom_passed(self):
         self.passed.value += 1
 
-    def atom_failed(self, idx, loop, test_name, reason):
+    def atom_failed(self, idx, loop, test_name, reason, data=None):
         self.failed.value += 1
         self.failed_ids.value.append(
             {
@@ -313,5 +315,6 @@ class TestSummary(Message):
                 KEY_ATOM_LOOP: loop,
                 KEY_ATOM_NAME: test_name,
                 REASON: reason,
+                "data": data,
             }
         )

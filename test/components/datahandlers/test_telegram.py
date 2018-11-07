@@ -9,10 +9,7 @@ from batterytester.components.datahandlers.telegram import (
     Telegram,
 )
 from batterytester.core.bus import Bus
-from batterytester.core.helpers.message_data import (
-    ActorResponse,
-    AtomResult,
-)
+from batterytester.core.helpers.message_data import ActorResponse, AtomResult
 from test.private_keys import telegram_token, chat_id
 
 
@@ -62,7 +59,8 @@ def test_event_atom_result(tg):
     """Check if only failed tests are communicated."""
     _res = AtomResult(
         passed=False,
-        reason="Failed to communicate with PowerView hub: Cannot connect to host 192.168.1.11:80 ssl:None [Connect call failed ('192.168.1.11', 80)]",
+        reason="ref data does not match",
+        data={"sensor": {"a": 1}, "ref": {"b": 10}, "idx": 10, "loop": 20},
     )
 
     tg.handle_event(subj.ATOM_RESULT, _res)
@@ -84,6 +82,7 @@ def test_message_quality():
         _res = AtomResult(
             passed=False,
             reason="Failed to communicate with PowerView hub: Cannot connect to host 192.168.1.11:80 ssl:None [Connect call failed ('192.168.1.11', 80)]",
+            data={"idx": 10, "loop": 10, "sensor": {}, "ref": {}},
         )
         telegram.handle_event(subj.ATOM_RESULT, _res)
 

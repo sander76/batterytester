@@ -10,11 +10,11 @@
     <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
     <script src="js/moment.js"></script>
-    <link id="favicon" rel="icon" href="icons/thumb-up.png"/>
+    <link id="favicon" rel="icon" href="icons/thumb-up.png" />
 </head>
 
 <body>
-<style>
+    <style>
         html {
             height: 100%;
             background: #eee;
@@ -32,7 +32,6 @@
         #all_tests {
             width: 100%;
         }
-
 
         .status_connected {
             --card-back-color: #689f38;
@@ -70,160 +69,177 @@
             padding: 0;
         }
 
+    </style>
+    <div id="app">
+        <div class="container">
 
-</style>
-<div id="app">
-    <div class="container">
-
-        <div class="row cols-md-4 cols-sm-12">
-            <div>
-                <div class="card fluid" v-bind:class="connection.status.class">
-                    <div class="section">
-                        <div>server: {{connection.status.value}}</div>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <div class="card fluid" v-bind:class="process.status">
-                    <div class="section">
-                        <div>process: {{process.status}}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <div class="card fluid" v-bind:class="test.status.v">
-                    <div class="section">
-                        <div>test: {{test.status.v}}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="row">
-
-            <div class="col-md-5 col-sm-12">
-                <div class="card fluid">
-                    <h1>Test control</h1>
-                    <div class="section">
-                        <select id="all_tests" v-model="current_test">
-                            <option value="" disabled>Select a test</option>
-                            <option v-for="option in available_tests" v-bind:value="option">
-                                {{option.name}}
-                            </option>
-                        </select>
-                        <div>
-                            <button v-on:click="startTest">start test</button>
-                            <button v-on:click="stopTest">stop test</button>
+            <div class="row cols-md-4 cols-sm-12">
+                <div>
+                    <div class="card fluid" v-bind:class="connection.status.class">
+                        <div class="section">
+                            <div>server: {{connection.status.value}}</div>
                         </div>
                     </div>
                 </div>
-                <div class="card fluid">
-                    <h1>Test data</h1>
-                    <div class="section">
-                        <label-value label="Name" v-bind:value="test.test_name.v"></label-value>
-                        <label-value label="Loopcount" v-bind:value="test.loop_count.v"></label-value>
-                        <label-value label="Start" v-bind:value="test.started.v | time"></label-value>
-                        <label-value label="Stopped" v-bind:value="test.time_finished.v | time"></label-value>
-                        <label-value label="Reason" v-bind:value="test.reason.v"></label-value>
-                    </div>
-                </div>
-                <div class="card fluid">
-                    <h1>Test summary</h1>
-                    <div class="section">
-                        <label-value label="passed" v-bind:value="summary.passed.v"></label-value>
-                        <label-value label="failed" v-bind:value="summary.failed.v"></label-value>
-                    </div>
-                </div>
-                <div class="card fluid">
-                    <h1>Loop data</h1>
-                    <div class="section">
-                        <label-value label="Total duration" v-bind:value="loop.duration.v | duration"></label-value>
-
-                    </div>
-                    <div class="section">
-                        <div v-for="(cur_atom,index) in loop.atoms">
-                            <atom-item v-bind:activeidx="atom.idx.v" v-bind:index="index"
-                                       v-bind:atom="cur_atom"></atom-item>
+                <div>
+                    <div class="card fluid" v-bind:class="process.status">
+                        <div class="section">
+                            <div>process: {{process.status}}</div>
                         </div>
                     </div>
                 </div>
 
-            </div>
-            <div class="col-md-7 col-sm-12">
-                <div class="card fluid">
-                    <h1>Atom data</h1>
-                    <div class="section">
-                        <label-value label="Name" v-bind:value="atom.atom_name.v"></label-value>
-                        <label-value label="idx" v-bind:value="atom.idx.v"></label-value>
-                        <label-value label="loop" v-bind:value="atom.loop.v"></label-value>
-                        <label-value label="status" v-bind:value="atom.status.v"></label-value>
-                        <label-value label="started" v-bind:value="atom.started.v | time"></label-value>
-                        <label-value label="reference" v-bind:value="atom.reference_data.v | json"></label-value>
-                        <key-val label="duration [s.]">
-                            <timer v-bind:start="atom.duration.v" v-bind:started="atom.started.v"></timer>
-                            \ {{atom.duration.v}}
-                        </key-val>
+                <div>
+                    <div class="card fluid" v-bind:class="test.status.v">
+                        <div class="section">
+                            <div>test: {{test.status.v}}</div>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="card fluid">
-                    <h1>Sensor data</h1>
-                    <div class="section" v-for="sensor in sensor_data">
-                        <div class="row">
-                            <div class="col-sm-12 col-md-5">
-                                <div>{{ sensor.n }}</div>
-                                <div>
-                                    <small>{{ sensor.t.v | time }}</small>
+
+            <div class="row">
+
+                <div class="col-md-5 col-sm-12">
+                    <div class="card fluid">
+                        <h1>Test control</h1>
+                        <div class="section">
+                            <select id="all_tests" v-model="current_test">
+                                <option value="" disabled>Select a test</option>
+                                <option v-for="option in available_tests" v-bind:value="option">
+                                    {{option.name}}
+                                </option>
+                            </select>
+                            <div>
+                                <button v-on:click="startTest">start test</button>
+                                <button v-on:click="stopTest">stop test</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card fluid">
+                        <h1>Test data</h1>
+                        <div class="section">
+                            <label-value label="Name" v-bind:value="test.test_name.v"></label-value>
+                            <label-value label="Loopcount" v-bind:value="test.loop_count.v"></label-value>
+                            <label-value label="Start" v-bind:value="test.started.v | time"></label-value>
+                            <label-value label="Stopped" v-bind:value="test.time_finished.v | time"></label-value>
+                            <label-value label="Reason" v-bind:value="test.reason.v"></label-value>
+                        </div>
+                    </div>
+                    <div class="card fluid">
+                        <h1>Test summary</h1>
+                        <div class="section">
+                            <label-value label="passed" v-bind:value="summary.passed.v"></label-value>
+                            <label-value label="failed" v-bind:value="summary.failed.v"></label-value>
+                        </div>
+                    </div>
+                    <div class="card fluid">
+                        <h1>Loop data</h1>
+                        <div class="section">
+                            <label-value label="Total duration" v-bind:value="loop.duration.v | duration"></label-value>
+
+                        </div>
+                        <div class="section">
+                            <div v-for="(cur_atom,index) in loop.atoms">
+                                <atom-item v-bind:activeidx="atom.idx.v" v-bind:index="index" v-bind:atom="cur_atom"></atom-item>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-7 col-sm-12">
+                    <div class="card fluid">
+                        <h1>Atom data</h1>
+                        <div class="section">
+                            <label-value label="Name" v-bind:value="atom.atom_name.v"></label-value>
+                            <label-value label="idx" v-bind:value="atom.idx.v"></label-value>
+                            <label-value label="loop" v-bind:value="atom.loop.v"></label-value>
+                            <label-value label="status" v-bind:value="atom.status.v"></label-value>
+                            <label-value label="started" v-bind:value="atom.started.v | time"></label-value>
+                            <label-value label="reference" v-bind:value="atom.reference_data.v | json"></label-value>
+                            <key-val label="duration [s.]">
+                                <timer v-bind:start="atom.duration.v" v-bind:started="atom.started.v"></timer>
+                                \ {{atom.duration.v}}
+                            </key-val>
+                        </div>
+                    </div>
+
+                    <div class="card fluid">
+                        <h1>Sensor data</h1>
+                        <div class="section" v-for="sensor in sensor_data">
+                            <div class="row">
+                                <div class="col-sm-12 col-md-5">
+                                    <div>{{ sensor.n }}</div>
+                                    <div>
+                                        <small>{{ sensor.t.v | time }}</small>
+                                    </div>
                                 </div>
+                                <div class="col-sm-12 col-md-7">
+                                    <pre class="code" data-lang="JSON"><code>{{sensor.v.v | json}}</code></pre>
+                                </div>
+                                <!-- <div>{{ sensor.v }}</div> -->
+                                <!-- <div class="col-sm-12 col-md-6">time: {{ sensor.t.v | time }}</div> -->
                             </div>
-                            <div class="col-sm-12 col-md-7">
-                                <pre class="code" data-lang="JSON"><code>{{sensor.v.v | json}}</code></pre>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card fluid">
+                        <h1>Failed atoms</h1>
+                        <div class="section" v-for="failure in summary.failed_ids.v">
+
+                            <div>atom name: <b>{{failure.atom_name}}</b></div>
+
+                            <div>index: <b>{{failure.idx}}</b>, loop: <b>{{failure.loop}}</b></div>
+                            <div>reason: <b>{{failure.reason}}</b></div>
+                            reference
+                            <pre title="ref" class="code" data-lang="JSON">{{failure.data.ref | json }}</pre>
+                            sensor
+                            <pre class="code" data-lang="JSON">{{failure.data.sensor | json }}</pre>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="row">
+                <div class="col-sm-12">
+                    <div class="card fluid">
+                        <h1>Failed test data</h1>
+                        <div class="section">
+                            <div>
+                                <pre class="code" data-lang="JSON"><code>{{summary.failed_ids.v | json }}</code></pre>
                             </div>
-                            <!-- <div>{{ sensor.v }}</div> -->
-                            <!-- <div class="col-sm-12 col-md-6">time: {{ sensor.t.v | time }}</div> -->
                         </div>
+                    </div>
+                </div>
+            </div> -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card fluid">
+                        <h1>Process data</h1>
+                        <div class="section">
+                            <div v-for="message in process.messages">
+                                <code id="process_messages" class="code">{{message}}</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="card fluid">
-                    <h1>Failed test data</h1>
-                    <div class="section">
-                        <div>
-                            <pre class="code" data-lang="JSON"><code>{{summary.failed_ids.v | json }}</code></pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="card fluid">
-                    <h1>Process data</h1>
-                    <div class="section">
-                        <div v-for="message in process.messages">
-                            <code id="process_messages" class="code">{{message}}</code>
-                        </div>
-                    </div>
-                </div>
             </div>
 
         </div>
 
+
+        <button v-on:click="clearData">Clear data</button>
+        <button v-on:click="get_tests">get all tests</button>
+        <button v-on:click="openSocket">Open connection</button>
+        <button v-on:click="shutdown">Shutdown tester</button>
     </div>
-
-
-    <button v-on:click="clearData">Clear data</button>
-    <button v-on:click="get_tests">get all tests</button>
-    <button v-on:click="openSocket">Open connection</button>
-    <button v-on:click="shutdown">Shutdown tester</button>
-</div>
-<script src="vue_control.js"></script>
+    <script src="vue_control.js"></script>
 </body>
 
 </html>

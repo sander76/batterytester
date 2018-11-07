@@ -8,8 +8,9 @@ from typing import Optional
 
 from aiotg import Bot, BotApiError
 
-from batterytester.components.datahandlers.base_data_handler import \
-    BaseDataHandler
+from batterytester.components.datahandlers.base_data_handler import (
+    BaseDataHandler,
+)
 from batterytester.core.bus import Bus
 from batterytester.core.helpers.message_subjects import Subscriptions
 
@@ -66,7 +67,16 @@ class Telegram(BaseDataHandler):
 
     def event_atom_result(self, testdata):
         if not testdata.passed.value:
-            _info = testdata.reason.value
+            _info = "\n".join(
+                (
+                    testdata.reason.value,
+                    "- ref     {}".format(testdata.data.value["ref"]),
+                    "- sensor  {}".format(testdata.data.value["sensor"]),
+                    "- idx     {}".format(testdata.data.value["idx"]),
+                    "- loop    {}".format(testdata.data.value["loop"]),
+                )
+            )
+
             self._send_message(self._make_message(_info, testdata.time.value))
 
     def event_test_warmup(self, testdata):

@@ -85,46 +85,23 @@ class Messaging(BaseDataHandler):
         testdata.subj = subj.LOOP_WARMUP
         self._send_to_ws(testdata)
 
-    # def loop_warmup(self, subject, data: LoopData):
-    #     data.subj = subject
-    #     self._send_to_ws(data)
-
     def event_atom_warmup(self, testdata: AtomWarmup):
         super().event_atom_warmup(testdata)
         testdata.subj = subj.ATOM_WARMUP
         self._send_to_ws(testdata)
-
-    # def _atom_warmup(self, subject, data: AtomData):
-    #     super()._atom_warmup(subject, data)
-    #     data.subj = subject
-    #     self._send_to_ws(data)
 
     def event_test_warmup(self, testdata):
         LOGGER.debug("warmup test: {} data: {}".format(subj.TEST_WARMUP, testdata))
         testdata.subj = subj.TEST_WARMUP
         self._send_to_ws(testdata)
 
-    # def test_warmup(self, subject, data: TestData):
-    #     LOGGER.debug("warmup test: {} data: {}".format(subject, data))
-    #     data.subj = subject
-    #     self._send_to_ws(data)
-
     def event_test_fatal(self, testdata):
         testdata.subj = subj.TEST_FATAL
         self._send_to_ws(testdata)
 
-    #
-    # def test_fatal(self, subject, data: FatalData):
-    #     data.subj = subject
-    #     self._send_to_ws(data)
-
     def event_test_finished(self, testdata):
         testdata.subj = subj.TEST_FINISHED
         self._send_to_ws(testdata)
-
-    # def test_finished(self, subject, data: TestFinished):
-    #     data.subj = subject
-    #     self._send_to_ws(data)
 
     def event_atom_result(self, testdata):
         """Sends out a summary of the current running test result."""
@@ -136,23 +113,10 @@ class Messaging(BaseDataHandler):
                 self._current_loop,
                 self._atom_name,
                 testdata.reason.value,
+                testdata.data.value,
             )
-
         self._send_to_ws(self.test_summary)
 
-    # def atom_result(self, subject, data: AtomResult):
-    #     """Sends out a summary of the current running test result."""
-    #     if data.passed.value:
-    #         self.test_summary.atom_passed()
-    #     else:
-    #         self.test_summary.atom_failed(
-    #             self._current_idx,
-    #             self._current_loop,
-    #             self._atom_name,
-    #             data.reason.value,
-    #         )
-    #
-    #     self._send_to_ws(self.test_summary)
 
     def event_sensor_data(self, testdata):
         self._send_to_ws(testdata)
