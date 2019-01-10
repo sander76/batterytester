@@ -66,18 +66,23 @@ class Telegram(BaseDataHandler):
         )
 
     def event_atom_result(self, testdata):
-        if not testdata.passed.value:
+        if testdata.passed.value:
+            return
+
+        _info = testdata.reason.value
+
+        if testdata.data.value is not None:
             _info = "\n".join(
                 (
                     testdata.reason.value,
-                    "- ref     {}".format(testdata.data.value["ref"]),
-                    "- sensor  {}".format(testdata.data.value["sensor"]),
-                    "- idx     {}".format(testdata.data.value["idx"]),
-                    "- loop    {}".format(testdata.data.value["loop"]),
+                    "- ref     {}".format(testdata.data.value.get("ref")),
+                    "- sensor  {}".format(testdata.data.value.get("sensor")),
+                    "- idx     {}".format(testdata.data.value.get("idx")),
+                    "- loop    {}".format(testdata.data.value.get("loop")),
                 )
             )
 
-            self._send_message(self._make_message(_info, testdata.time.value))
+        self._send_message(self._make_message(_info, testdata.time.value))
 
     def event_test_warmup(self, testdata):
         _message = self._make_message("STARTED", testdata.started.value)

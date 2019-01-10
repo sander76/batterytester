@@ -1,3 +1,5 @@
-VERSION = (1, 3, 16)
+MAJOR = 1
+MINOR = 3
+PATCH = 16
 
-__version__ = ".".join(map(str, VERSION))
+__version__ = "{}.{}.{}".format(MAJOR, MINOR, PATCH)

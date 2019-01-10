@@ -70,6 +70,15 @@ def test_event_atom_result(tg):
 
     assert len(tg._send_message.mock_calls) == 1
 
+    # Now testing with no data supplied
+    _res = AtomResult(
+        passed=False,
+        reason="no response")
+
+    tg.handle_event(subj.ATOM_RESULT,_res)
+    assert len(tg._send_message.mock_calls) == 2
+
+
 
 def test_message_quality():
     telegram = Telegram(token=telegram_token, chat_id=chat_id)
