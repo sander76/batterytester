@@ -94,7 +94,7 @@ class Server:
         self.app.router.add_post(URL_TEST_STOP, self.stop_test_handler)
         self.app.router.add_get("/get_status", self.get_status_handler)
         self.app.router.add_get("/get_tests", self.get_tests_handler)
-
+        self.app.router.add_post("/system_update",self.system_update)
         self.app.router.add_post("/system_shutdown", self.system_shutdown_handler)
         self.app.router.add_get("", self.dashboard_handler)
         self.app.router.add_get("/", self.dashboard_handler)
@@ -131,6 +131,9 @@ class Server:
 
     async def system_shutdown_handler(self, request):
         os.system("sudo shutdown now -h")
+
+    async def system_update(self,request):
+        os.system(". ~/batterytester/scripts/update.sh")
 
     async def test_start_handler(self, request):
         LOGGER.debug("Start test handler")
