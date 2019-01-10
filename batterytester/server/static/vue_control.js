@@ -331,9 +331,13 @@ var vm = new Vue({
                 this.$http.post('/system_shutdown')
             }
         },
-        update: function(event){
+        update: function (event){
             if (window.confirm("This will cancel the running test. \n\n Do you want to continue? ")){
-                this.$http.post("/system_update")
+                this.$http.post("/system_update").then(response => {
+                response.json().then(js => {
+
+                })
+            }, response => {})
             }
         },
         openSocket: function (event) {
