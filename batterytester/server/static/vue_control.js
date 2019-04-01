@@ -405,6 +405,7 @@ function parseWsMessage(js) {
             parseSensor(js, vm.sensor_data)
             break
         case 'result_summary':
+            console.log(js)
 //            merge(js, vm.summary)
             break
         case 'process_started':
