@@ -428,7 +428,7 @@ function parseWsMessage(js) {
             merge(js, vm.atom)
             break
         case 'loop_warmup':
-            merge(js, vm.loop)
+//            merge(js, vm.loop)
             break
         case 'test_warmup':
 //            merge(js, vm.test)
