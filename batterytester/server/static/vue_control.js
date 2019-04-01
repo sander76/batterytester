@@ -394,65 +394,64 @@ function parseSensor(source, target) {
 }
 
 function parseWsMessage(js) {
-    return
-//    let subj = js['subj']
-//    console.log(subj)
-//    switch (subj) {
-//        case 'sensor_data':
-//            parseSensor(js, vm.sensor_data)
-//            break
-//        case 'result_summary':
-//            merge(js, vm.summary)
-//            break
-//        case 'process_started':
-//            merge(js, vm.process)
-//            vm.set_current_test()
-//            break
-//        case 'process_info':
-//            merge(js, vm.process)
-//            vm.set_current_test()
-//            break
-//        case 'process_message':
-//            vm.process.messages.push(js['message'])
-//            break
-//        case 'process_finished':
-//            merge(js, vm.process)
-//            break
-//        case 'atom_warmup':
-//            vm.atom = atomData()
-//            merge(js, vm.atom)
-//            break
-//        case 'atom_execute':
-//            merge(js, vm.atom)
-//            break
-//        case 'atom_collecting':
-//            merge(js, vm.atom)
-//            break
-//        case 'loop_warmup':
-//            merge(js, vm.loop)
-//            break
-//        case 'test_warmup':
+    let subj = js['subj']
+    console.log(subj)
+    switch (subj) {
+        case 'sensor_data':
+            parseSensor(js, vm.sensor_data)
+            break
+        case 'result_summary':
+            merge(js, vm.summary)
+            break
+        case 'process_started':
+            merge(js, vm.process)
+            vm.set_current_test()
+            break
+        case 'process_info':
+            merge(js, vm.process)
+            vm.set_current_test()
+            break
+        case 'process_message':
+            vm.process.messages.push(js['message'])
+            break
+        case 'process_finished':
+            merge(js, vm.process)
+            break
+        case 'atom_warmup':
+            vm.atom = atomData()
+            merge(js, vm.atom)
+            break
+        case 'atom_execute':
+            merge(js, vm.atom)
+            break
+        case 'atom_collecting':
+            merge(js, vm.atom)
+            break
+        case 'loop_warmup':
+            merge(js, vm.loop)
+            break
+        case 'test_warmup':
 //            merge(js, vm.test)
 //            changeFav(subj)
-//            break
-//        case 'test_finished':
+            break
+        case 'test_finished':
 //            merge(js, vm.test)
 //            changeFav(subj)
-//            break
-//        case 'test_fatal':
+            break
+        case 'test_fatal':
 //            merge(js, vm.test)
 //            changeFav(subj)
-//            break
-//        case 'test_result':
+            break
+        case 'test_result':
 //            merge(js, vm.test)
 //            changeFav(subj)
-//            break
-//        case 'sensor_cache':
-//            for (var sensor in js) {
-//                if (sensor !== 'subj') {
-//                    parseSensor(js[sensor], vm.sensor_data)
-//                }
-//            }
-//            break
-//    }
+            break
+        case 'sensor_cache':
+            for (var sensor in js) {
+                if (sensor !== 'subj') {
+                    parseSensor(js[sensor], vm.sensor_data)
+                }
+            }
+            break
+    }
 }
