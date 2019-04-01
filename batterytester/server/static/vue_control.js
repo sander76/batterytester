@@ -390,6 +390,7 @@ function merge_summary(source, target) {
     // Merge incomig test data into the existing data.
     let ids = source['failed_ids']['v']
     for (var dta in ids) {
+        console.log(dta['data'])
         if (dta['data'] === null) {
             dta['data'] = {}
         }
