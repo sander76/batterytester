@@ -383,76 +383,76 @@ function merge(source, target) {
 }
 
 function parseSensor(source, target) {
-    return
-//    for (var item in target) {
-//        if (target[item]['n'] === source['n']) {
-//            target[item]['v'] = source['v']
-//            target[item]['t'] = source['t']
-//            return
-//        }
-//    }
-//    target.push(source)
+    for (var item in target) {
+        if (target[item]['n'] === source['n']) {
+            target[item]['v'] = source['v']
+            target[item]['t'] = source['t']
+            return
+        }
+    }
+    target.push(source)
 }
 
 function parseWsMessage(js) {
-    let subj = js['subj']
-    console.log(subj)
-    switch (subj) {
-        case 'sensor_data':
-            parseSensor(js, vm.sensor_data)
-            break
-        case 'result_summary':
-            merge(js, vm.summary)
-            break
-        case 'process_started':
-            merge(js, vm.process)
-            vm.set_current_test()
-            break
-        case 'process_info':
-            merge(js, vm.process)
-            vm.set_current_test()
-            break
-        case 'process_message':
-            vm.process.messages.push(js['message'])
-            break
-        case 'process_finished':
-            merge(js, vm.process)
-            break
-        case 'atom_warmup':
-            vm.atom = atomData()
-            merge(js, vm.atom)
-            break
-        case 'atom_execute':
-            merge(js, vm.atom)
-            break
-        case 'atom_collecting':
-            merge(js, vm.atom)
-            break
-        case 'loop_warmup':
-            merge(js, vm.loop)
-            break
-        case 'test_warmup':
-            merge(js, vm.test)
-            changeFav(subj)
-            break
-        case 'test_finished':
-            merge(js, vm.test)
-            changeFav(subj)
-            break
-        case 'test_fatal':
-            merge(js, vm.test)
-            changeFav(subj)
-            break
-        case 'test_result':
-            merge(js, vm.test)
-            changeFav(subj)
-            break
-        case 'sensor_cache':
-            for (var sensor in js) {
-                if (sensor !== 'subj') {
-                    parseSensor(js[sensor], vm.sensor_data)
-                }
-            }
-            break
-    }
+    return
+//    let subj = js['subj']
+//    console.log(subj)
+//    switch (subj) {
+//        case 'sensor_data':
+//            parseSensor(js, vm.sensor_data)
+//            break
+//        case 'result_summary':
+//            merge(js, vm.summary)
+//            break
+//        case 'process_started':
+//            merge(js, vm.process)
+//            vm.set_current_test()
+//            break
+//        case 'process_info':
+//            merge(js, vm.process)
+//            vm.set_current_test()
+//            break
+//        case 'process_message':
+//            vm.process.messages.push(js['message'])
+//            break
+//        case 'process_finished':
+//            merge(js, vm.process)
+//            break
+//        case 'atom_warmup':
+//            vm.atom = atomData()
+//            merge(js, vm.atom)
+//            break
+//        case 'atom_execute':
+//            merge(js, vm.atom)
+//            break
+//        case 'atom_collecting':
+//            merge(js, vm.atom)
+//            break
+//        case 'loop_warmup':
+//            merge(js, vm.loop)
+//            break
+//        case 'test_warmup':
+//            merge(js, vm.test)
+//            changeFav(subj)
+//            break
+//        case 'test_finished':
+//            merge(js, vm.test)
+//            changeFav(subj)
+//            break
+//        case 'test_fatal':
+//            merge(js, vm.test)
+//            changeFav(subj)
+//            break
+//        case 'test_result':
+//            merge(js, vm.test)
+//            changeFav(subj)
+//            break
+//        case 'sensor_cache':
+//            for (var sensor in js) {
+//                if (sensor !== 'subj') {
+//                    parseSensor(js[sensor], vm.sensor_data)
+//                }
+//            }
+//            break
+//    }
 }
