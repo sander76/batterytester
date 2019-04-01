@@ -331,13 +331,13 @@ var vm = new Vue({
                 this.$http.post('/system_shutdown')
             }
         },
-        update: function (event){
-            if (window.confirm("This will cancel the running test. \n\n Do you want to continue? ")){
+        update: function (event) {
+            if (window.confirm("This will cancel the running test. \n\n Do you want to continue? ")) {
                 this.$http.post("/system_update").then(response => {
-                response.json().then(js => {
+                    response.json().then(js => {
 
-                })
-            }, response => {})
+                    })
+                }, response => {})
             }
         },
         openSocket: function (event) {
@@ -377,23 +377,26 @@ var vm = new Vue({
 
 function merge(source, target) {
     // Merge incomig test data into the existing data.
-    try{
+    try {
         for (var key in source) {
             target[key] = source[key]
-        }}
-    catch(error){
+        }
+    } catch (error) {
         console.error(error)
     }
 }
 
 function merge_summary(source, target) {
     // Merge incomig test data into the existing data.
-    try{
-        for (var key in source) {
-            target[key] = source[key]
-        }}
-    catch(error){
-        console.error(error)
+    let ids = source['failed_ids']['v']
+    for (var dta in ids) {
+        if (dta['data'] === null) {
+            dta['data'] = {}
+        }
+    }
+
+    for (var key in source) {
+        target[key] = source[key]
     }
 }
 
@@ -417,7 +420,7 @@ function parseWsMessage(js) {
             break
         case 'result_summary':
             console.log(js)
-//            merge(js, vm.summary)
+            //            merge(js, vm.summary)
             merge_summary(js, vm.summary)
             break
         case 'process_started':
