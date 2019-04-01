@@ -386,6 +386,17 @@ function merge(source, target) {
     }
 }
 
+function merge_summary(source, target) {
+    // Merge incomig test data into the existing data.
+    try{
+        for (var key in source) {
+            target[key] = source[key]
+        }}
+    catch(error){
+        console.error(error)
+    }
+}
+
 function parseSensor(source, target) {
     for (var item in target) {
         if (target[item]['n'] === source['n']) {
@@ -407,6 +418,7 @@ function parseWsMessage(js) {
         case 'result_summary':
             console.log(js)
 //            merge(js, vm.summary)
+            merge_summary(js, vm.summary)
             break
         case 'process_started':
             merge(js, vm.process)
