@@ -447,11 +447,11 @@ function parseWsMessage(js) {
 //            changeFav(subj)
             break
         case 'sensor_cache':
-            for (var sensor in js) {
-                if (sensor !== 'subj') {
-                    parseSensor(js[sensor], vm.sensor_data)
-                }
-            }
+//            for (var sensor in js) {
+//                if (sensor !== 'subj') {
+//                    parseSensor(js[sensor], vm.sensor_data)
+//                }
+//            }
             break
     }
 }
