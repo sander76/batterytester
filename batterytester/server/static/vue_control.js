@@ -398,7 +398,7 @@ function parseWsMessage(js) {
     console.log(subj)
     switch (subj) {
         case 'sensor_data':
-            parseSensor(js, vm.sensor_data)
+//            parseSensor(js, vm.sensor_data)
             break
         case 'result_summary':
             merge(js, vm.summary)
