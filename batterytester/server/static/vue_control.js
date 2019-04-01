@@ -377,8 +377,12 @@ var vm = new Vue({
 
 function merge(source, target) {
     // Merge incomig test data into the existing data.
-    for (var key in source) {
-        target[key] = source[key]
+    try:
+        for (var key in source) {
+            target[key] = source[key]
+        }
+    catch(error){
+        console.error(error)
     }
 }
 
