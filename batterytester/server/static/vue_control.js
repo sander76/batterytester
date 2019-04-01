@@ -383,14 +383,15 @@ function merge(source, target) {
 }
 
 function parseSensor(source, target) {
-    for (var item in target) {
-        if (target[item]['n'] === source['n']) {
-            target[item]['v'] = source['v']
-            target[item]['t'] = source['t']
-            return
-        }
-    }
-    target.push(source)
+    return
+//    for (var item in target) {
+//        if (target[item]['n'] === source['n']) {
+//            target[item]['v'] = source['v']
+//            target[item]['t'] = source['t']
+//            return
+//        }
+//    }
+//    target.push(source)
 }
 
 function parseWsMessage(js) {
@@ -447,11 +448,11 @@ function parseWsMessage(js) {
             changeFav(subj)
             break
         case 'sensor_cache':
-//            for (var sensor in js) {
-//                if (sensor !== 'subj') {
-//                    parseSensor(js[sensor], vm.sensor_data)
-//                }
-//            }
+            for (var sensor in js) {
+                if (sensor !== 'subj') {
+                    parseSensor(js[sensor], vm.sensor_data)
+                }
+            }
             break
     }
 }
