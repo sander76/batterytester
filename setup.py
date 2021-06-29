@@ -22,7 +22,7 @@ setup(
     install_requires=[
         "pyserial==3.4",
         "aiopvapi==1.6.14",
-        "aiohttp==3.5.2",
+        "aiohttp==3.7.4",
         "python-slugify==1.2.5",
         "aiotg==0.9.9",
         "async_timeout==3.0.1",
