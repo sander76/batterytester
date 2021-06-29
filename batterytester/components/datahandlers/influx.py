@@ -45,7 +45,6 @@ class InfluxLineProtocol:
 
     def __init__(self, measurement, time_stamp, tags: dict = None, fields: dict = None):
         """
-
         :param measurement:
         :param tags:
         :param fields:

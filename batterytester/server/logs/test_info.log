@@ -1,0 +1,16 @@
+2018-06-29 09:55:30,094 - batterytester.core.base_test - INFO - Starting the test.
+2018-06-29 09:55:30,100 - batterytester.core.base_test - INFO - STARTING async_test
+2018-06-29 09:55:44,522 - batterytester.core.bus - ERROR - Stop test signal received.
+2018-06-29 09:55:44,523 - batterytester.core.bus - INFO - Forced stopping the test.
+2018-06-29 09:55:44,524 - batterytester.core.bus - ERROR - Main test loop cancelled.
+2018-06-29 09:55:48,525 - batterytester.core.bus - INFO - stopping test
+2018-06-29 09:55:48,527 - batterytester.components.datahandlers.messaging - INFO - Messaging shutdown signal received.
+2018-06-29 09:55:48,528 - batterytester.components.datahandlers.messaging - INFO - Closing websocket connection. Connection state: 2
+2018-06-29 09:55:48,530 - batterytester.components.sensor.sensor - INFO - Stopped data parser
+2018-06-29 10:11:05,676 - batterytester.core.base_test - INFO - Starting the test.
+2018-06-29 10:11:05,679 - batterytester.core.base_test - INFO - STARTING async_test
+2018-06-29 10:44:29,936 - batterytester.core.bus - INFO - stopping test
+2018-06-29 10:44:29,936 - batterytester.components.datahandlers.messaging - INFO - Messaging shutdown signal received.
+2018-06-29 10:44:29,937 - batterytester.components.datahandlers.messaging - INFO - Closing websocket connection. Connection state: 2
+2018-06-29 10:44:29,938 - batterytester.components.datahandlers.messaging - INFO - Closing ws reader.
+2018-06-29 10:44:29,939 - batterytester.components.sensor.sensor - INFO - Stopped data parser
