@@ -38,7 +38,7 @@ snowballstemmer==1.2.1
 Sphinx==1.7.2
 sphinxcontrib-websupport==1.0.1
 Unidecode==1.0.22
-urllib3==1.22
+urllib3==1.26.5
 watchdog==0.8.3
 wcwidth==0.1.7
 yarl==1.1.1
