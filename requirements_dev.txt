@@ -30,7 +30,7 @@ pytest==3.4.0
 python-slugify==1.2.4
 pytz==2018.3
 PyYAML==5.4
-requests==2.18.4
+requests==2.20.0
 six==1.11.0
 slack-sansio==0.4.0
 slacker==0.9.42
