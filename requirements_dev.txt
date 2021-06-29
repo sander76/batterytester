@@ -1,5 +1,5 @@
 aiofiles==0.3.2
-aiohttp==3.2.1
+aiohttp==3.7.4
 aiotg==0.9.9
 alabaster==0.7.10
 argh==0.26.2
